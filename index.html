@@ -108,11 +108,12 @@ This code is the private property of Artia Studio.
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-fixed-dim selection:text-primary">
 <!-- Desktop Side Navigation (SideNavBar) -->
-<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
 <div>
-<a class="mb-12 block group" href="index.html">
-<span class="text-2xl font-bold tracking-tighter text-[#00113a] dark:text-white font-headline group-hover:opacity-70 transition-opacity blur-reveal">ARTIA</span>
-<p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold group-hover:opacity-70 transition-opacity blur-reveal">Marketing Studio</p>
+<a href="#" class="block w-32 mb-10"> <!-- Controla el ancho aquí (w-32 = 128px) -->
+    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
+         alt="Logo Artia" 
+         class="w-full h-auto object-contain">
 </a>
 <nav class="flex flex-col gap-y-6">
 <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
@@ -154,8 +155,13 @@ This code is the private property of Artia Studio.
 </header>
 <!-- Mobile Navigation Overlay (Hamburger Menu) -->
 <<div class="fixed inset-0 z-[60] bg-white hidden flex-col p-10 lg:hidden" id="mobile-menu">
-    <div class="flex justify-between items-center mb-12">
-        <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
+    <div class="flex justify-between items-center mb-8">
+        <a href="index.html" class="block w-24"> <!-- w-24 es ideal para móviles (96px) -->
+        <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
+             alt="Logo Artia" 
+             class="w-full h-auto object-contain">
+    </a>
+
         <button class="text-primary" id="mobile-menu-close">
             <span class="material-symbols-outlined text-3xl">close</span>
         </button>
@@ -185,32 +191,104 @@ This code is the private property of Artia Studio.
         <a class="block w-full bg-primary text-white text-center py-1 rounded-lg font-bold" href="https://wa.me/593969937265">RESERVAR</a>
     </div>
 </div>
+<!-- Floating Contact Menu -->
+<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+  
+  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+    
+    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">
+      ¿Cómo podemos ayudarte?
+    </div>
+
+    <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
+      <span class="text-sm font-bold">WhatsApp</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+    </a>
+
+    <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
+      <span class="text-sm font-bold">Llamar ahora</span>
+      <span class="material-symbols-outlined">call</span>
+    </a>
+  </div>
+
+  <button id="wa-toggle" class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
+    <span class="material-symbols-outlined text-2xl" data-icon="chat" style="font-variation-settings: 'FILL' 1;">
+        chat
+    </span>
+</button>
+
+<style>
+/* Animación de pulso azul sutil */
+.wa-pulse {
+  animation: blue-pulse 2s infinite;
+}
+
+@keyframes blue-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+</style>
+</div>
 <!-- Main Content Canvas -->
 <main class="lg:ml-[280px] min-h-screen">
 <!-- Hero Section -->
-<section class="relative h-screen flex items-center justify-center overflow-hidden bg-surface-container-low">
-    <div class="absolute inset-0 z-0">
-        <img class="w-full h-full object-cover opacity-15 grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXIx0eLeURJjOPGOyH7BXN0oFgji4XbTsOvOsrDtKUW67q_AHfnCUkBK23_7oACyig5P3P0JwOgp1gJHwRRp0Ka26KXUv0XgkW3VkSY9Jqy0Kki62QH-azCfdu8xfIDbsUPSb0MK3CHMQw_EZOfTbjH7cmi9zUlgd51WDNuPVKxxEpdPyoyeU_u_I0itt3u9JuCmZKCeFGZqcsbQ_LjDp5yoYvaveqjD-KQYCiXhN95BTtAya98CntTH6MKFBFYcti_H-m2YyTXbAi" alt="Background"/>
+<section class="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+    
+    <!-- CAPA 1: Fondo (Parallax más rápido) -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <img id="parallax-bg" 
+             class="w-full h-[130%] object-cover opacity-80 grayscale-[40%] blur-[1px] brightness-80 scale-110 will-change-transform" 
+             src="https://i.ibb.co/XrsYqVGY/portada.png">
+        
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
+        <div class="absolute inset-0 bg-black/10 backdrop-contrast-90"></div>
     </div>
 
-    <div class="z-10 flex flex-col items-center justify-center px-6 text-center">
+    <!-- CAPA 2: Texto (Parallax suave / Flotante) -->
+    <!-- Este div "parallax-text" moverá todo el bloque sin tocar las clases de animación internas -->
+    <!-- Cambiamos justify-center por justify-end y añadimos pb-24 -->
+<div id="parallax-text" class="z-10 flex flex-col items-center justify-end pb-24 h-full w-full px-6 text-center will-change-transform">
         
-        <h1 class="blur-to-clear text-[18vw] lg:text-[14rem] font-extrabold tracking-tighter text-secondary leading-[0.8] font-headline">
-            ARTIA
-        </h1>
-        
-        <div class="relative mt-2">
-            <p class="text-reveal text-sm lg:text-2xl font-light tracking-[0.2em] lg:tracking-[0.5em] text-on-surface-variant uppercase" 
-               style="animation-delay: 1s;">
-                Marketing & Publicidad Integral
-            </p>
-        </div>
-
-        <div class="mt-12 flex justify-center blur-to-clear" style="animation-delay: 1.5s;">
-            <div class="h-16 w-[1px] bg-primary/30"></div>
-        </div>
+    <h1 class="blur-to-clear text-[22vw] lg:text-[14rem] font-extrabold tracking-tighter text-white leading-[0.8] font-headline">
+        ARTIA
+    </h1>
+    
+    <div class="relative mt-4">
+        <p class="text-reveal text-sm lg:text-2xl font-light tracking-[0.2em] lg:tracking-[0.5em] text-white/90 uppercase" 
+           style="animation-delay: 2s;">
+            Marketing & Publicidad Integral
+        </p>
     </div>
+
+    <div class="mt-12 flex justify-center blur-to-clear" style="animation-delay: 1.5s;">
+        <div class="h-16 w-[1px] bg-primary/30"></div>
+    </div>
+</div>
+
 </section>
+
+<!-- Script de Triple Capa -->
+<script>
+    window.addEventListener('scroll', function() {
+        const scrolled = window.scrollY;
+        const bg = document.getElementById('parallax-bg');
+        const text = document.getElementById('parallax-text');
+
+        // Solo aplicamos el efecto si el usuario no ha bajado demasiado (optimización)
+        if (scrolled < window.innerHeight) {
+            // Capa 1: El fondo baja al 40% de la velocidad del scroll
+            bg.style.transform = `translateY(${scrolled * 0.4}px) scale(1.1)`;
+            
+            // Capa 2: El texto sube al 15% de la velocidad del scroll
+            // Esto crea el efecto "flotante" entre la imagen y el usuario
+            text.style.transform = `translateY(${scrolled * -0.15}px)`;
+        }
+    });
+</script>
+
 
 <style>
 
@@ -268,6 +346,13 @@ This code is the private property of Artia Studio.
     0% { filter: blur(20px); opacity: 0; }
     100% { filter: blur(0); opacity: 1; }
 }
+/* Animación WhatsApp */
+        @keyframes titileo {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 170, 245, 0.8); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(37, 69, 211, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(12, 14, 95, 0); }
+        }
+        .wa-pulse { animation: titileo 2s infinite; }
 </style>
 <!-- About Section -->
 <section class="py-24 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
@@ -286,18 +371,18 @@ This code is the private property of Artia Studio.
 </div>
 <div class="flex gap-12 pt-4">
 <div>
-<p class="text-3xl font-bold text-primary">12+</p>
+<p class="text-3xl font-bold text-primary">7+</p>
 <p class="text-xs text-on-surface-variant uppercase tracking-wider">Años Exp</p>
 </div>
 <div>
-<p class="text-3xl font-bold text-primary">300+</p>
+<p class="text-3xl font-bold text-primary">65+</p>
 <p class="text-xs text-on-surface-variant uppercase tracking-wider">Proyectos</p>
 </div>
 </div>
 </div>
 <div class="relative group">
 <div class="absolute -inset-4 bg-primary-fixed-dim/20 rounded-xl -z-10 group-hover:scale-105 transition-transform duration-700"></div>
-<img class="rounded-lg shadow-2xl aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-[1.02]" data-alt="Overhead view of a creative team collaborating around a large wooden table with marketing sketches and architectural floor plans" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSriOtCRTx_H9S3spdkOBZkTfU2CHF1KHw7xOzySxsf7qzMppgWTUzsTb2TNBrJck_-8EGkN9HsyscdIsF8rJ4dOs8TeLivDdqb48kb7XJyDyt-TXH2FBMjv7QuBMdbJDvb11i_tbO3JKwZbbd3cheFjLO53C81P-GQNTtPlXd1is4x7_FwxNmC8Y0DbngZeQAq3JT18UB35qwH3dH2CEYshvExBDUDNHWF9Wm_R2yZwoKO3VA3RRuxcEUQIUQQToyX9km-aQTwBfP"/>
+<img class="rounded-lg shadow-2xl aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-[1.02]" data-alt="Overhead view of a creative team collaborating around a large wooden table with marketing sketches and architectural floor plans" src="https://i.ibb.co/7dW4Hy3j/estrategia-marca.avif"/>
 </div>
 </section>
 <!-- Services Section: Bento Grid Layout -->
@@ -310,7 +395,7 @@ This code is the private property of Artia Studio.
 <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
 <!-- Digital Marketing -->
 <div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500">
-<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" data-alt="Digital marketing analytics dashboard on a sleek laptop screen in a modern bright office with blue accent lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkrCj75G7fp0M3gNhlb05OfTPza6hXYTpG-ryzlBBrQ3vJt3s-xY6xeGltAZfx7srqTrNgc-xlbmX5cVvMopbfU9zs1-KdWFSAKyAWqnuYxQ0wbEreAvdtAeJd5Pvf5TCezuOk5ElbMcAR5ove1m82Ysq5o4b9hGcnDc2zYTNQxDarz51gFSbMlvxskISvqViX4GBgsSISegGK6huRBUL4eii5-8HyJuR557esaOfUF2gVrfK4TnrTzpfWzSapB6Y3YLIsGS4gL7dH"/>
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000 " data-alt="Digital marketing analytics dashboard on a sleek laptop screen in a modern bright office with blue accent lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkrCj75G7fp0M3gNhlb05OfTPza6hXYTpG-ryzlBBrQ3vJt3s-xY6xeGltAZfx7srqTrNgc-xlbmX5cVvMopbfU9zs1-KdWFSAKyAWqnuYxQ0wbEreAvdtAeJd5Pvf5TCezuOk5ElbMcAR5ove1m82Ysq5o4b9hGcnDc2zYTNQxDarz51gFSbMlvxskISvqViX4GBgsSISegGK6huRBUL4eii5-8HyJuR557esaOfUF2gVrfK4TnrTzpfWzSapB6Y3YLIsGS4gL7dH"/>
 <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
 <div class="relative h-full flex flex-col justify-end p-10 text-white">
 <span class="text-primary-fixed-dim font-bold tracking-tighter text-sm mb-2">01</span>
@@ -325,15 +410,20 @@ This code is the private property of Artia Studio.
 </div>
 <!-- Print Media -->
 <div class="md:col-span-4 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500">
-<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" data-alt="High quality graphic design brand book and printed materials laid out on a professional studio table with minimal aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_aDJbpGVVO7B4VQ9SeDQxvW5cAaBKBnb_GJi78LtDE9H2n_BeT7Sxex_HSnkPgBs9NsGyoDENh99GbnC4qR4vPqLbVUoYXiLilN6pLLX5x-vzE84KQHeQ7Rc3ni09I3-v4r8zhyb7hBiP669SYbx2GI9ZD7mOaueDiQV3e_xx2GS8IsNWpQ0shcyr8wD2ChBUbpLuN8ec7wMDvBoHdWJkZ3PWoYyH4h6rgcSn5nD0GltqDQhOnpxaOJq4y43HDIbSuqa4jsdEOddN"/>
-<div class="absolute inset-0 bg-gradient-to-t from-secondary/80 to-transparent"></div>
-<div class="relative h-full flex flex-col justify-end p-8 text-white">
-<span class="text-secondary-fixed-dim font-bold tracking-tighter text-sm mb-2">02</span>
-<h3 class="text-2xl font-bold font-headline mb-4">Medios Impresos</h3>
-<a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-impresion.html">
-                                Ver Catálogo <span class="material-symbols-outlined">north_east</span>
-</a>
-</div>
+    <!-- Cambios: scale-[1.35] para zoom inicial y group-hover:scale-[1.5] para más zoom al pasar el mouse -->
+    <img class="absolute inset-0 w-full h-full object-cover opacity-60 scale-[2] group-hover:scale-[2.35] transition-transform duration-1000 ease-out" 
+         src="https://i.ibb.co/whf2FG1w/medios-impresos.jpg" 
+         alt="Medios Impresos"/>
+    
+    <div class="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent"></div>
+    
+    <div class="relative h-full flex flex-col justify-end p-8 text-white">
+        <span class="text-secondary-fixed-dim font-bold tracking-tighter text-sm mb-2">02</span>
+        <h3 class="text-2xl font-bold font-headline mb-4">Medios Impresos</h3>
+        <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-impresion.html">
+            Ver Catálogo <span class="material-symbols-outlined">north_east</span>
+        </a>
+    </div>
 </div>
 <!-- Photography/Audiovisual -->
 <div class="md:col-span-12 group relative overflow-hidden bg-surface-container-lowest rounded-xl h-[300px] shadow-sm hover:shadow-xl transition-all duration-500">
@@ -351,32 +441,7 @@ This code is the private property of Artia Studio.
 </div>
 </div>
 </section>
-<!-- Floating Contact Menu -->
-<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
-  
-  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-    
-    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">
-      ¿Cómo podemos ayudarte?
-    </div>
 
-    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
-      <span class="text-sm font-bold">WhatsApp</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-      </svg>
-    </a>
-
-    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
-      <span class="text-sm font-bold">Llamar ahora</span>
-      <span class="material-symbols-outlined">call</span>
-    </a>
-  </div>
-
-  <button class="w-16 h-16 bg-secondary text-white rounded-full shadow-[0_20px_40px_rgba(0,17,58,0.2)] flex items-center justify-center transition-transform active:scale-90 group-hover:rotate-45">
-    <span class="material-symbols-outlined text-2xl" data-icon="chat" style="font-variation-settings: 'FILL' 1;">chat</span>
-  </button>
-</div>
 <!-- Footer (Replicated from SCREEN_30) -->
 <footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
 <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
@@ -435,6 +500,7 @@ This code is the private property of Artia Studio.
 </footer>
 </main>
 <script>
+        const waToggle = document.getElementById('wa-toggle');
         const menuToggle = document.getElementById('mobile-menu-toggle');
         const menuClose = document.getElementById('mobile-menu-close');
         const mobileMenu = document.getElementById('mobile-menu');
