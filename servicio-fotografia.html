@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;800&family=Inter:wght@300;400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-container": "#eceef0",
+          "success-dark-green": "#388e3c",
+          "outline": "#757682",
+          "on-error-container": "#93000a",
+          "secondary-fixed-dim": "#b6c4ff",
+          "on-error": "#ffffff",
+          "tertiary-fixed": "#d4e4f6",
+          "on-tertiary": "#ffffff",
+          "background": "#f7f9fb",
+          "surface-container-lowest": "#ffffff",
+          "outline-variant": "#c5c6d2",
+          "on-primary-fixed": "#00174a",
+          "error-container": "#ffdad6",
+          "primary": "#00113a",
+          "inverse-surface": "#2d3133",
+          "surface": "#f7f9fb",
+          "secondary-fixed": "#dce1ff",
+          "on-tertiary-container": "#8191a2",
+          "inverse-primary": "#b3c5ff",
+          "primary-container": "#002366",
+          "on-secondary": "#ffffff",
+          "on-primary-fixed-variant": "#2a4386",
+          "surface-variant": "#e0e3e5",
+          "tertiary": "#051522",
+          "primary-fixed": "#dbe1ff",
+          "secondary": "#2552ca",
+          "primary-fixed-dim": "#b3c5ff",
+          "on-tertiary-fixed-variant": "#394857",
+          "error": "#ba1a1a",
+          "surface-container-high": "#e6e8ea",
+          "secondary-container": "#446ce4",
+          "surface-tint": "#435b9f",
+          "surface-container-low": "#f2f4f6",
+          "on-secondary-fixed-variant": "#003baf",
+          "on-primary-container": "#758dd5",
+          "on-surface-variant": "#444650",
+          "surface-dim": "#d8dadc",
+          "on-background": "#191c1e",
+          "surface-bright": "#f7f9fb",
+          "on-secondary-container": "#fffbff",
+          "tertiary-fixed-dim": "#b8c8da",
+          "on-primary": "#ffffff",
+          "tertiary-container": "#1a2a37",
+          "on-secondary-fixed": "#00164e",
+          "surface-container-highest": "#e0e3e5",
+          "on-tertiary-fixed": "#0d1d2a",
+          "on-surface": "#191c1e",
+          "inverse-on-surface": "#eff1f3"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "fontFamily": {
+          "headline": ["Manrope"],
+          "body": ["Inter"],
+          "label": ["Inter"]
+        }
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  .cinematic-gradient {
+    background: linear-gradient(180deg, rgba(0,17,58,0) 0%, rgba(0,17,58,0.8) 100%);
+  }
+  .tonal-layering-no-borders { border: none !important; }
+  .group:hover .submenu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* ── Lightbox ── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    align-items: center;
+    justify-content: center;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    animation: lb-in .25s ease;
+  }
+  @keyframes lb-in {
+    from { opacity:0; transform:scale(.93); }
+    to   { opacity:1; transform:scale(1);  }
+  }
+  #lb-close {
+    position: absolute;
+    top: 20px; right: 24px;
+    color: #fff;
+    background: rgba(255,255,255,.12);
+    border: none;
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #lb-prev, #lb-next {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    color: #fff;
+    background: rgba(255,255,255,.12);
+    border: none;
+    border-radius: 50%;
+    width: 48px; height: 48px;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  #lb-prev:hover, #lb-next:hover { background: rgba(255,255,255,.25); }
+  #lb-prev { left: 16px; }
+  #lb-next { right: 16px; }
+  #lb-caption {
+    position: absolute;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,.7);
+    font-size: 13px;
+    letter-spacing: .05em;
+  }
+
+  /* ── Category Gallery Modal ── */
+  #gallery-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(0,0,0,0.75);
+    align-items: flex-end;
+    justify-content: center;
+  }
+  #gallery-modal.open { display: flex; }
+  #gallery-modal-inner {
+    background: #fff;
+    width: 100%;
+    max-width: 1100px;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    padding: 36px 32px 48px;
+    animation: slide-up .3s ease;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    #gallery-modal { align-items: center; }
+    #gallery-modal-inner {
+      border-radius: 16px;
+      max-height: 88vh;
+    }
+  }
+  @keyframes slide-up {
+    from { opacity:0; transform: translateY(40px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 640px) {
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .gallery-thumb {
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .gallery-thumb:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  /* clickable cards */
+  .category-card { cursor: pointer; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-primary">
+
+<!-- ───────── Desktop Side Navigation ───────── -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a class="mb-12 block group" href="index.html">
+      <span class="text-2xl font-bold tracking-tighter text-[#00113a] dark:text-white font-headline group-hover:opacity-70 transition-opacity blur-reveal">ARTIA</span>
+      <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold group-hover:opacity-70 transition-opacity blur-reveal">Marketing Studio</p>
+    </a>
+    <nav class="flex flex-col gap-y-6">
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
+          <span>Servicios</span>
+          <span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+        </div>
+      </div>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+  </div>
+  <div class="flex flex-col gap-6">
+    <a class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-primary-container transition-all active:scale-95 duration-200 text-center" href="https://wa.me/593969937265">RESERVAR</a>
+    <div class="flex items-center gap-3 pl-4 text-slate-500 dark:text-slate-400">
+      <span class="material-symbols-outlined text-[18px]">help_outline</span>
+      <span class="text-xs font-medium">Soporte</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ───────── Mobile Top Navigation ───────── -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 dark:bg-slate-950/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a class="text-xl font-black tracking-widest text-[#00113a] dark:text-white font-headline" href="index.html">ARTIA</a>
+  <button class="text-primary" id="mobile-menu-toggle">
+    <span class="material-symbols-outlined text-3xl">menu</span>
+  </button>
+</header>
+
+<!-- ───────── Mobile Navigation Overlay ───────── -->
+<div id="mobile-menu" style="display:none" class="fixed inset-0 z-[60] bg-white flex-col p-10 lg:hidden">
+  <div class="flex justify-between items-center mb-12">
+    <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
+    <button class="text-primary" id="mobile-menu-close">
+      <span class="material-symbols-outlined text-3xl">close</span>
+    </button>
+  </div>
+  <nav class="flex flex-col gap-y-6">
+    <a class="font-manrope text-lg font-bold text-primary border-l-2 border-primary pl-4" href="index.html">Inicio</a>
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-lg font-bold text-primary pl-4">
+        <span>Servicios</span>
+        <span id="icon-flecha" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
+      </button>
+      <div id="submenu-movil" style="display:none" class="flex-col mt-4 ml-6 gap-4 border-l border-slate-100 pl-4">
+        <a class="text-base text-slate-600" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-base text-slate-600" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-base text-slate-600" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+      </div>
+    </div>
+    <a class="font-manrope text-lg font-bold text-primary pl-4" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-lg font-bold text-primary pl-4" href="nosotros.html">Nosotros</a>
+  </nav>
+  <div class="mt-auto">
+    <a class="block w-full bg-primary text-white text-center py-4 rounded-lg font-bold" href="https://wa.me/593969937265">RESERVAR</a>
+  </div>
+</div>
+
+<!-- ───────── Main Content ───────── -->
+<main class="lg:ml-[280px] min-h-screen">
+
+  <!-- Hero -->
+  <section class="relative h-[819px] flex items-end p-8 md:p-16 overflow-hidden">
+    <img class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIeoq9w-HY67oQ3qENbEnDbG9Ulkcudx9nVn09sfZPUaPOtCWJ5O94KunSNd7nOuY4uF0L6iJ7m0MhtJTRAJoX42NGsZIypKS_bx861HCTMwp7DEEWNnTQq2m1JukGpuCtfFifTvrZLJIrV-D1g6_b-E0BlKEc1NI8Bnibbx8OxhztxLrb42uyH6jzm7Zu3Ya4IVWsPoU7MCYqwHtNiFXJ-hwHBRoWRU_r72yQ-ymVH698iQhcTv6vafc7leA-QpP1kC7l-SH3o2LU" alt="Estudio fotográfico profesional"/>
+    <div class="absolute inset-0 cinematic-gradient"></div>
+    <div class="relative z-10 max-w-4xl space-y-6">
+      <span class="inline-block px-3 py-1 bg-secondary text-white text-[10px] font-bold tracking-[0.3em] uppercase rounded-sm">Audiovisual</span>
+      <h2 class="font-headline text-5xl md:text-7xl font-extrabold text-white leading-none tracking-tighter">
+        Capturando la <br/>esencia del <span class="text-secondary-fixed-dim">negocio.</span>
+      </h2>
+      <p class="font-body text-lg text-white/70 max-w-xl leading-relaxed">
+        Producción cinematográfica y fotografía de alta precisión para marcas que no solo quieren ser vistas, sino recordadas.
+      </p>
+    </div>
+  </section>
+
+  <!-- Services Bento Grid -->
+  <section class="py-24 px-8 md:px-16 bg-surface">
+    <div class="mb-16">
+      <h3 class="font-headline text-3xl font-bold text-primary tracking-tight">Excelencia Visual</h3>
+      <p class="text-on-surface-variant mt-3 max-w-xl">Haz clic en cada categoría para ver ejemplos de nuestro trabajo.</p>
+      <div class="h-1 w-12 bg-secondary mt-4"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+      <!-- Video Corporativo -->
+      <div class="md:col-span-8 category-card group relative overflow-hidden bg-surface-container-low rounded-xl aspect-video md:aspect-auto h-[400px]"
+           data-category="video-corporativo" title="Ver galería de Video Corporativo">
+        <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVhijB3qX7mw0mv4czqioq6B8pjjwj-y0aTxZgYf7kUqompfOXukTSlafELi_3yq4Waziok1aOMfEXBd0Xdc_LMel3OtZcqAxzr_2p3ej8tblNVOECTkJ5_T1JMMoJN7bPPkGSlS3YXJ2kfms8vo1shl71cS8FRPdJLYvQhtvxnFvx-Jz3aLCISi_vx5ZVK31ou7Oy3ycrMoK4KGxxvUqYVcKMK0NWbbZS4NJSi66GJTzf_U-E-A6MAYXum7-C1qGDI6HYJ9wl8n2s"
+             alt="Video Corporativo"/>
+        <div class="absolute inset-0 bg-primary/40 group-hover:bg-primary/20 transition-all duration-500"></div>
+        <!-- hover hint -->
+        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">photo_library</span> Ver galería
+          </span>
+        </div>
+        <div class="absolute bottom-0 left-0 p-8 space-y-2">
+          <h4 class="font-headline text-2xl font-bold text-white">Video Corporativo</h4>
+          <p class="text-white/80 font-body text-sm max-w-md">Narrativas dinámicas que comunican la visión, cultura y valores de su empresa con calidad 4K.</p>
+        </div>
+      </div>
+
+      <!-- Eventos -->
+      <div class="md:col-span-4 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]"
+           data-category="eventos" title="Ver galería de Eventos">
+        <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuClhApXV-VZc8pXQNQXpRv4-tViFykq55Z_uBmMtpIcLubflWU9c2OsLHFucSdA3Mdv5eHKFhbFID7iplNiuKlDNmt-NMi-S4sDy4Rt2DPPAO-3zUh11N26ORY4IFDWse3Wtvij4FeDN56WmyT4iQDXn9SpD69_rR9gWm82FvdX1Zxu8Tj2dkhyY5-6fCI7CY3RhtS0hRbsVA4SpabnxiYtUhQyVyn5sxwX1sCPJBHw9SNUOiOXxLiwmx7uRtGDFUUJSo1Tao7HuqkW"
+             alt="Eventos"/>
+        <div class="absolute inset-0 bg-secondary/30 group-hover:bg-secondary/10 transition-all duration-500"></div>
+        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">photo_library</span> Ver galería
+          </span>
+        </div>
+        <div class="absolute bottom-0 left-0 p-8 space-y-2">
+          <h4 class="font-headline text-2xl font-bold text-white">Eventos</h4>
+          <p class="text-white/80 font-body text-sm">Documentación integral de congresos, lanzamientos y galas corporativas.</p>
+        </div>
+      </div>
+
+      <!-- Producto -->
+      <div class="md:col-span-4 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]"
+           data-category="productos" title="Ver galería de Producto">
+        <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7q-1bBJvBmaVAknuGQIEvwYvNZ1kqRO-kxj8thkQoKbaGMEa3nN90zqIZ2EXCXxwTryC9YKRtfVt6f-ocO-e9qjQ2nXpKJ6EAnqQ3_NQCI2sh2K0P6iDxtgo52-E15X1ZEGXPGR3JOVFmoj1gVaEv4i2VxffsGOUI2lbfYTglmhuV1_rkcEjR4QfWjOhvAFTjOmmouBG6ORPklqseye0-UyOP8BFl4p6hhc0nI8tfnYEwVMf7aMoou_okFuYdZeOc66r7b8F7CQ50"
+             alt="Fotografía de Producto"/>
+        <div class="absolute inset-0 bg-tertiary/40 group-hover:bg-tertiary/20 transition-all duration-500"></div>
+        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">photo_library</span> Ver galería
+          </span>
+        </div>
+        <div class="absolute bottom-0 left-0 p-8 space-y-2">
+          <h4 class="font-headline text-2xl font-bold text-white">Producto</h4>
+          <p class="text-white/80 font-body text-sm">Imágenes de alto impacto para catálogos y plataformas de e-commerce.</p>
+        </div>
+      </div>
+
+      <!-- Contenido Digital -->
+      <div class="md:col-span-8 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]"
+           data-category="contenidos-digitales" title="Ver galería de Contenido Digital">
+        <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiuzWGNexxPIFsnP65TolHy_cBPyG0v9EXrEhQPLu8hMGmC__gGhzxP8zuO75pSluCmGRB8781mcJ61vQiyIeT_SCWo3ZAJFZ_o4XVDYSw-w8G6eMM3dbS6QH6BYr7h7-n2bVqb1rho-FEKCZ40-o3KKeh1NSyG6Uc9zXCrLTgU4bv-fTwu3aGahFtPJvG5-VgFOsazkLM_ezrHQV-LO0OiY4fOOxWoF-OEGo01lkMy9PTbiEnlBhWEfEshYwk49PHAtYDantMNdaY"
+             alt="Contenido Digital"/>
+        <div class="absolute inset-0 bg-primary-container/40 group-hover:bg-primary-container/20 transition-all duration-500"></div>
+        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">photo_library</span> Ver galería
+          </span>
+        </div>
+        <div class="absolute bottom-0 left-0 p-8 space-y-2">
+          <h4 class="font-headline text-2xl font-bold text-white">Contenido Digital</h4>
+          <p class="text-white/80 font-body text-sm max-w-md">Creación de piezas audiovisuales optimizadas para redes sociales y campañas publicitarias.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Process Section -->
+  <section class="py-24 px-8 md:px-16 bg-surface-container-low">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+      <div class="md:w-1/2 space-y-8">
+        <h3 class="font-headline text-4xl font-extrabold text-primary tracking-tight">Metodología Artia</h3>
+        <div class="space-y-12">
+          <div class="flex gap-6">
+            <span class="text-4xl font-headline font-black text-secondary/20">01</span>
+            <div>
+              <h5 class="font-headline font-bold text-primary mb-2">Conceptualización</h5>
+              <p class="text-on-surface-variant leading-relaxed">Entendemos su marca para definir el estilo visual y el mensaje central del proyecto.</p>
+            </div>
+          </div>
+          <div class="flex gap-6">
+            <span class="text-4xl font-headline font-black text-secondary/20">02</span>
+            <div>
+              <h5 class="font-headline font-bold text-primary mb-2">Producción Élite</h5>
+              <p class="text-on-surface-variant leading-relaxed">Ejecución técnica con equipo de última generación y dirección artística profesional.</p>
+            </div>
+          </div>
+          <div class="flex gap-6">
+            <span class="text-4xl font-headline font-black text-secondary/20">03</span>
+            <div>
+              <h5 class="font-headline font-bold text-primary mb-2">Post-Producción</h5>
+              <p class="text-on-surface-variant leading-relaxed">Edición, corrección de color y diseño sonoro para un acabado impecable.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="md:w-1/2 relative">
+        <div class="bg-surface-container-highest rounded-xl overflow-hidden aspect-[4/5] shadow-xl">
+          <img class="w-full h-full object-cover lightbox-img cursor-zoom-in"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuGjNO_x4x5wWkf-0XXmt3MFeW_Jru3zWgo3oUML_mW0XMhelfF4YIBEFcb42LK0TZM_strCKBE-Qq5mf0QqUQFHgwenehETV80vRIYbMZjAGOg2HeJ_SdUkv-sr3nZxYTSQ5bIYxrXBS8NkednRDIg64EBmlZXsFmFHXNcRQATFeupgFfaIncdEJVWpRc-Of1IM3jjrAdsv57ychtpl9dtSUY4tmalSwFBJvxW1SR_Nye5j1HXXNPqOGurzkTY8aNzI04PwF7LWgP"
+               alt="Cinematógrafo profesional"/>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-24 px-8 md:px-16 text-center">
+    <div class="max-w-2xl mx-auto space-y-8">
+      <h3 class="font-headline text-4xl font-bold text-primary tracking-tight">¿Listo para elevar su imagen de marca?</h3>
+      <p class="text-on-surface-variant text-lg">Permítanos transformar su visión en contenido audiovisual de clase mundial.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors">Solicitar Presupuesto</button>
+        <button class="px-8 py-4 bg-surface-container-highest text-primary rounded-lg font-headline font-bold tracking-wide hover:bg-surface-variant transition-colors">Ver Reel 2024</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
+    <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+      <div class="space-y-6">
+        <div class="flex flex-col">
+          <h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2>
+          <p class="text-[#8191a2] text-xs font-label uppercase tracking-widest mt-1">Marketing Agency</p>
+        </div>
+        <div class="space-y-2">
+          <p class="text-[#8191a2] text-sm font-body">+593 96 993 7265</p>
+          <p class="text-[#8191a2] text-sm font-body">info@artiamarketing.com</p>
+        </div>
+        <p class="text-[#8191a2]/60 text-xs font-body max-w-xs">Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.</p>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
+        <div class="space-y-4">
+          <h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
+          <nav class="flex flex-col gap-3">
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="nosotros.html">Nosotros</a>
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Servicios</a>
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="clientes.html">Clientes</a>
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
+          </nav>
+        </div>
+        <div class="space-y-4">
+          <h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
+          <nav class="flex flex-col gap-3">
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
+            <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
+          </nav>
+        </div>
+        <div class="space-y-4 col-span-2 lg:col-span-1">
+          <h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
+          <nav class="flex gap-4">
+            <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
+              <span class="material-symbols-outlined text-base">public</span>
+            </a>
+            <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
+              <span class="material-symbols-outlined text-base">share</span>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-[#8191a2]/40 text-xs">© 2025 ARTIA. All rights reserved.</p>
+      <button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        Volver arriba
+        <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span>
+      </button>
+    </div>
+  </footer>
+</main>
+
+<!-- ── WhatsApp Float ── -->
+<div class="fixed bottom-10 right-10 md:right-20 z-[60] group">
+  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">¿Cómo podemos ayudarte?</div>
+    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-all duration-300 active:scale-95" href="https://wa.me/593969937265" target="_blank">
+      <span class="text-sm font-bold">WhatsApp</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    </a>
+    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-secondary hover:text-white transition-all duration-300 active:scale-95" href="tel:+593969937265">
+      <span class="text-sm font-bold">Llamar ahora</span>
+      <span class="material-symbols-outlined">call</span>
+    </a>
+  </div>
+  <button class="w-16 h-16 bg-secondary text-white rounded-full shadow-[0_20px_40px_rgba(0,17,58,0.2)] flex items-center justify-center transition-all duration-300 active:scale-90 group-hover:rotate-45">
+    <span class="material-symbols-outlined text-3xl" style="font-variation-settings:'FILL' 1;">chat</span>
+  </button>
+</div>
+
+<!-- ══════════ LIGHTBOX ══════════ -->
+<div id="lightbox">
+  <button id="lb-close"><span class="material-symbols-outlined">close</span></button>
+  <button id="lb-prev"><span class="material-symbols-outlined">chevron_left</span></button>
+  <img id="lb-img" src="" alt=""/>
+  <button id="lb-next"><span class="material-symbols-outlined">chevron_right</span></button>
+  <span id="lb-caption"></span>
+</div>
+
+<!-- ══════════ GALLERY MODAL ══════════ -->
+<div id="gallery-modal">
+  <div id="gallery-modal-inner">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h3 id="gallery-title" class="font-headline text-2xl font-bold text-primary"></h3>
+        <p id="gallery-subtitle" class="text-on-surface-variant text-sm mt-1"></p>
+      </div>
+      <button id="gallery-close" class="text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-3xl">close</span>
+      </button>
+    </div>
+    <div id="gallery-grid" class="gallery-grid"></div>
+    <p class="text-xs text-on-surface-variant/50 mt-6 text-center">Haz clic en cualquier imagen para ampliarla · Estas imágenes son temporales y serán reemplazadas</p>
+  </div>
+</div>
+
+<!-- ══════════ SCRIPTS ══════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ── 1. Mobile Menu ──────────────────────────────────────────────
+  const menuToggle  = document.getElementById('mobile-menu-toggle');
+  const menuClose   = document.getElementById('mobile-menu-close');
+  const mobileMenu  = document.getElementById('mobile-menu');
+
+  function openMenu() {
+    mobileMenu.style.display = 'flex';
+    mobileMenu.style.flexDirection = 'column';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    mobileMenu.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  menuToggle.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+
+  // Servicios submenu
+  const btnServicios = document.getElementById('btn-toggle-servicios');
+  const submovil     = document.getElementById('submenu-movil');
+  const iconFlecha   = document.getElementById('icon-flecha');
+  if (btnServicios) {
+    btnServicios.addEventListener('click', function(e) {
+      e.preventDefault();
+      const open = submovil.style.display === 'flex';
+      submovil.style.display = open ? 'none' : 'flex';
+      submovil.style.flexDirection = open ? '' : 'column';
+      iconFlecha.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+  }
+
+  // ── 2. Lightbox ─────────────────────────────────────────────────
+  const lightbox  = document.getElementById('lightbox');
+  const lbImg     = document.getElementById('lb-img');
+  const lbCaption = document.getElementById('lb-caption');
+  const lbClose   = document.getElementById('lb-close');
+  const lbPrev    = document.getElementById('lb-prev');
+  const lbNext    = document.getElementById('lb-next');
+
+  let lbImages = [];   // [{src, alt}]
+  let lbIndex  = 0;
+
+  function openLightbox(images, idx) {
+    lbImages = images;
+    lbIndex  = idx;
+    showLbSlide();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function showLbSlide() {
+    lbImg.src      = lbImages[lbIndex].src;
+    lbImg.alt      = lbImages[lbIndex].alt;
+    lbCaption.textContent = (lbIndex + 1) + ' / ' + lbImages.length;
+    lbPrev.style.display = lbImages.length > 1 ? 'flex' : 'none';
+    lbNext.style.display = lbImages.length > 1 ? 'flex' : 'none';
+  }
+
+  lbClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) { if (e.target === lightbox) closeLightbox(); });
+  lbPrev.addEventListener('click', function() { lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length; showLbSlide(); });
+  lbNext.addEventListener('click', function() { lbIndex = (lbIndex + 1) % lbImages.length; showLbSlide(); });
+  document.addEventListener('keydown', function(e) {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape')      closeLightbox();
+    if (e.key === 'ArrowLeft')  { lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length; showLbSlide(); }
+    if (e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % lbImages.length; showLbSlide(); }
+  });
+
+  // Single images (process section)
+  document.querySelectorAll('.lightbox-img').forEach(function(img) {
+    img.addEventListener('click', function() {
+      openLightbox([{ src: img.src, alt: img.alt }], 0);
+    });
+  });
+
+  // ── 3. Category Gallery Data ─────────────────────────────────────
+  // Placeholder images — reemplaza los src con tus imágenes reales
+  const galleries = {
+    'video-corporativo': {
+      title: 'Video Corporativo',
+      subtitle: 'Producción audiovisual para empresas · calidad 4K',
+      images: [
+        { src: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&q=80', alt: 'Video corporativo 1' },
+        { src: 'https://images.unsplash.com/photo-1536240478700-b869ad10e2ab?w=800&q=80', alt: 'Video corporativo 2' },
+        { src: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80', alt: 'Video corporativo 3' },
+        { src: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=80', alt: 'Video corporativo 4' },
+        { src: 'https://images.unsplash.com/photo-1478737270197-d9a2d374c2b6?w=800&q=80', alt: 'Video corporativo 5' },
+        { src: 'https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=800&q=80', alt: 'Video corporativo 6' },
+      ]
+    },
+    'eventos': {
+      title: 'Eventos',
+      subtitle: 'Congresos, galas y lanzamientos corporativos',
+      images: [
+        { src: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80', alt: 'Evento 1' },
+        { src: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80', alt: 'Evento 2' },
+        { src: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80', alt: 'Evento 3' },
+        { src: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80', alt: 'Evento 4' },
+        { src: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=800&q=80', alt: 'Evento 5' },
+        { src: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=800&q=80', alt: 'Evento 6' },
+      ]
+    },
+    'productos': {
+      title: 'Fotografía de Producto',
+      subtitle: 'E-commerce, catálogos y publicidad',
+      images: [
+        { src: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80', alt: 'Producto 1' },
+        { src: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800&q=80', alt: 'Producto 2' },
+        { src: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&q=80', alt: 'Producto 3' },
+        { src: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80', alt: 'Producto 4' },
+        { src: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&q=80', alt: 'Producto 5' },
+        { src: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&q=80', alt: 'Producto 6' },
+      ]
+    },
+    'contenidos-digitales': {
+      title: 'Contenido Digital',
+      subtitle: 'Redes sociales, campañas y publicidad digital',
+      images: [
+        { src: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80', alt: 'Contenido digital 1' },
+        { src: 'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&q=80', alt: 'Contenido digital 2' },
+        { src: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', alt: 'Contenido digital 3' },
+        { src: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&q=80', alt: 'Contenido digital 4' },
+        { src: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', alt: 'Contenido digital 5' },
+        { src: 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=800&q=80', alt: 'Contenido digital 6' },
+      ]
+    }
+  };
+
+  // ── 4. Category card click → open gallery modal ───────────────────
+  const galleryModal    = document.getElementById('gallery-modal');
+  const galleryClose    = document.getElementById('gallery-close');
+  const galleryTitle    = document.getElementById('gallery-title');
+  const gallerySubtitle = document.getElementById('gallery-subtitle');
+  const galleryGrid     = document.getElementById('gallery-grid');
+
+  function openGallery(category) {
+    const data = galleries[category];
+    if (!data) return;
+
+    galleryTitle.textContent    = data.title;
+    gallerySubtitle.textContent = data.subtitle;
+    galleryGrid.innerHTML = '';
+
+    data.images.forEach(function(img, i) {
+      const el = document.createElement('img');
+      el.src       = img.src;
+      el.alt       = img.alt;
+      el.className = 'gallery-thumb';
+      el.loading   = 'lazy';
+      el.addEventListener('click', function() {
+        openLightbox(data.images, i);
+      });
+      galleryGrid.appendChild(el);
+    });
+
+    galleryModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGallery() {
+    galleryModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.category-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      openGallery(card.dataset.category);
+    });
+  });
+
+  galleryClose.addEventListener('click', closeGallery);
+  galleryModal.addEventListener('click', function(e) {
+    if (e.target === galleryModal) closeGallery();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && galleryModal.classList.contains('open')) closeGallery();
+  });
+
+});
+</script>
+</body>
+</html>

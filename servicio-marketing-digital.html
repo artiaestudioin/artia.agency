@@ -1,0 +1,456 @@
+<!--
+@license
+© 2026 Artia Studio. All rights reserved.
+This code is the private property of Artia Studio.
+ Reproduction or distribution without permission is strictly prohibited. -->
+<!DOCTYPE html>
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ARTIA | Planes de Marketing Digital</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@200;400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceef0",
+                         "success-dark-green": "#388e3c",
+                        "outline": "#757682",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#b6c4ff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#d4e4f6",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#c5c6d2",
+                        "on-primary-fixed": "#00174a",
+                        "error-container": "#ffdad6",
+                        "primary": "#00113a",
+                        "inverse-surface": "#2d3133",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed": "#dce1ff",
+                        "on-tertiary-container": "#8191a2",
+                        "inverse-primary": "#b3c5ff",
+                        "primary-container": "#002366",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#2a4386",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary": "#051522",
+                        "primary-fixed": "#dbe1ff",
+                        "secondary": "#2552ca",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "on-tertiary-fixed-variant": "#394857",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-container": "#446ce4",
+                        "surface-tint": "#435b9f",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed-variant": "#003baf",
+                        "on-primary-container": "#758dd5",
+                        "on-surface-variant": "#444650",
+                        "surface-dim": "#d8dadc",
+                        "on-background": "#191c1e",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#fffbff",
+                        "tertiary-fixed-dim": "#b8c8da",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#1a2a37",
+                        "on-secondary-fixed": "#00164e",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#0d1d2a",
+                        "on-surface": "#191c1e",
+                        "inverse-on-surface": "#eff1f3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layering-no-borders { border: none !important }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        /* Submenu styles */
+        .group:hover .submenu {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<!-- Desktop Side Navigation (SideNavBar) -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
+<div>
+<a class="mb-12 block group" href="index.html">
+<span class="text-2xl font-bold tracking-tighter text-[#00113a] dark:text-white font-headline group-hover:opacity-70 transition-opacity blur-reveal">ARTIA</span>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold group-hover:opacity-70 transition-opacity blur-reveal">Marketing Studio</p>
+</a>
+<nav class="flex flex-col gap-y-6">
+<a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
+<div class="group relative">
+<button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
+<span>Servicios</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<!-- Submenu -->
+<div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
+<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+</div>
+</div>
+<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
+<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
+</nav>
+</div>
+<div class="flex flex-col gap-6">
+<a class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-primary-container transition-all active:scale-95 duration-200 text-center" href="https://wa.me/593969937265">
+                RESERVAR
+            </a>
+<div class="flex items-center gap-3 pl-4 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+<span class="text-xs font-medium">Soporte</span>
+</div>
+</div>
+</aside>
+<!-- Mobile Top Navigation (TopNavBar) -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 dark:bg-slate-950/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+<div class="w-10"></div> <!-- Spacer -->
+<a class="text-xl font-black tracking-widest text-[#00113a] dark:text-white font-headline text-center" href="index.html">ARTIA</a>
+<div class="flex items-center gap-4">
+<button class="text-primary" id="mobile-menu-toggle">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- Mobile Navigation Overlay (Hamburger Menu) -->
+<<div class="fixed inset-0 z-[60] bg-white hidden flex-col p-10 lg:hidden" id="mobile-menu">
+    <div class="flex justify-between items-center mb-12">
+        <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
+        <button class="text-primary" id="mobile-menu-close">
+            <span class="material-symbols-outlined text-3xl">close</span>
+        </button>
+    </div>
+    
+    <nav class="flex flex-col gap-y-6">
+        <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
+        
+        <div class="relative">
+            <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
+                <span>Servicios</span>
+                <span id="icon-flecha" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
+            </button>
+            
+            <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+            </div>
+        </div>
+
+        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
+        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+    
+    <div class="mt-5">
+        <a class="block w-full bg-primary text-white text-center py-1 rounded-lg font-bold" href="https://wa.me/593969937265">RESERVAR</a>
+    </div>
+</div>
+<!-- Main Content Canvas -->
+<main class="lg:ml-[280px] min-h-screen">
+<!-- Hero Section: Editorial Style -->
+<section class="px-8 lg:px-16 pt-16 lg:pt-24 pb-12">
+<div class="max-w-6xl">
+<span class="text-secondary font-bold tracking-[0.2em] text-xs uppercase mb-4 block">Estrategia &amp; Creatividad</span>
+<h2 class="text-5xl lg:text-7xl font-extrabold text-primary leading-tight mb-8">
+                    Soluciones que <br/><span class="text-outline-variant">definen mercados.</span>
+</h2>
+<p class="text-on-surface-variant max-w-2xl text-lg leading-relaxed font-body">
+                    Transformamos la visión de tu marca en resultados tangibles mediante una arquitectura de marketing precisa, limpia y altamente funcional.
+                </p>
+</div>
+</section>
+<!-- Services Grid: Asymmetric Bento Style -->
+<section class="px-8 lg:px-16 py-12">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-6xl">
+<!-- Bento Item 1: Social Media -->
+<div class="md:col-span-8 bg-surface-container-lowest rounded-xl overflow-hidden group cursor-pointer transition-all duration-300 hover:surface-container-high">
+<div class="h-[400px] relative">
+<img alt="Social Media Management" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVfmOVpCG_fqx04u8izQz3lGcG6Wa3XOjGeHLAqF3Yz1o8VriFW1DO3WMuk1EXohitIRNCeoq6Tx_KzohBnXIvN_WqPKEkdVxoSHFsxfx7w4qEqqJmS5YO2aG-A-EXWK2LTyQBPvYPBBmeZWqxoM4QeMx4WwCuaRgbBwGm-FURr0cwCvLRx_sBavkB_-ONDXhpJlrSeONZ_jkJyMbwQO-k65rzFP4zgFOS3ltk6HRbf220TPKJ5GSQdQNd5FNShSMEP1oDLjvadm2V"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-8 text-white">
+<span class="bg-secondary px-3 py-1 text-[10px] font-bold tracking-widest uppercase w-fit mb-4">Gestión Premium</span>
+<h3 class="text-3xl font-bold mb-2">Social Media Management</h3>
+<p class="text-white/80 text-sm max-w-md">Estrategia de contenidos, diseño visual y gestión de comunidades para elevar tu presencia digital.</p>
+</div>
+</div>
+</div>
+<!-- Bento Item 2: Performance -->
+<div class="md:col-span-4 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
+<div>
+<span class="material-symbols-outlined text-4xl text-secondary mb-6 group-hover:scale-110 transition-transform">ads_click</span>
+<h3 class="text-2xl font-bold text-primary mb-4">Campañas de Pauta</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Optimizamos tu inversión en Google Ads y Meta Ads para captar leads de alta calidad con precisión quirúrgica.</p>
+</div>
+<a class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mt-8" href="#">
+                        Ver planes <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<!-- Bento Item 3: SEO -->
+<div class="md:col-span-4 bg-surface-container-highest p-8 rounded-xl group">
+<h3 class="text-2xl font-bold text-primary mb-4">SEO &amp; Posicionamiento</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Aparece donde tus clientes buscan. Estrategias de posicionamiento orgánico basadas en datos y autoridad.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-3 text-xs font-semibold text-primary">
+<span class="material-symbols-outlined text-sm">check_circle</span> Auditoría Técnica
+                        </div>
+<div class="flex items-center gap-3 text-xs font-semibold text-primary">
+<span class="material-symbols-outlined text-sm">check_circle</span> Contenido Optimizado
+                        </div>
+<div class="flex items-center gap-3 text-xs font-semibold text-primary">
+<span class="material-symbols-outlined text-sm">check_circle</span> Linkbuilding Ético
+                        </div>
+</div>
+</div>
+<!-- Bento Item 4: Content Strategy -->
+<div class="md:col-span-8 h-[300px] rounded-xl overflow-hidden relative">
+<img alt="Content Strategy" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLBPyeklHwiQHt_qOrOMGjJ4rzKM3Q1tqqgt-fjN6QrkwLQRBvyErKTtzhMtruxv9guEf8Fe_IPRIbZKNsEzE6jcpmWwsq7wj5jQrJe-CEHZHy19djmDalZuszrpEyd0vhxFsswBkPnGYR92SOtNmRbQwji1h300pVDIBkrTyltLGuZ0_TtnVG5xyoHdrd-re7THyimCEMvGVNHULlldBQSH4ASGmA5FW0yic__0hNNXtkp8BAqMsI50MEWLj1yPz4x7zUu6w0jwW_"/>
+<div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center p-12">
+<div class="bg-white/90 p-8 max-w-sm rounded-sm shadow-xl">
+<h3 class="text-xl font-bold text-primary mb-2">Diseño de Identidad</h3>
+<p class="text-on-surface-variant text-xs">Conceptualizamos marcas que trascienden lo visual para comunicar valores arquitectónicos de solidez y confianza.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Tier Section -->
+<section class="px-8 lg:px-16 py-24 bg-surface-container-low">
+<div class="max-w-6xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter">Planes de Crecimiento</h2>
+<p class="text-on-surface-variant max-w-xl mx-auto">Estructuras diseñadas para adaptarse al volumen y ambición de tu negocio.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Starter -->
+<div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500">
+<div>
+<h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Esencial</h4>
+<div class="text-4xl font-black text-primary mb-6">$499<span class="text-sm font-normal text-on-surface-variant">/mes</span></div>
+<ul class="space-y-4 mb-8">
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 12 Posts Mensuales</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 1 Red Social Principal</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Gestión de Pauta Básica</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Reporte Mensual</li>
+</ul>
+</div>
+<button class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Seleccionar</button>
+</div>
+<!-- Professional (Featured) -->
+<div class="bg-primary p-8 rounded-lg flex flex-col justify-between relative transform scale-105 shadow-2xl z-10">
+<div class="absolute top-0 right-8 -translate-y-1/2 bg-secondary text-white text-[10px] font-bold px-4 py-1 uppercase tracking-widest rounded-full">Más Popular</div>
+<div>
+<h4 class="text-xs font-bold text-primary-fixed-dim uppercase tracking-[0.2em] mb-4">Profesional</h4>
+<div class="text-4xl font-black text-white mb-6">$899<span class="text-sm font-normal text-on-primary-container">/mes</span></div>
+<ul class="space-y-4 mb-8">
+<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 20 Posts Mensuales</li>
+<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 3 Redes Sociales</li>
+<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Campañas Meta &amp; Google</li>
+<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> SEO On-Page Básico</li>
+<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Soporte Prioritario</li>
+</ul>
+</div>
+<button class="w-full py-4 bg-white text-primary font-bold text-xs uppercase tracking-widest hover:bg-secondary hover:text-white transition-colors">Solicitar Demo</button>
+</div>
+<!-- Enterprise -->
+<div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500">
+<div>
+<h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Corporativo</h4>
+<div class="text-4xl font-black text-primary mb-6">Custom</div>
+<ul class="space-y-4 mb-8">
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Contenido Ilimitado</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Estrategia Omnicanal</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> SEO Avanzado &amp; Auditorías</li>
+<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Content Manager Dedicado</li>
+</ul>
+</div>
+<button class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Contactar</button>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="px-8 lg:px-16 py-32 bg-primary overflow-hidden relative">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute top-0 right-0 w-96 h-96 bg-secondary-container rounded-full blur-[120px]"></div>
+<div class="absolute bottom-0 left-0 w-96 h-96 bg-primary-container rounded-full blur-[120px]"></div>
+</div>
+<div class="max-w-4xl mx-auto text-center relative z-10">
+<h2 class="text-4xl lg:text-5xl font-bold text-white mb-8">¿Listo para elevar la arquitectura de tu marca?</h2>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="bg-secondary text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all">Empezar ahora</button>
+<button class="border border-white/30 text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-all">Ver portafolio</button>
+</div>
+</div>
+</section>
+<!-- Standardized Footer from SCREEN_30 -->
+<footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
+<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+<div class="space-y-6">
+<div class="flex flex-col">
+<h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2>
+<p class="text-[#8191a2] text-xs font-label uppercase tracking-widest mt-1">Marketing Agency</p>
+</div>
+<div class="space-y-2">
+<p class="text-[#8191a2] text-sm font-body">+593 96 993 7265</p>
+<p class="text-[#8191a2] text-sm font-body">info@artiamarketing.com</p>
+</div>
+<p class="text-[#8191a2]/60 text-xs font-body max-w-xs">
+                    Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.
+                </p>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
+<div class="space-y-4">
+<h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
+<nav class="flex flex-col gap-3">
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_5}}">Nosotros</a>
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_12}}">Servicios</a>
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_8}}">Clientes</a>
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
+</nav>
+</div>
+<div class="space-y-4">
+<h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
+<nav class="flex flex-col gap-3">
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
+<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
+</nav>
+</div>
+<div class="space-y-4 col-span-2 lg:col-span-1">
+<h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
+<nav class="flex gap-4">
+<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
+<span class="material-symbols-outlined text-base">public</span>
+</a>
+<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
+<span class="material-symbols-outlined text-base">share</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+<div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-[#8191a2]/40 text-xs">© 2024 ARTIA. All rights reserved.</p>
+<button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                Volver arriba
+                <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span>
+</button>
+</div>
+</footer>
+</main>
+<div class="fixed bottom-10 right-10 md:right-20 z-[60] group">
+  
+  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+    
+    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">
+      ¿Cómo podemos ayudarte?
+    </div>
+
+    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-all duration-300 active:scale-95" href="https://wa.me/593969937265" target="_blank">
+      <span class="text-sm font-bold">WhatsApp</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+    </a>
+
+    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-secondary hover:text-white transition-all duration-300 active:scale-95" href="tel:+593969937265">
+      <span class="text-sm font-bold">Llamar ahora</span>
+      <span class="material-symbols-outlined">call</span>
+    </a>
+  </div>
+
+  <button class="w-16 h-16 bg-secondary text-white rounded-full shadow-[0_20px_40px_rgba(0,17,58,0.2)] flex items-center justify-center transition-all duration-300 active:scale-90 group-hover:rotate-45">
+    <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">chat</span>
+  </button>
+</div>
+
+<script>
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const menuClose = document.getElementById('mobile-menu-close');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            mobileMenu.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+
+        menuClose.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            mobileMenu.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        });
+
+        // Close mobile menu on link click
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            });
+        });
+    </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnServicios = document.getElementById('btn-toggle-servicios');
+    const submenu = document.getElementById('submenu-movil');
+    const icono = document.getElementById('icon-flecha');
+
+    if (btnServicios && submenu) {
+        btnServicios.addEventListener('click', function(e) {
+            e.preventDefault(); // Evita cualquier comportamiento extraño
+            
+            // Alternamos la clase 'hidden'
+            const estaCerrado = submenu.classList.contains('hidden');
+
+            if (estaCerrado) {
+                submenu.classList.remove('hidden');
+                submenu.classList.add('flex');
+                icono.style.transform = 'rotate(180deg)';
+            } else {
+                submenu.classList.add('hidden');
+                submenu.classList.remove('flex');
+                icono.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+});
+</script>
+</body></html>
