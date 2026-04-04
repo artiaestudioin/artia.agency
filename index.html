@@ -213,7 +213,7 @@ This code is the private property of Artia Studio.
 </section>
 
 <style>
-/* Animación para ARTIA (Ya la tenías) */
+
 .blur-to-clear {
     opacity: 0;
     filter: blur(20px);
@@ -227,7 +227,6 @@ This code is the private property of Artia Studio.
     }
 }
 
-/* Animación para el Subtítulo: Aparece "de la nada" */
 .text-reveal {
     opacity: 0;
     transform: translateY(10px); /* Empieza un poco más abajo */
@@ -247,31 +246,7 @@ This code is the private property of Artia Studio.
         filter: blur(0);
     }
 }
-</style>
-/* Animación para que el texto aparezca "de la nada" */
-@keyframes revealFromNothing {
-    0% {
-        opacity: 0;
-        filter: blur(10px);
-        transform: scale(0.8);
-    }
-    100% {
-        opacity: 1;
-        filter: blur(0);
-        transform: scale(1);
-    }
-}
 
-/* La clase blur-to-clear que ya usas para ARTIA */
-.blur-to-clear {
-    animation: blurToClear 1.5s ease-out forwards;
-}
-
-@keyframes blurToClear {
-    0% { filter: blur(20px); opacity: 0; }
-    100% { filter: blur(0); opacity: 1; }
-}
-</style>
 <!-- About Section -->
 <section class="py-24 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
 <div class="space-y-8">
