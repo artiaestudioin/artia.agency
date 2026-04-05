@@ -1,456 +1,742 @@
-<!--
-@license
-© 2026 Artia Studio. All rights reserved.
-This code is the private property of Artia Studio.
- Reproduction or distribution without permission is strictly prohibited. -->
 <!DOCTYPE html>
-<html class="light" lang="es"><head>
+<html class="light" lang="es">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>ARTIA | Planes de Marketing Digital</title>
-<!-- Fonts -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@200;400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<!-- Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "surface-container": "#eceef0",
-                         "success-dark-green": "#388e3c",
-                        "outline": "#757682",
-                        "on-error-container": "#93000a",
-                        "secondary-fixed-dim": "#b6c4ff",
-                        "on-error": "#ffffff",
-                        "tertiary-fixed": "#d4e4f6",
-                        "on-tertiary": "#ffffff",
-                        "background": "#f7f9fb",
-                        "surface-container-lowest": "#ffffff",
-                        "outline-variant": "#c5c6d2",
-                        "on-primary-fixed": "#00174a",
-                        "error-container": "#ffdad6",
-                        "primary": "#00113a",
-                        "inverse-surface": "#2d3133",
-                        "surface": "#f7f9fb",
-                        "secondary-fixed": "#dce1ff",
-                        "on-tertiary-container": "#8191a2",
-                        "inverse-primary": "#b3c5ff",
-                        "primary-container": "#002366",
-                        "on-secondary": "#ffffff",
-                        "on-primary-fixed-variant": "#2a4386",
-                        "surface-variant": "#e0e3e5",
-                        "tertiary": "#051522",
-                        "primary-fixed": "#dbe1ff",
-                        "secondary": "#2552ca",
-                        "primary-fixed-dim": "#b3c5ff",
-                        "on-tertiary-fixed-variant": "#394857",
-                        "error": "#ba1a1a",
-                        "surface-container-high": "#e6e8ea",
-                        "secondary-container": "#446ce4",
-                        "surface-tint": "#435b9f",
-                        "surface-container-low": "#f2f4f6",
-                        "on-secondary-fixed-variant": "#003baf",
-                        "on-primary-container": "#758dd5",
-                        "on-surface-variant": "#444650",
-                        "surface-dim": "#d8dadc",
-                        "on-background": "#191c1e",
-                        "surface-bright": "#f7f9fb",
-                        "on-secondary-container": "#fffbff",
-                        "tertiary-fixed-dim": "#b8c8da",
-                        "on-primary": "#ffffff",
-                        "tertiary-container": "#1a2a37",
-                        "on-secondary-fixed": "#00164e",
-                        "surface-container-highest": "#e0e3e5",
-                        "on-tertiary-fixed": "#0d1d2a",
-                        "on-surface": "#191c1e",
-                        "inverse-on-surface": "#eff1f3"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                },
-            },
-        }
-    </script>
-<style>
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .tonal-layering-no-borders { border: none !important }
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(24px);
-        }
-        /* Submenu styles */
-        .group:hover .submenu {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-    </style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<!-- Desktop Side Navigation (SideNavBar) -->
-<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
-<div>
-<a class="mb-12 block group" href="index.html">
-<span class="text-2xl font-bold tracking-tighter text-[#00113a] dark:text-white font-headline group-hover:opacity-70 transition-opacity blur-reveal">ARTIA</span>
-<p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold group-hover:opacity-70 transition-opacity blur-reveal">Marketing Studio</p>
-</a>
-<nav class="flex flex-col gap-y-6">
-<a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
-<div class="group relative">
-<button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
-<span>Servicios</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</button>
-<!-- Submenu -->
-<div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
-</div>
-</div>
-<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
-<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
-</nav>
-</div>
-<div class="flex flex-col gap-6">
-<a class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-primary-container transition-all active:scale-95 duration-200 text-center" href="https://wa.me/593969937265">
-                RESERVAR
-            </a>
-<div class="flex items-center gap-3 pl-4 text-slate-500 dark:text-slate-400">
-<span class="material-symbols-outlined text-[18px]">help_outline</span>
-<span class="text-xs font-medium">Soporte</span>
-</div>
-</div>
-</aside>
-<!-- Mobile Top Navigation (TopNavBar) -->
-<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 dark:bg-slate-950/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
-<div class="w-10"></div> <!-- Spacer -->
-<a class="text-xl font-black tracking-widest text-[#00113a] dark:text-white font-headline text-center" href="index.html">ARTIA</a>
-<div class="flex items-center gap-4">
-<button class="text-primary" id="mobile-menu-toggle">
-<span class="material-symbols-outlined">menu</span>
-</button>
-</div>
-</header>
-<!-- Mobile Navigation Overlay (Hamburger Menu) -->
-<<div class="fixed inset-0 z-[60] bg-white hidden flex-col p-10 lg:hidden" id="mobile-menu">
-    <div class="flex justify-between items-center mb-12">
-        <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
-        <button class="text-primary" id="mobile-menu-close">
-            <span class="material-symbols-outlined text-3xl">close</span>
-        </button>
-    </div>
-    
-    <nav class="flex flex-col gap-y-6">
-        <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
-        
-        <div class="relative">
-            <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
-                <span>Servicios</span>
-                <span id="icon-flecha" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
-            </button>
-            
-            <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
-            </div>
-        </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cloudflare.com"></script>
+<script src="https://cloudflare.com"></script>
+<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}</script>
 
-        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
-        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
-    </nav>
-    
-    <div class="mt-5">
-        <a class="block w-full bg-primary text-white text-center py-1 rounded-lg font-bold" href="https://wa.me/593969937265">RESERVAR</a>
-    </div>
-</div>
-<!-- Main Content Canvas -->
-<main class="lg:ml-[280px] min-h-screen">
-<!-- Hero Section: Editorial Style -->
-<section class="px-8 lg:px-16 pt-16 lg:pt-24 pb-12">
-<div class="max-w-6xl">
-<span class="text-secondary font-bold tracking-[0.2em] text-xs uppercase mb-4 block">Estrategia &amp; Creatividad</span>
-<h2 class="text-5xl lg:text-7xl font-extrabold text-primary leading-tight mb-8">
-                    Soluciones que <br/><span class="text-outline-variant">definen mercados.</span>
-</h2>
-<p class="text-on-surface-variant max-w-2xl text-lg leading-relaxed font-body">
-                    Transformamos la visión de tu marca en resultados tangibles mediante una arquitectura de marketing precisa, limpia y altamente funcional.
-                </p>
-</div>
-</section>
-<!-- Services Grid: Asymmetric Bento Style -->
-<section class="px-8 lg:px-16 py-12">
-<div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-6xl">
-<!-- Bento Item 1: Social Media -->
-<div class="md:col-span-8 bg-surface-container-lowest rounded-xl overflow-hidden group cursor-pointer transition-all duration-300 hover:surface-container-high">
-<div class="h-[400px] relative">
-<img alt="Social Media Management" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVfmOVpCG_fqx04u8izQz3lGcG6Wa3XOjGeHLAqF3Yz1o8VriFW1DO3WMuk1EXohitIRNCeoq6Tx_KzohBnXIvN_WqPKEkdVxoSHFsxfx7w4qEqqJmS5YO2aG-A-EXWK2LTyQBPvYPBBmeZWqxoM4QeMx4WwCuaRgbBwGm-FURr0cwCvLRx_sBavkB_-ONDXhpJlrSeONZ_jkJyMbwQO-k65rzFP4zgFOS3ltk6HRbf220TPKJ5GSQdQNd5FNShSMEP1oDLjvadm2V"/>
-<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-8 text-white">
-<span class="bg-secondary px-3 py-1 text-[10px] font-bold tracking-widest uppercase w-fit mb-4">Gestión Premium</span>
-<h3 class="text-3xl font-bold mb-2">Social Media Management</h3>
-<p class="text-white/80 text-sm max-w-md">Estrategia de contenidos, diseño visual y gestión de comunidades para elevar tu presencia digital.</p>
-</div>
-</div>
-</div>
-<!-- Bento Item 2: Performance -->
-<div class="md:col-span-4 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
-<div>
-<span class="material-symbols-outlined text-4xl text-secondary mb-6 group-hover:scale-110 transition-transform">ads_click</span>
-<h3 class="text-2xl font-bold text-primary mb-4">Campañas de Pauta</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Optimizamos tu inversión en Google Ads y Meta Ads para captar leads de alta calidad con precisión quirúrgica.</p>
-</div>
-<a class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mt-8" href="#">
-                        Ver planes <span class="material-symbols-outlined text-sm">arrow_forward</span>
-</a>
-</div>
-<!-- Bento Item 3: SEO -->
-<div class="md:col-span-4 bg-surface-container-highest p-8 rounded-xl group">
-<h3 class="text-2xl font-bold text-primary mb-4">SEO &amp; Posicionamiento</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Aparece donde tus clientes buscan. Estrategias de posicionamiento orgánico basadas en datos y autoridad.</p>
-<div class="space-y-3">
-<div class="flex items-center gap-3 text-xs font-semibold text-primary">
-<span class="material-symbols-outlined text-sm">check_circle</span> Auditoría Técnica
-                        </div>
-<div class="flex items-center gap-3 text-xs font-semibold text-primary">
-<span class="material-symbols-outlined text-sm">check_circle</span> Contenido Optimizado
-                        </div>
-<div class="flex items-center gap-3 text-xs font-semibold text-primary">
-<span class="material-symbols-outlined text-sm">check_circle</span> Linkbuilding Ético
-                        </div>
-</div>
-</div>
-<!-- Bento Item 4: Content Strategy -->
-<div class="md:col-span-8 h-[300px] rounded-xl overflow-hidden relative">
-<img alt="Content Strategy" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLBPyeklHwiQHt_qOrOMGjJ4rzKM3Q1tqqgt-fjN6QrkwLQRBvyErKTtzhMtruxv9guEf8Fe_IPRIbZKNsEzE6jcpmWwsq7wj5jQrJe-CEHZHy19djmDalZuszrpEyd0vhxFsswBkPnGYR92SOtNmRbQwji1h300pVDIBkrTyltLGuZ0_TtnVG5xyoHdrd-re7THyimCEMvGVNHULlldBQSH4ASGmA5FW0yic__0hNNXtkp8BAqMsI50MEWLj1yPz4x7zUu6w0jwW_"/>
-<div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center p-12">
-<div class="bg-white/90 p-8 max-w-sm rounded-sm shadow-xl">
-<h3 class="text-xl font-bold text-primary mb-2">Diseño de Identidad</h3>
-<p class="text-on-surface-variant text-xs">Conceptualizamos marcas que trascienden lo visual para comunicar valores arquitectónicos de solidez y confianza.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Pricing Tier Section -->
-<section class="px-8 lg:px-16 py-24 bg-surface-container-low">
-<div class="max-w-6xl mx-auto">
-<div class="text-center mb-16">
-<h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter">Planes de Crecimiento</h2>
-<p class="text-on-surface-variant max-w-xl mx-auto">Estructuras diseñadas para adaptarse al volumen y ambición de tu negocio.</p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-<!-- Starter -->
-<div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500">
-<div>
-<h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Esencial</h4>
-<div class="text-4xl font-black text-primary mb-6">$499<span class="text-sm font-normal text-on-surface-variant">/mes</span></div>
-<ul class="space-y-4 mb-8">
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 12 Posts Mensuales</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 1 Red Social Principal</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Gestión de Pauta Básica</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Reporte Mensual</li>
-</ul>
-</div>
-<button class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Seleccionar</button>
-</div>
-<!-- Professional (Featured) -->
-<div class="bg-primary p-8 rounded-lg flex flex-col justify-between relative transform scale-105 shadow-2xl z-10">
-<div class="absolute top-0 right-8 -translate-y-1/2 bg-secondary text-white text-[10px] font-bold px-4 py-1 uppercase tracking-widest rounded-full">Más Popular</div>
-<div>
-<h4 class="text-xs font-bold text-primary-fixed-dim uppercase tracking-[0.2em] mb-4">Profesional</h4>
-<div class="text-4xl font-black text-white mb-6">$899<span class="text-sm font-normal text-on-primary-container">/mes</span></div>
-<ul class="space-y-4 mb-8">
-<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 20 Posts Mensuales</li>
-<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 3 Redes Sociales</li>
-<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Campañas Meta &amp; Google</li>
-<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> SEO On-Page Básico</li>
-<li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Soporte Prioritario</li>
-</ul>
-</div>
-<button class="w-full py-4 bg-white text-primary font-bold text-xs uppercase tracking-widest hover:bg-secondary hover:text-white transition-colors">Solicitar Demo</button>
-</div>
-<!-- Enterprise -->
-<div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500">
-<div>
-<h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Corporativo</h4>
-<div class="text-4xl font-black text-primary mb-6">Custom</div>
-<ul class="space-y-4 mb-8">
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Contenido Ilimitado</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Estrategia Omnicanal</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> SEO Avanzado &amp; Auditorías</li>
-<li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Content Manager Dedicado</li>
-</ul>
-</div>
-<button class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Contactar</button>
-</div>
-</div>
-</div>
-</section>
-<!-- CTA Section -->
-<section class="px-8 lg:px-16 py-32 bg-primary overflow-hidden relative">
-<div class="absolute inset-0 opacity-10 pointer-events-none">
-<div class="absolute top-0 right-0 w-96 h-96 bg-secondary-container rounded-full blur-[120px]"></div>
-<div class="absolute bottom-0 left-0 w-96 h-96 bg-primary-container rounded-full blur-[120px]"></div>
-</div>
-<div class="max-w-4xl mx-auto text-center relative z-10">
-<h2 class="text-4xl lg:text-5xl font-bold text-white mb-8">¿Listo para elevar la arquitectura de tu marca?</h2>
-<div class="flex flex-col sm:flex-row gap-4 justify-center">
-<button class="bg-secondary text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all">Empezar ahora</button>
-<button class="border border-white/30 text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-all">Ver portafolio</button>
-</div>
-</div>
-</section>
-<!-- Standardized Footer from SCREEN_30 -->
-<footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
-<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-<div class="space-y-6">
-<div class="flex flex-col">
-<h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2>
-<p class="text-[#8191a2] text-xs font-label uppercase tracking-widest mt-1">Marketing Agency</p>
-</div>
-<div class="space-y-2">
-<p class="text-[#8191a2] text-sm font-body">+593 96 993 7265</p>
-<p class="text-[#8191a2] text-sm font-body">info@artiamarketing.com</p>
-</div>
-<p class="text-[#8191a2]/60 text-xs font-body max-w-xs">
-                    Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.
-                </p>
-</div>
-<div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
-<div class="space-y-4">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
-<nav class="flex flex-col gap-3">
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_5}}">Nosotros</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_12}}">Servicios</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="{{DATA:SCREEN:SCREEN_8}}">Clientes</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
-</nav>
-</div>
-<div class="space-y-4">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
-<nav class="flex flex-col gap-3">
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
-</nav>
-</div>
-<div class="space-y-4 col-span-2 lg:col-span-1">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
-<nav class="flex gap-4">
-<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
-<span class="material-symbols-outlined text-base">public</span>
-</a>
-<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
-<span class="material-symbols-outlined text-base">share</span>
-</a>
-</nav>
-</div>
-</div>
-</div>
-<div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-<p class="text-[#8191a2]/40 text-xs">© 2024 ARTIA. All rights reserved.</p>
-<button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                Volver arriba
-                <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span>
-</button>
-</div>
-</footer>
-</main>
-<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+<style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+.tonal-layering-no-borders{box-shadow:none;border-right:1px solid rgba(197,198,210,0.15)}
+.wa-pulse{animation:waPulse 2s infinite}
+@keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+
+  /* 1. Habilitar scroll suave en toda la página */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* 2. Definir la animación del brillo (Shimmer) */
+  @keyframes moveShimmer {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    50% { transform: translateX(150%) skewX(-20deg); }
+    100% { transform: translateX(150%) skewX(-20deg); }
+  }
+
+  .shimmer-effect {
+    background: linear-gradient(
+      90deg, 
+      transparent, 
+      rgb(255, 246, 116), 
+      transparent
+    );
+    width: 100%;
+    animation: moveShimmer 2.5s infinite ease-in-out;
+  }
+
+  /* Opcional: Detener animación al pasar el mouse para que sea legible */
+  .group:hover .shimmer-effect {
+    animation-play-state: paused;
+    opacity: 0;
+  }
+  @media (min-width: 1024px) {
+  /* Asegura que el main sea un contenedor independiente que empuje al footer */
+  main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
   
-  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-    
-    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">
-      ¿Cómo podemos ayudarte?
+  /* Fuerza al footer a quedarse al final del flujo del 'main' */
+  footer {
+    margin-top: auto;
+    position: relative;
+    clear: both;
+    display: block;
+  }
+}
+</style>
+</head>
+<body class="bg-background text-on-surface font-body">
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a class="mb-12 block group" href="index.html">
+      <span class="text-2xl font-bold tracking-tighter text-[#00113a] font-headline group-hover:opacity-70 transition-opacity">ARTIA</span>
+      <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold">Marketing Studio</p>
+    </a>
+    <nav class="flex flex-col gap-y-6">
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="index.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4">
+          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+          <a class="text-xs font-bold text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+        </div>
+      </div>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+  </div>
+  <div class="flex flex-col gap-6">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+  RESERVAR
+</button>
+
+    <div class="flex items-center gap-3 pl-4 text-slate-500"><span class="material-symbols-outlined text-[18px]">help_outline</span><span class="text-xs font-medium">Soporte</span></div>
+  </div>
+</aside>
+<!-- Mobile Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a class="text-xl font-black tracking-widest text-[#00113a] font-headline" href="index.html">ARTIA</a>
+  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
+</header>
+<!-- Mobile Navigation Overlay -->
+<div class="fixed inset-0 z-[60] bg-white flex-col p-10 lg:hidden" id="mobile-menu" style="display:none">
+  <div class="flex justify-between items-center mb-8" id="mm-header">
+    <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
+    <button class="text-primary" id="mobile-menu-close"><span class="material-symbols-outlined text-3xl">close</span></button>
+  </div>
+  <nav class="flex flex-col gap-y-6" id="mm-nav">
+    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="index.html">Inicio</a>
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4">
+        <span>Servicios</span><span id="icon-flecha" class="material-symbols-outlined text-sm">expand_more</span>
+      </button>
+      <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+      </div>
+    </div>
+    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="nosotros.html">Nosotros</a>
+  </nav>
+  <div class="mt-8" id="mm-cta">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+  RESERVAR
+</button>
+
+  </div>
+</div>
+<!-- ===== POPUP EMAIL MODAL ===== -->
+<div id="emailModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 hidden">
+  <div class="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl animate-[fadeIn_.2s_ease]">
+
+    <!-- Header azul -->
+    <div class="bg-blue-600 px-6 py-5 flex items-start justify-between">
+      <div>
+        <h2 class="text-white text-xl font-black tracking-wide leading-tight">ARTIA STUDIO</h2>
+        <p class="text-white/80 text-[10px] font-bold tracking-[2px] uppercase mt-1">Reserva de Consultoría</p>
+      </div>
+      <button onclick="closeEmailModal()" class="bg-white/20 hover:bg-white/30 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm transition-colors flex-shrink-0">✕</button>
     </div>
 
-    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-all duration-300 active:scale-95" href="https://wa.me/593969937265" target="_blank">
+    <!-- Formulario -->
+    <div class="p-6 flex flex-col gap-4">
+
+      <!-- Nombre -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Tu Nombre</label>
+        <input id="emailName" type="text" placeholder="Nombre y Apellido"
+          class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-colors" />
+      </div>
+
+      <!-- Servicio -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Servicio Requerido</label>
+        <div class="relative">
+          <select id="emailService"
+            class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white appearance-none cursor-pointer transition-colors">
+            <option value="">Selecciona una opción...</option>
+            <option>Páginas Webs</option>
+            <option>Planes de Redes Sociales</option>
+            <option>Impresión o Sublimados</option>
+            <option>Branding Corporativo</option>
+            <option>Fotografía o Video Profesionales</option>
+            <option>Vuelos de Drone Profesional</option>
+          </select>
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      <!-- Mensaje -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Tu Mensaje</label>
+        <textarea id="emailMessage" rows="3" placeholder="Cuéntanos brevemente tu proyecto o consulta..."
+          class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white resize-none transition-colors"></textarea>
+      </div>
+
+      <!-- Botón enviar -->
+      <button onclick="sendEmail()"
+        class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[11px] tracking-[1.5px] uppercase rounded-lg py-3.5 flex items-center justify-center gap-2 transition-all">
+        CONFIRMAR RESERVA
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTÓN FLOTANTE ===== -->
+<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">¿Cómo podemos ayudarte?</div>
+
+    <!-- WhatsApp -->
+    <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
       <span class="text-sm font-bold">WhatsApp</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
     </a>
 
-    <a class="bg-surface-container-lowest text-on-surface p-4 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-secondary hover:text-white transition-all duration-300 active:scale-95" href="tel:+593969937265">
-      <span class="text-sm font-bold">Llamar ahora</span>
-      <span class="material-symbols-outlined">call</span>
+    <!-- Llamar -->
+    <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
+      <span class="text-sm font-bold">Llamar ahora</span><span class="material-symbols-outlined">call</span>
     </a>
+
+    <!-- ✉️ NUEVO: Email -->
+    <button onclick="openEmailModal()"
+      class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
+      <span class="text-sm font-bold">Enviar Email</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M2 7l10 7 10-7"/>
+      </svg>
+    </button>
   </div>
 
-  <button class="w-16 h-16 bg-secondary text-white rounded-full shadow-[0_20px_40px_rgba(0,17,58,0.2)] flex items-center justify-center transition-all duration-300 active:scale-90 group-hover:rotate-45">
-    <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">chat</span>
+  <button class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
+    <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">chat</span>
   </button>
 </div>
 
+<!-- ===== JAVASCRIPT ===== -->
 <script>
-        const menuToggle = document.getElementById('mobile-menu-toggle');
-        const menuClose = document.getElementById('mobile-menu-close');
-        const mobileMenu = document.getElementById('mobile-menu');
+  function openEmailModal() {
+    document.getElementById('emailModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
 
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.remove('hidden');
-            mobileMenu.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        });
+  function closeEmailModal() {
+    document.getElementById('emailModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
 
-        menuClose.addEventListener('click', () => {
-            mobileMenu.classList.add('hidden');
-            mobileMenu.classList.remove('flex');
-            document.body.style.overflow = 'auto';
-        });
+  // Cerrar al hacer clic fuera del modal
+  document.getElementById('emailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEmailModal();
+  });
 
-        // Close mobile menu on link click
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('flex');
-                document.body.style.overflow = 'auto';
-            });
-        });
-    </script>
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btnServicios = document.getElementById('btn-toggle-servicios');
-    const submenu = document.getElementById('submenu-movil');
-    const icono = document.getElementById('icon-flecha');
+  function sendEmail() {
+    const name    = document.getElementById('emailName').value.trim();
+    const service = document.getElementById('emailService').value;
+    const message = document.getElementById('emailMessage').value.trim();
 
-    if (btnServicios && submenu) {
-        btnServicios.addEventListener('click', function(e) {
-            e.preventDefault(); // Evita cualquier comportamiento extraño
-            
-            // Alternamos la clase 'hidden'
-            const estaCerrado = submenu.classList.contains('hidden');
-
-            if (estaCerrado) {
-                submenu.classList.remove('hidden');
-                submenu.classList.add('flex');
-                icono.style.transform = 'rotate(180deg)';
-            } else {
-                submenu.classList.add('hidden');
-                submenu.classList.remove('flex');
-                icono.style.transform = 'rotate(0deg)';
-            }
-        });
+    if (!name || !service) {
+      alert('Por favor completa tu nombre y selecciona un servicio.');
+      return;
     }
+
+    const subject = encodeURIComponent(`Consulta: ${service} — ${name}`);
+    const body    = encodeURIComponent(
+      `Hola Artia Studio,\n\nNombre: ${name}\nServicio: ${service}\n\nMensaje:\n${message || 'Sin mensaje adicional.'}\n\n— Enviado desde el sitio web`
+    );
+
+    // ⬇️ REEMPLAZA con tu correo real
+    window.location.href = `mailto:artia.estudioin@gmail.com?subject=${subject}&body=${body}`;
+
+    closeEmailModal();
+  }
+</script>
+
+<main class="lg:ml-[280px] min-h-screen">
+
+<!-- Hero -->
+<section class="px-8 lg:px-16 pt-16 lg:pt-24 pb-12" data-sr>
+  <div class="max-w-6xl">
+    <span class="text-secondary font-bold tracking-[0.2em] text-xs uppercase mb-4 block">Estrategia &amp; Creatividad</span>
+    <h2 class="text-5xl lg:text-7xl font-extrabold text-primary leading-tight mb-8">Soluciones que <br/><span class="text-outline-variant">definen mercados.</span></h2>
+    <p class="text-on-surface-variant max-w-2xl text-lg leading-relaxed">Transformamos la visión de tu marca en resultados tangibles mediante una arquitectura de marketing precisa, limpia y altamente funcional.</p>
+  </div>
+</section>
+
+<!-- Services Bento -->
+<section class="px-8 lg:px-16 py-12">
+  <!-- El contenedor grid empieza aquí -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-6xl mx-auto">
+    
+    <!-- TARJETA 1: SOCIAL MEDIA (Ocupa 8 columnas) -->
+    <div class="md:col-span-8 bg-surface-container-lowest rounded-xl overflow-hidden group relative h-[400px]" data-sr>
+      <div class="absolute inset-0 overflow-hidden">
+        <img alt="Social Media" 
+             class="absolute w-full h-full object-cover transition-transform duration-[2000ms] ease-out -top-20 scale-125 md:top-0 md:scale-100 md:object-center group-hover:scale-110" 
+             src="https://i.ibb.co/twfsh6Xm/sticker-7.png" />
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/40 to-transparent flex flex-col justify-end p-8 text-white">
+        <span class="bg-secondary px-2 py-1 text-[8px] font-bold tracking-widest uppercase w-fit mb-3">Gestión Premium</span>
+        <h3 class="text-3xl font-bold mb-2">Social Media Management</h3>
+        <p class="text-white/80 text-sm max-w-md">Estrategia de contenidos, diseño visual y gestión de comunidades.</p>
+      </div>
+    </div> <!-- Fin Tarjeta 1 -->
+
+    <!-- TARJETA 2: CAMPAÑAS (Ocupa 4 columnas y queda a la derecha en escritorio) -->
+    <div class="md:col-span-4 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between group shadow-sm" data-sr data-sr-delay="0.1">
+      <div>
+        <span class="material-symbols-outlined text-7xl text-center text-secondary mb-10 group-hover:scale-110 transition-transform block">ads_click</span>
+        <h3 class="text-2xl font-bold text-primary mb-4">Campañas de Pauta</h3>
+        <p class="text-on-surface-variant text-sm leading-relaxed">Optimizamos tu inversión en Google Ads y Meta Ads para captar leads de alta calidad.</p>
+      </div>
+      
+      <!-- Botón con Scroll y Efecto Brillo -->
+      <a href="#seccion-precios" class="group relative inline-flex items-center justify-center gap-2 px-4 py-4 bg-blue-600 text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full overflow-hidden transition-all duration-500 hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] mt-8 cursor-pointer shadow-xl">
+        <div class="shimmer-effect absolute inset-0 w-full h-full skew-x-[-20deg]"></div>
+        <span class="relative z-10 text-center">Ver Planes</span>
+        <span class="material-symbols-outlined relative z-10 text-sm transition-transform duration-500 group-hover:translate-x-2">arrow_forward</span>
+      </a>
+    </div> <!-- Fin Tarjeta 2 -->
+  </div> <!-- AQUÍ es donde debe cerrar el div de la cuadrícula (grid) -->
+ </section>
+         <!-- texto ceo -->
+<section class="px-8 lg:px-16 py-10 bg-white">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-6xl mx-auto">
+        
+        <div class="md:col-span-6 bg-surface-container-lowest rounded-xl overflow-hidden group relative h-[400px]" data-sr>
+            <div>
+                <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-6 shadow-lg shadow-blue-200">
+                    <span class="material-symbols-outlined text-white">trending_up</span>
+                </div>
+                <h3 class="text-3xl font-bold text-slate-900 mb-4 font-headline">SEO & <br>Posicionamiento</h3>
+                <p class="text-slate-600 mb-8 leading-relaxed">No solo creamos contenido, hacemos que te encuentren. Estrategias basadas en datos para escalar posiciones.</p>
+                <ul class="space-y-4">
+                    <li class="seo-item flex items-center gap-3 text-slate-800 font-medium">
+                        <span class="dot w-2 h-2 bg-blue-600 rounded-full"></span> Auditoría Técnica
+                    </li>
+                    <li class="seo-item flex items-center gap-3 text-slate-800 font-medium">
+                        <span class="dot w-2 h-2 bg-blue-600 rounded-full"></span> Keywords Strategy
+                    </li>
+                    <li class="seo-item flex items-center gap-3 text-slate-800 font-medium">
+                        <span class="dot w-2 h-2 bg-blue-600 rounded-full"></span> Link Building
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+      <!-- diseño de identidad -->
+        <div class="md:col-span-6 h-[300px] rounded-xl overflow-hidden relative" data-sr data-sr-delay="0.2">
+            <img class="design-img absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-150" 
+                 src="https://i.ibb.co/C5q4FDrk/REINA-SAN-MIGUEL.jpg" alt="Diseño ARTIA">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent"></div>
+            <div class="absolute inset-0 flex items-center p-8 md:p-12">
+                <div class="design-box bg-white/95 p-8 max-w-sm rounded-xl shadow-2xl border-b-4 border-blue-600">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2 font-headline">Diseño de Identidad</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">Creamos marcas que no solo se ven bien, sino que comunican solidez y confianza en cada pixel.</p>
+                </div>
+            </div>
+        </div> 
+    </div>
+      </section>
+<!-- Pricing -->
+<section id="seccion-precios" class="px-8 lg:px-16 py-24 bg-surface-container-low">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16" data-sr>
+      <h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter">Planes de Crecimiento</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto">Estructuras diseñadas para adaptarse al volumen y ambición de tu negocio.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500" data-sr data-sr-delay="0">
+        <div>
+          <h4  class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Esencial</h4>
+          <div class="text-4xl font-black text-primary mb-6">250<span class="text-sm font-normal text-on-surface-variant">/mes</span></div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 12 Posts Mensuales</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> 1 Red Social Principal</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Gestión de Pauta Básica</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Reporte Mensual</li>
+          </ul>
+        </div> 
+        <<button onclick="openModal('Profesional')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors"  >Escríbenos ahora</button>
+
+      </div> 
+      <div class="bg-primary p-8 rounded-lg flex flex-col justify-between relative transform scale-105 shadow-2xl z-10" data-sr data-sr-delay="0.1">
+        <div class="absolute top-0 right-8 -translate-y-1/2 bg-secondary text-white text-[10px] font-bold px-4 py-1 uppercase tracking-widest rounded-full">Más Popular</div>
+        <div>
+          <h4 class="text-xs font-bold text-primary-fixed-dim uppercase tracking-[0.2em] mb-4">Profesional</h4>
+          <div class="text-4xl font-black text-white mb-6">450<span class="text-sm font-normal text-on-primary-container">/mes</span></div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 20 Posts Mensuales</li>
+            <li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> 3 Redes Sociales</li>
+            <li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Campañas Meta &amp; Google</li>
+            <li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> SEO On-Page Básico</li>
+            <li class="text-sm text-on-primary-container flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">done</span> Soporte Prioritario</li>
+          </ul>
+        </div> 
+        <button onclick="openModal('Profesional')" class="w-full py-4 bg-white text-primary font-bold text-xs uppercase tracking-widest hover:bg-secondary hover:text-white transition-colors">Solicitar Plan</button>
+      </div>
+      <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500" data-sr data-sr-delay="0.2">
+        <div>
+          <h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Corporativo</h4>
+          <div class="text-4xl font-black text-primary mb-6">Custom</div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Contenido Ilimitado</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Estrategia Omnicanal</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> SEO Avanzado &amp; Auditorías</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Content Manager Dedicado</li>
+          </ul>
+        </div> 
+        <button onclick="openModal('Profesional')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Cotiza</button>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- CTA -->
+<section id= "cotizar-ya" class="px-8 lg:px-16 py-10 bg-primary overflow-hidden relative" data-sr>
+  <div class="absolute inset-0 opacity-10 pointer-events-none">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-secondary-container rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-primary-container rounded-full blur-[120px]"></div>
+  </div>
+  <div class="max-w-4xl mx-auto text-center relative z-10">
+    <h2 class="text-4xl lg:text-5xl font-bold text-white mb-8">¿Listo para elevar la arquitectura de tu marca?</h2>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="openReservaMenu()" class="bg-secondary text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:opacity-90 transition-all" href="https://wa.me/593969937265" target="_blank">Empezar ahora</button>
+      <a class="border border-white/30 text-white px-10 py-5 rounded-sm font-bold text-sm uppercase tracking-widest hover:bg-white/10 transition-all" href="servicio-fotografia.html">Ver portafolio</a>
+    </div>
+  </div>
+</section>
+<footer class="relative z-30 bg-[#051522] w-full py-20 px-8 lg:px-16 mt-0">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div class="col-span-1 md:col-span-2">
+            <h2 class="text-3xl font-bold text-white mb-6 font-headline">ARTIA</h2>
+            <p class="text-slate-400 max-w-sm mb-8">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</p>
+        </div>
+        <div>
+            <h4 class="text-white font-bold mb-6">Servicios</h4>
+            <ul class="space-y-4 text-slate-400 text-sm">
+                <li>Marketing Digital</li>
+                <li>Fotografía Profesional</li>
+                <li>Diseño de Marca</li>
+            </ul>
+        </div>
+        <div>
+            <h4 class="text-white font-bold mb-6">Contacto</h4>
+            <ul class="space-y-4 text-slate-400 text-sm">
+                <li>info@artia.studio</li>
+                <li>+593 96 993 7265</li>
+            </ul>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto pt-16 mt-16 border-t border-white/10 text-center">
+        <p class="text-slate-500 text-xs">© 2023 Artia Studio. Todos los derechos reservados.</p>
+    </div>
+</footer>
+</main>
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+  const toggle=document.getElementById('mobile-menu-toggle'),close=document.getElementById('mobile-menu-close'),menu=document.getElementById('mobile-menu'),hdr=document.getElementById('mm-header'),nav=document.getElementById('mm-nav'),cta=document.getElementById('mm-cta');
+  gsap.set(menu,{xPercent:100,autoAlpha:0,display:'none'});
+  function open(){document.body.style.overflow='hidden';gsap.set(menu,{display:'flex'});gsap.timeline().to(menu,{xPercent:0,autoAlpha:1,duration:0.45,ease:'power3.out'}).from(hdr,{y:-20,opacity:0,duration:0.3,ease:'power2.out'},'-=0.2').from(nav.children,{y:24,opacity:0,duration:0.35,stagger:0.07,ease:'power2.out'},'-=0.1').from(cta,{y:16,opacity:0,duration:0.3,ease:'power2.out'},'-=0.1');}
+  function closeMenu(){gsap.to(menu,{xPercent:100,autoAlpha:0,duration:0.35,ease:'power3.in',onComplete:()=>{gsap.set(menu,{display:'none'});document.body.style.overflow='auto';}});}
+  toggle.addEventListener('click',open);close.addEventListener('click',closeMenu);
+  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+  const btn=document.getElementById('btn-toggle-servicios'),sub=document.getElementById('submenu-movil'),ico=document.getElementById('icon-flecha');
+  if(btn&&sub){btn.addEventListener('click',function(e){e.preventDefault();const c=sub.classList.contains('hidden');if(c){sub.classList.remove('hidden');sub.classList.add('flex');gsap.from(sub.children,{y:10,opacity:0,duration:0.25,stagger:0.06,ease:'power2.out'});gsap.to(ico,{rotation:180,duration:0.3});}else{sub.classList.add('hidden');sub.classList.remove('flex');gsap.to(ico,{rotation:0,duration:0.3});}});}
+  document.querySelectorAll('[data-sr]').forEach(function(el){gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%',once:true},y:50,opacity:0,duration:0.8,delay:parseFloat(el.dataset.srDelay||0),ease:'power3.out'});});
+})();
+</script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // 1. Animación de la tarjeta SEO y sus items (Efecto Cascada)
+  const seoTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: ".seo-card",
+      start: "top 85%",
+    }
+  });
+
+  seoTl.from(".seo-card", { 
+    x: -50, 
+    opacity: 0, 
+    duration: 1, 
+    ease: "power4.out" 
+  })
+  .to(".seo-item", { 
+    opacity: 1, 
+    x: 10, 
+    stagger: 0.2, // Uno tras otro
+    duration: 0.8, 
+    ease: "back.out(1.7)" 
+  }, "-=0.5");
+
+  // 2. Animación de la tarjeta de Diseño (Efecto Parallax + Slide)
+  gsap.to(".design-card", {
+    scrollTrigger: {
+      trigger: ".design-card",
+      start: "top 80%",
+    },
+    opacity: 1,
+    y: 0,
+    duration: 1.2,
+    ease: "power3.out"
+  });
+
+  // La caja blanca entra desde la izquierda
+  gsap.to(".design-box", {
+    scrollTrigger: {
+      trigger: ".design-card",
+      start: "top 60%",
+    },
+    x: 0,
+    opacity: 1,
+    duration: 1,
+    delay: 0.3,
+    ease: "expo.out"
+  });
+
+  // Efecto Parallax suave en la imagen de fondo al hacer scroll
+  gsap.to(".design-img", {
+    scrollTrigger: {
+      trigger: ".design-card",
+      start: "top bottom",
+      end: "bottom top",
+      scrub: true // Se mueve con el dedo/rueda del mouse
+    },
+    scale: 1,
+    y: 30
+  });
+</script>
+<script>
+  // --- ANIMACIÓN DE ENTRADA (Scroll) ---
+  gsap.from(".seo-card", {
+    scrollTrigger: ".seo-card",
+    y: 50, opacity: 0, duration: 1, ease: "expo.out"
+  });
+
+  gsap.from(".design-card", {
+    scrollTrigger: ".design-card",
+    scale: 0.9, opacity: 0, duration: 1.2, ease: "back.out(1.7)"
+  });
+
+  // --- INTERACCIÓN HOVER SEO (Efecto Cascada en puntos) ---
+  const seoCard = document.querySelector('.seo-card');
+  const items = document.querySelectorAll('.seo-item');
+
+  seoCard.addEventListener('mouseenter', () => {
+    gsap.to(items, { 
+      x: 15, 
+      color: "#2563eb", 
+      stagger: 0.1, 
+      duration: 0.4, 
+      ease: "power2.out" 
+    });
+    gsap.to(".dot", { scale: 2, stagger: 0.1, duration: 0.3 });
+  });
+
+  seoCard.addEventListener('mouseleave', () => {
+    gsap.to(items, { x: 0, color: "#000", stagger: 0.05, duration: 0.4 });
+    gsap.to(".dot", { scale: 1, stagger: 0.05, duration: 0.3 });
+  });
+
+  // --- INTERACCIÓN HOVER DISEÑO (Efecto Zoom + Flotado) ---
+  const designCard = document.querySelector('.design-card');
+
+  designCard.addEventListener('mouseenter', () => {
+    gsap.to(".design-img", { scale: 1.2, duration: 2, ease: "power1.out" });
+    gsap.to(".design-box", { 
+      y: -15, 
+      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)", 
+      duration: 0.6, 
+      ease: "power3.out" 
+    });
+  });
+
+  designCard.addEventListener('mouseleave', () => {
+    gsap.to(".design-img", { scale: 1.1, duration: 1.5, ease: "power1.inOut" });
+    gsap.to(".design-box", { y: 0, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)", duration: 0.6 });
+  });
+</script>
+<!-- Modal Overlay -->
+<div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+    
+    <!-- Cabecera -->
+    <div class="bg-primary p-6 text-white relative">
+      <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-xl font-bold">Solicitar Información</h3>
+      <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="whatsappForm" class="p-8 space-y-4">
+      <input type="hidden" id="selectedPlan">
+      
+      <div>
+        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
+        <input type="text" id="userName" required placeholder="Ej. Carlitos" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
+        Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+<!-- Modal de Reserva de Menú -->
+<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
+    
+    <!-- Header Estilo Agencia -->
+    <div class="bg-blue-600 p-8 text-white relative">
+      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="reservaMenuForm" class="p-8 space-y-6">
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
+        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
+        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
+          <option value="" disabled selected>Selecciona una opción...</option>
+          <option value="Páginas Webs">Páginas Webs</option>
+          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
+          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
+          <option value="Branding Corporativo">Branding Corporativo</option>
+          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
+          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+function openModal(planName) {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    const displayPlan = document.getElementById('displayPlanName');
+    const hiddenInput = document.getElementById('selectedPlan');
+
+    displayPlan.innerText = planName;
+    hiddenInput.value = planName;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Animación de entrada
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// Lógica del Formulario
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('userName').value;
+    const plan = document.getElementById('selectedPlan').value;
+    const telefono = "593969937265"; 
+
+    // Creamos el mensaje con saltos de línea REALES
+    const mensajeFinal = `*¡Hola Artia!*
+Mi nombre es *${nombre}*.
+Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
+¿Podríamos agendar una breve reunión para revisar los detalles?
+
+Muchas gracias.`;
+
+    // CORRECCIÓN: Aquí usamos mensajeFinal dentro del encodeURIComponent
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    
+    window.open(url, '_blank');
+    
+    // Opcional: Cerrar el modal después de enviar
+    if(typeof closeModal === 'function') closeModal();
 });
 </script>
-</body></html>
+<script>
+function openReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('reservaMenuNombre').value;
+    const servicio = document.getElementById('reservaMenuServicio').value;
+    const telefono = "593969937265";
+
+    // Mensaje con saltos de línea reales para evitar errores de codificación
+    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
+
+*Nombre:* ${nombre}
+*Servicio:* ${servicio}
+
+Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
+
+¡Quedo atento/a!`;
+
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    window.open(url, '_blank');
+    closeReservaMenu();
+});
+</script>
+
+</body>
+</html>

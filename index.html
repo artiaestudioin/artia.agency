@@ -2,633 +2,657 @@
 @license
 © 2026 Artia Studio. All rights reserved.
 This code is the private property of Artia Studio.
- Reproduction or distribution without permission is strictly prohibited. -->
+Reproduction or distribution without permission is strictly prohibited.
+-->
 <!DOCTYPE html>
-<html class="light" lang="es"><head>
+<html class="light" lang="es">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>ARTIA | Marketing Studio</title>
-<!-- Fonts -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Manrope:wght@200;400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<!-- Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind -->
+<script src="https://cloudflare.com"></script>
+<script src="https://cloudflare.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@200;400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "primary-fixed-dim": "#b3c5ff",
-                        "success-dark-green": "#388e3c",
-                        "on-primary-container": "#758dd5",
-                        "tertiary": "#051522",
-                        "primary": "#00113a",
-                        "outline-variant": "#c5c6d2",
-                        "on-error": "#ffffff",
-                        "background": "#f7f9fb",
-                        "tertiary-container": "#1a2a37",
-                        "surface-container-low": "#f2f4f6",
-                        "on-error-container": "#93000a",
-                        "tertiary-fixed": "#d4e4f6",
-                        "on-tertiary-fixed-variant": "#394857",
-                        "on-primary-fixed-variant": "#2a4386",
-                        "surface-variant": "#e0e3e5",
-                        "surface-tint": "#435b9f",
-                        "surface-container": "#eceef0",
-                        "surface-dim": "#d8dadc",
-                        "tertiary-fixed-dim": "#b8c8da",
-                        "on-secondary-container": "#fffbff",
-                        "on-primary-fixed": "#00174a",
-                        "inverse-surface": "#2d3133",
-                        "surface": "#f7f9fb",
-                        "surface-container-lowest": "#ffffff",
-                        "secondary-container": "#446ce4",
-                        "secondary": "#2552ca",
-                        "on-tertiary": "#ffffff",
-                        "secondary-fixed": "#dce1ff",
-                        "error": "#ba1a1a",
-                        "on-background": "#191c1e",
-                        "on-secondary": "#ffffff",
-                        "surface-container-high": "#e6e8ea",
-                        "inverse-primary": "#b3c5ff",
-                        "error-container": "#ffdad6",
-                        "secondary-fixed-dim": "#b6c4ff",
-                        "on-tertiary-fixed": "#0d1d2a",
-                        "surface-container-highest": "#e0e3e5",
-                        "on-primary": "#ffffff",
-                        "primary-container": "#002366",
-                        "surface-bright": "#f7f9fb",
-                        "primary-fixed": "#dbe1ff",
-                        "inverse-on-surface": "#eff1f3",
-                        "on-surface-variant": "#444650",
-                        "on-secondary-fixed-variant": "#003baf",
-                        "outline": "#757682",
-                        "on-surface": "#191c1e",
-                        "on-tertiary-container": "#8191a2",
-                        "on-secondary-fixed": "#00164e"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                },
-            },
-        }
-    </script>
+  
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}
+</script>
 <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-        .blur-to-clear {
-            animation: blurClear 2s ease-out forwards;
-        }
-        @keyframes blurClear {
-            0% { filter: blur(20px); opacity: 0; transform: translateY(10px); }
-            100% { filter: blur(0); opacity: 1; transform: translateY(0); }
-        }
-        .tonal-layering-no-borders {
-            box-shadow: none;
-            border-right: 1px solid rgba(197, 198, 210, 0.15);
-        }
-        .gentle-fade {
-            transition: opacity 2s ease-in-out;
-        }
-    </style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}
+.tonal-layering-no-borders{box-shadow:none;border-right:1px solid rgba(197,198,210,0.15)}
+.blur-to-clear{animation:blurClear 2s ease-out forwards}
+@keyframes blurClear{0%{filter:blur(20px);opacity:0;transform:translateY(10px)}100%{filter:blur(0);opacity:1;transform:translateY(0)}}
+.text-reveal{opacity:0;transform:translateY(10px);filter:blur(5px);animation:revealAnim 1.2s cubic-bezier(0.4,0,0.2,1) forwards}
+@keyframes revealAnim{100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+.wa-pulse{animation:waPulse 2s infinite}
+@keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+</style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-fixed-dim selection:text-primary">
-<!-- Desktop Side Navigation (SideNavBar) -->
-<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
-<div>
-<a href="#" class="block w-32 mb-10"> <!-- Controla el ancho aquí (w-32 = 128px) -->
-    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
-         alt="Logo Artia" 
-         class="w-full h-auto object-contain">
-</a>
-<nav class="flex flex-col gap-y-6">
-<a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
-<div class="group relative">
-<button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
-<span>Servicios</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</button>
-<!-- Submenu -->
-<div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-<a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
-</div>
-</div>
-<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
-<a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
-</nav>
-</div>
-<div class="flex flex-col gap-6">
-<a class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-primary-container transition-all active:scale-95 duration-200 text-center" href="https://wa.me/593969937265">
-                RESERVAR
-            </a>
-<div class="flex items-center gap-3 pl-4 text-slate-500 dark:text-slate-400">
-<span class="material-symbols-outlined text-[18px]">help_outline</span>
-<span class="text-xs font-medium">Soporte</span>
-</div>
-</div>
-</aside>
-<!-- Mobile Top Navigation (TopNavBar) -->
-<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 dark:bg-slate-950/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
-<div class="w-10"></div> <!-- Spacer -->
-<a class="text-xl font-black tracking-widest text-[#00113a] dark:text-white font-headline text-center" href="index.html">ARTIA</a>
-<div class="flex items-center gap-4">
-<button class="text-primary" id="mobile-menu-toggle">
-<span class="material-symbols-outlined">menu</span>
-</button>
-</div>
-</header>
-<!-- Mobile Navigation Overlay (Hamburger Menu) -->
-<<div class="fixed inset-0 z-[60] bg-white hidden flex-col p-10 lg:hidden" id="mobile-menu">
-    <div class="flex justify-between items-center mb-8">
-        <a href="index.html" class="block w-24"> <!-- w-24 es ideal para móviles (96px) -->
-        <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
-             alt="Logo Artia" 
-             class="w-full h-auto object-contain">
+
+<!-- Desktop Side Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a href="index.html" class="block w-32 mb-10">
+      <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
     </a>
-
-        <button class="text-primary" id="mobile-menu-close">
-            <span class="material-symbols-outlined text-3xl">close</span>
-        </button>
-    </div>
-    
     <nav class="flex flex-col gap-y-6">
-        <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] dark:text-white border-l-2 border-[#00113a] dark:border-[#2552ca] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
-        
-        <div class="relative">
-            <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300">
-                <span>Servicios</span>
-                <span id="icon-flecha" class="material-symbols-outlined text-sm transition-transform duration-300">expand_more</span>
-            </button>
-            
-            <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-                <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
-            </div>
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="index.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
+          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
         </div>
-
-        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="clientes.html">Clientes</a>
-        <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 dark:text-slate-400 pl-4 hover:text-[#00113a] dark:hover:text-white transition-colors duration-300" href="nosotros.html">Nosotros</a>
+      </div>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
     </nav>
-    
-    <div class="mt-5">
-        <a class="block w-full bg-primary text-white text-center py-1 rounded-lg font-bold" href="https://wa.me/593969937265">RESERVAR</a>
+  </div>
+  <div class="flex flex-col gap-6">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+  RESERVAR
+</button>
+    <div class="flex items-center gap-3 pl-4 text-slate-500">
+      <span class="material-symbols-outlined text-[18px]">help_outline</span>
+      <span class="text-xs font-medium">Soporte</span>
     </div>
+  </div>
+</aside>
+
+<!-- Mobile Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a class="text-xl font-black tracking-widest text-[#00113a] font-headline" href="index.html">ARTIA</a>
+  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
+</header>
+
+<!-- Mobile Navigation Overlay (GSAP controlled) -->
+<div class="fixed inset-0 z-[60] bg-white flex-col p-10 lg:hidden" id="mobile-menu" style="display:none">
+  <div class="flex justify-between items-center mb-8" id="mm-header">
+    <a href="index.html" class="block w-24"><img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain"></a>
+    <button class="text-primary" id="mobile-menu-close"><span class="material-symbols-outlined text-3xl">close</span></button>
+  </div>
+  <nav class="flex flex-col gap-y-6" id="mm-nav">
+    <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4" href="index.html">Inicio</a>
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4">
+        <span>Servicios</span><span id="icon-flecha" class="material-symbols-outlined text-sm">expand_more</span>
+      </button>
+      <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+      </div>
+    </div>
+    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="nosotros.html">Nosotros</a>
+  </nav>
+  <div class="mt-8" id="mm-cta">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+  RESERVAR
+</button>
+  </div>
 </div>
-<!-- Floating Contact Menu -->
-<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
-  
-  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-    
-    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">
-      ¿Cómo podemos ayudarte?
+
+<!-- ===== POPUP EMAIL MODAL ===== -->
+<div id="emailModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 hidden">
+  <div class="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl animate-[fadeIn_.2s_ease]">
+
+    <!-- Header azul -->
+    <div class="bg-blue-600 px-6 py-5 flex items-start justify-between">
+      <div>
+        <h2 class="text-white text-xl font-black tracking-wide leading-tight">ARTIA STUDIO</h2>
+        <p class="text-white/80 text-[10px] font-bold tracking-[2px] uppercase mt-1">Reserva de Consultoría</p>
+      </div>
+      <button onclick="closeEmailModal()" class="bg-white/20 hover:bg-white/30 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm transition-colors flex-shrink-0">✕</button>
     </div>
 
+    <!-- Formulario -->
+    <div class="p-6 flex flex-col gap-4">
+
+      <!-- Nombre -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Tu Nombre</label>
+        <input id="emailName" type="text" placeholder="Nombre y Apellido"
+          class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-colors" />
+      </div>
+
+      <!-- Servicio -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Servicio Requerido</label>
+        <div class="relative">
+          <select id="emailService"
+            class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white appearance-none cursor-pointer transition-colors">
+            <option value="">Selecciona una opción...</option>
+            <option>Páginas Webs</option>
+            <option>Planes de Redes Sociales</option>
+            <option>Impresión o Sublimados</option>
+            <option>Branding Corporativo</option>
+            <option>Fotografía o Video Profesionales</option>
+            <option>Vuelos de Drone Profesional</option>
+          </select>
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      <!-- Mensaje -->
+      <div>
+        <label class="block text-[10px] font-black tracking-[1.5px] uppercase text-slate-400 mb-1.5">Tu Mensaje</label>
+        <textarea id="emailMessage" rows="3" placeholder="Cuéntanos brevemente tu proyecto o consulta..."
+          class="w-full border-[1.5px] border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-600 bg-slate-50 focus:bg-white resize-none transition-colors"></textarea>
+      </div>
+
+      <!-- Botón enviar -->
+      <button onclick="sendEmail()"
+        class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[11px] tracking-[1.5px] uppercase rounded-lg py-3.5 flex items-center justify-center gap-2 transition-all">
+        CONFIRMAR RESERVA
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTÓN FLOTANTE ===== -->
+<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+  <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+    <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">¿Cómo podemos ayudarte?</div>
+
+    <!-- WhatsApp -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
       <span class="text-sm font-bold">WhatsApp</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
     </a>
 
+    <!-- Llamar -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
-      <span class="text-sm font-bold">Llamar ahora</span>
-      <span class="material-symbols-outlined">call</span>
+      <span class="text-sm font-bold">Llamar ahora</span><span class="material-symbols-outlined">call</span>
     </a>
+
+    <!-- ✉️ NUEVO: Email -->
+    <button onclick="openEmailModal()"
+      class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
+      <span class="text-sm font-bold">Enviar Email</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M2 7l10 7 10-7"/>
+      </svg>
+    </button>
   </div>
 
-  <button id="wa-toggle" class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
-    <span class="material-symbols-outlined text-2xl" data-icon="chat" style="font-variation-settings: 'FILL' 1;">
-        chat
-    </span>
-</button>
-
-<style>
-/* Animación de pulso azul sutil */
-.wa-pulse {
-  animation: blue-pulse 2s infinite;
-}
-
-@keyframes blue-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-  70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-}
-</style>
+  <button class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
+    <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">chat</span>
+  </button>
 </div>
-<!-- Main Content Canvas -->
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  function openEmailModal() {
+    document.getElementById('emailModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEmailModal() {
+    document.getElementById('emailModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Cerrar al hacer clic fuera del modal
+  document.getElementById('emailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEmailModal();
+  });
+
+  function sendEmail() {
+    const name    = document.getElementById('emailName').value.trim();
+    const service = document.getElementById('emailService').value;
+    const message = document.getElementById('emailMessage').value.trim();
+
+    if (!name || !service) {
+      alert('Por favor completa tu nombre y selecciona un servicio.');
+      return;
+    }
+
+    const subject = encodeURIComponent(`Consulta: ${service} — ${name}`);
+    const body    = encodeURIComponent(
+      `Hola Artia Studio,\n\nNombre: ${name}\nServicio: ${service}\n\nMensaje:\n${message || 'Sin mensaje adicional.'}\n\n— Enviado desde el sitio web`
+    );
+
+    // ⬇️ REEMPLAZA con tu correo real
+    window.location.href = `mailto:artia.estudioin@gmail.com?subject=${subject}&body=${body}`;
+
+    closeEmailModal();
+  }
+</script>
+
 <main class="lg:ml-[280px] min-h-screen">
-<!-- Hero Section -->
+
+<!-- Hero -->
 <section class="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+  <div class="absolute inset-0 z-0 overflow-hidden" id="slider-container">
+    <!-- Imagen 1 (Activa por defecto) -->
+    <img class="hero-slide absolute inset-0 w-full h-[100%] object-cover opacity-80 grayscale-[20%]  brightness-90 scale-100 transition-opacity duration-1000" src="https://i.ibb.co/Y4pwTw8y/riobamba.jpg" alt="Hero 1"/>
     
-    <!-- CAPA 1: Fondo (Parallax más rápido) -->
-    <div class="absolute inset-0 z-0 overflow-hidden">
-        <img id="parallax-bg" 
-             class="w-full h-[130%] object-cover opacity-80 grayscale-[40%] blur-[1px] brightness-80 scale-110 will-change-transform" 
-             src="https://i.ibb.co/XrsYqVGY/portada.png">
-        
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
-        <div class="absolute inset-0 bg-black/10 backdrop-contrast-90"></div>
-    </div>
+    <!-- Agrega aquí tus otras 4 imágenes con opacity-0 -->
+    <img class="hero-slide absolute inset-0 w-full h-[100%] object-cover opacity-0 grayscale-[20%]  brightness-90 scale-100 transition-opacity duration-1000" src="https://ibb.co/tw0z7H25" alt="Hero 2"/>
+    <img class="hero-slide absolute inset-0 w-full h-[100%] object-cover opacity-0 grayscale-[20%]  brightness-90 scale-100 transition-opacity duration-1000" src="https://i.ibb.co/twGq2tWh/040426-1.jpg" alt="Hero 3"/>
+    <img class="hero-slide absolute inset-0 w-full h-[100%] object-cover opacity-0 grayscale-[20%]  brightness-90 scale-100 transition-opacity duration-1000" src="https://i.ibb.co/RpmD3G90/IMG-9079-compressed.jpg" alt="Hero 4"/>
+    <img class="hero-slide absolute inset-0 w-full h-[100%] object-cover opacity-0 grayscale-[20%]  brightness-90 scale-100 transition-opacity duration-1000" src="https://i.ibb.co/SDWDq6nN/ARW4996-compressed-1.jpg" alt="Hero 5"/>
 
-    <!-- CAPA 2: Texto (Parallax suave / Flotante) -->
-    <!-- Este div "parallax-text" moverá todo el bloque sin tocar las clases de animación internas -->
-    <!-- Cambiamos justify-center por justify-end y añadimos pb-24 -->
-<div id="parallax-text" class="z-10 flex flex-col items-center justify-end pb-24 h-full w-full px-6 text-center will-change-transform">
-        
-    <h1 class="blur-to-clear text-[22vw] lg:text-[14rem] font-extrabold tracking-tighter text-white leading-[0.8] font-headline">
-        ARTIA
-    </h1>
-    
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40"></div>
+  </div>
+
+  <div id="parallax-text" class="z-10 flex flex-col items-center justify-end pb-24 h-full w-full px-6 text-center">
+    <h1 class="blur-to-clear text-[22vw] lg:text-[14rem] font-extrabold tracking-tighter text-white leading-[0.8] font-headline">ARTIA</h1>
     <div class="relative mt-4">
-        <p class="text-reveal text-sm lg:text-2xl font-light tracking-[0.2em] lg:tracking-[0.5em] text-white/90 uppercase" 
-           style="animation-delay: 2s;">
-            Marketing & Publicidad Integral
-        </p>
+      <p class="text-reveal text-sm lg:text-2xl font-light tracking-[0.2em] lg:tracking-[0.5em] text-white/90 uppercase">Marketing & Publicidad Integral</p>
     </div>
-
-    <div class="mt-12 flex justify-center blur-to-clear" style="animation-delay: 1.5s;">
-        <div class="h-16 w-[1px] bg-primary/30"></div>
-    </div>
-</div>
-
+  </div>
 </section>
 
-<!-- Script de Triple Capa -->
 <script>
-    window.addEventListener('scroll', function() {
-        const scrolled = window.scrollY;
-        const bg = document.getElementById('parallax-bg');
-        const text = document.getElementById('parallax-text');
-
-        // Solo aplicamos el efecto si el usuario no ha bajado demasiado (optimización)
-        if (scrolled < window.innerHeight) {
-            // Capa 1: El fondo baja al 40% de la velocidad del scroll
-            bg.style.transform = `translateY(${scrolled * 0.4}px) scale(1.1)`;
-            
-            // Capa 2: El texto sube al 15% de la velocidad del scroll
-            // Esto crea el efecto "flotante" entre la imagen y el usuario
-            text.style.transform = `translateY(${scrolled * -0.15}px)`;
-        }
-    });
-</script>
-
-
-<style>
-
-.blur-to-clear {
-    opacity: 0;
-    filter: blur(20px);
-    animation: blur-animation 1.5s ease-out forwards;
-}
-
-@keyframes blur-animation {
-    to {
-        opacity: 1;
-        filter: blur(0);
-    }
-}
-
-.text-reveal {
-    opacity: 0;
-    transform: translateY(10px); /* Empieza un poco más abajo */
-    filter: blur(5px);
-    animation: reveal-animation 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes reveal-animation {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-        filter: blur(5px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-        filter: blur(0);
-    }
-}
-
-@keyframes revealFromNothing {
-    0% {
-        opacity: 0;
-        filter: blur(10px);
-        transform: scale(0.8);
-    }
-    100% {
-        opacity: 1;
-        filter: blur(0);
-        transform: scale(1);
-    }
-}
-
-.blur-to-clear {
-    animation: blurToClear 1.5s ease-out forwards;
-}
-
-@keyframes blurToClear {
-    0% { filter: blur(20px); opacity: 0; }
-    100% { filter: blur(0); opacity: 1; }
-}
-/* Animación WhatsApp */
-        @keyframes titileo {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 170, 245, 0.8); }
-            50% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(37, 69, 211, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(12, 14, 95, 0); }
-        }
-        .wa-pulse { animation: titileo 2s infinite; }
-</style>
-<!-- About Section -->
-<section class="py-6 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-<div class="space-y-8">
-<span class="text-secondary font-bold tracking-widest text-xs uppercase">Más que identidad...</span>
-<h2 class="text-4xl lg:text-5xl font-headline font-bold text-primary leading-tight">
-                    Arquitectura estratégica para marcas de alto impacto.
-                </h2>
-<div class="space-y-6 text-on-surface-variant leading-relaxed">
-<p>
-                        En Artia, no solo creamos publicidad; diseñamos estructuras de comunicación que sostienen el crecimiento de su negocio. Con sede en Ecuador, operamos bajo una visión de precisión editorial y ejecución técnica impecable.
-                    </p>
-<p>
-                        Nuestra metodología combina la creatividad audaz con el análisis de datos riguroso, asegurando que cada campaña no solo sea visualmente impactante, sino comercialmente rentable.
-                    </p>
-</div>
-<div class="flex gap-12 pt-4">
-<div>
-<p class="text-3xl font-bold text-primary">7+</p>
-<p class="text-xs text-on-surface-variant uppercase tracking-wider">Años Exp</p>
-</div>
-<div>
-<p class="text-3xl font-bold text-primary">65+</p>
-<p class="text-xs text-on-surface-variant uppercase tracking-wider">Proyectos</p>
-</div>
-</div>
-</div>
-<div class="relative group">
-<div class="absolute -inset-4 bg-primary-fixed-dim/20 rounded-xl -z-10 group-hover:scale-105 transition-transform duration-700"></div>
-<img class="rounded-lg shadow-2xl aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-[1.02]" data-alt="Overhead view of a creative team collaborating around a large wooden table with marketing sketches and architectural floor plans" src="https://i.ibb.co/7dW4Hy3j/estrategia-marca.avif"/>
-</div>
-</section>
-<!-- Services Section: Bento Grid Layout -->
-<section class="py-4 px-8 lg:px-24 bg-surface-container-low">
-<div class="max-w-7xl mx-auto">
-<div class="mb-10">
-<span class="text-secondary font-bold tracking-widest text-xs uppercase">Marketing y Publicidad Integral</span>
-<h2 class="text-4xl font-headline font-bold text-primary mt-4">Soluciones Integrales</h2>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
-<!-- Digital Marketing -->
-<div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500">
-<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000 " data-alt="Digital marketing analytics dashboard on a sleek laptop screen in a modern bright office with blue accent lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkrCj75G7fp0M3gNhlb05OfTPza6hXYTpG-ryzlBBrQ3vJt3s-xY6xeGltAZfx7srqTrNgc-xlbmX5cVvMopbfU9zs1-KdWFSAKyAWqnuYxQ0wbEreAvdtAeJd5Pvf5TCezuOk5ElbMcAR5ove1m82Ysq5o4b9hGcnDc2zYTNQxDarz51gFSbMlvxskISvqViX4GBgsSISegGK6huRBUL4eii5-8HyJuR557esaOfUF2gVrfK4TnrTzpfWzSapB6Y3YLIsGS4gL7dH"/>
-<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
-<div class="relative h-full flex flex-col justify-end p-10 text-white">
-<span class="text-primary-fixed-dim font-bold tracking-tighter text-sm mb-2"> </span>
-<h3 class="text-3xl font-bold font-headline mb-4">Planes de Marketing Digital</h3>
-<p class="max-w-md text-white/80 text-sm leading-relaxed mb-6 group-hover:opacity-100 opacity-0 transition-opacity duration-500">
-    Estrategias omnicanal enfocadas en conversión, gestión de comunidades y posicionamiento SEO/SEM de alta precisión.
-</p>
-
-<a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-marketing-digital.html">
-                                Explorar plan <span class="material-symbols-outlined">trending_flat</span>
-</a>
-</div>
-</div>
-<!-- Print Media -->
-<div class="md:col-span-4 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500">
-    <!-- Cambios: scale-[1.35] para zoom inicial y group-hover:scale-[1.5] para más zoom al pasar el mouse -->
-    <img class="absolute inset-0 w-full h-full object-cover opacity-60 scale-[2] group-hover:scale-[2.35] transition-transform duration-1000 ease-out" 
-         src="https://i.ibb.co/whf2FG1w/medios-impresos.jpg" 
-         alt="Medios Impresos"/>
-    
-    <div class="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent"></div>
-    
-    <div class="relative h-full flex flex-col justify-end p-8 text-white">
-        <span class="text-secondary-fixed-dim font-bold tracking-tighter text-sm mb-2"> </span>
-        <h3 class="text-2xl font-bold font-headline mb-4">Medios Impresos</h3>
-        <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-impresion.html">
-            Ver Catálogo <span class="material-symbols-outlined">north_east</span>
-        </a>
-    </div>
-</div>
-<!-- Photography/Audiovisual -->
-<div class="md:col-span-12 group relative overflow-hidden bg-surface-container-lowest rounded-xl h-[300px] shadow-sm hover:shadow-xl transition-all duration-500">
-<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" data-alt="Professional cinema camera on a gimbal during a high-end commercial shoot with dramatic soft focus background lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU18e3qRZ97M8llsYi1ffO7MkUGXB4NhW0NwY6DWq1avrlBgD2Xy-6DQEZuSmJovLsb3gfj8G4s7E0asWe0D7GiKVe_WDs5d10XVmogZif_GGkkJ2V399-OXB37o7gz0Yb4ciiPUipYVBGQHZ-0lqgWUNNK_Khls0bz0gvfpUfOhAgreSv8leOgz8KAMez6l2xx32XWNelH7iWdipRT4EwZ3M9CPsNCRE8DqTvhIQVxiPCDX_pJ25FvZ_UwcK1Rr4wxjwkHAnJMfnZ"/>
-<div class="absolute inset-0 bg-gradient-to-r from-primary/90 to-transparent"></div>
-<div class="relative h-full flex items-center p-10 text-white">
-<div class="max-w-xl">
-<span class="text-primary-fixed-dim font-bold tracking-tighter text-sm mb-2"></span>
-<h3 class="text-3xl font-bold font-headline mb-2">Fotografía y Audiovisual</h3>
-<p class="text-primary-fixed-dim/80 text-sm mb-6">Producción de contenido visual premium que eleva la percepción de su marca.</p>
-<a class="inline-block bg-white text-primary px-6 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-fixed-dim transition-colors" href="servicio-fotografia.html">Ver Portfolio</a>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<div class="flex flex-col items-center justify-center py-1 bg-surface-container-lowest rounded-2xl shadow-2xl mx-6 my-10 border border-outline-variant/20">
-    <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce">
-        groups
-    </span>
-    <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-2">
-        Comunidad Artia
-    </h3>
-    <!-- Este es el número grande -->
-    <div class="flex items-baseline gap-1">
-        <span id="global-visit-count" class="text-6xl md:text-8xl font-black font-headline text-primary tracking-tighter">
-            1.351
-        </span>
-        <span class="text-secondary text-4xl font-bold">+</span>
-    </div>
-    <p class="text-slate-400 text-sm font-medium mt-2">
-        Visitas globales y contando
-    </p>
-</div>
-
-<script>
-    async function animateCounter() {
-        const displayElement = document.getElementById('global-visit-count');
-        const baseVisits = 1351; // Tu base fija
-        
-        // Datos de tu API (Verificados de tu imagen)
-        const apiKey = 'ut_bDowg5fY18Xom2dlTsml1cgUEd2AE1cYaftS5ftR'; 
-        const url = 'https://api.counterapi.dev/v2/marlon-morenos-team-3593/artia-marketing-stats/up';
-
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) throw new Error('Error en respuesta de API');
-            
-            const res = await response.json();
-            
-            // Según la doc V2, el valor puede venir en res.value o res.data.count
-            const apiValue = res.value || (res.data && res.data.count) || 0;
-            const targetNumber = parseInt(apiValue) + baseVisits;
-
-            // Configuración de la animación
-            let start = 0;
-            const duration = 3000; // 3 segundos para que sea más impactante
-            const startTime = performance.now();
-
-            function step(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Efecto "Ease Out" (frena suave al final)
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                const currentCount = Math.floor(easeOut * targetNumber);
-                
-                displayElement.innerText = new Intl.NumberFormat('es-ES').format(currentCount);
-
-                if (progress < 1) {
-                    requestAnimationFrame(step);
-                } else {
-                    displayElement.innerText = new Intl.NumberFormat('es-ES').format(targetNumber);
-                }
-            }
-            requestAnimationFrame(step);
-
-        } catch (error) {
-            console.error("Detalle del error:", error);
-            // Si la API falla, mostramos tu número base con estilo
-            displayElement.innerText = new Intl.NumberFormat('es-ES').format(baseVisits);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', animateCounter);
-</script>
-
-<!-- Footer (Replicated from SCREEN_30) -->
-<footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
-<div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-<div class="space-y-6">
-<div class="flex flex-col">
-<h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2>
-<p class="text-[#8191a2] text-xs font-label uppercase tracking-widest mt-1">Marketing Agency</p>
-</div>
-<div class="space-y-2">
-<p class="text-[#8191a2] text-sm font-body">+593 96 993 7265</p>
-<p class="text-[#8191a2] text-sm font-body">artia.estudioin@gmail.com</p>
-</div>
-<p class="text-[#8191a2]/60 text-xs font-body max-w-xs">
-                        Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.
-                    </p>
-</div>
-<div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
-<div class="space-y-4">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
-<nav class="flex flex-col gap-3">
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="index.html">Inicio</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="nosotros.html">Nosotros</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="servicio-marketing-digital.html">Servicios</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="clientes.html">Clientes</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
-</nav>
-</div>
-<div class="space-y-4">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
-<nav class="flex flex-col gap-3">
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
-<a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
-</nav>
-</div>
-<div class="space-y-4 col-span-2 lg:col-span-1">
-<h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
-<nav class="flex gap-4">
-<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
-<span class="material-symbols-outlined text-base">public</span>
-</a>
-<a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#">
-<span class="material-symbols-outlined text-base">share</span>
-</a>
-</nav>
-</div>
-</div>
-</div>
-<div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-<p class="text-[#8191a2]/40 text-xs">© 2022 ARTIA. All rights reserved.</p>
-<button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                    Volver arriba
-                    <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span>
-</button>
-</div>
-</footer>
-</main>
-<script>
-        const waToggle = document.getElementById('wa-toggle');
-        const menuToggle = document.getElementById('mobile-menu-toggle');
-        const menuClose = document.getElementById('mobile-menu-close');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.remove('hidden');
-            mobileMenu.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        });
-
-        menuClose.addEventListener('click', () => {
-            mobileMenu.classList.add('hidden');
-            mobileMenu.classList.remove('flex');
-            document.body.style.overflow = 'auto';
-        });
-
-        // Close mobile menu on link click
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('flex');
-                document.body.style.overflow = 'auto';
-            });
-        });
-    </script>
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btnServicios = document.getElementById('btn-toggle-servicios');
-    const submenu = document.getElementById('submenu-movil');
-    const icono = document.getElementById('icon-flecha');
-
-    if (btnServicios && submenu) {
-        btnServicios.addEventListener('click', function(e) {
-            e.preventDefault(); // Evita cualquier comportamiento extraño
-            
-            // Alternamos la clase 'hidden'
-            const estaCerrado = submenu.classList.contains('hidden');
-
-            if (estaCerrado) {
-                submenu.classList.remove('hidden');
-                submenu.classList.add('flex');
-                icono.style.transform = 'rotate(180deg)';
-            } else {
-                submenu.classList.add('hidden');
-                submenu.classList.remove('flex');
-                icono.style.transform = 'rotate(0deg)';
-            }
-        });
-    }
+window.addEventListener('scroll',function(){
+  const s=window.scrollY;
+  if(s<window.innerHeight){
+    document.getElementById('parallax-bg').style.transform='translateY('+s*0.4+'px) scale(1.1)';
+    document.getElementById('parallax-text').style.transform='translateY('+s*-0.15+'px)';
+  }
 });
 </script>
 
-</body></html>
+<!-- About -->
+<section class="py-16 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center" data-sr>
+  <div class="space-y-8">
+    <span class="text-secondary font-bold tracking-widest text-xs uppercase">Más que identidad...</span>
+    <h2 class="text-4xl lg:text-5xl font-headline font-bold text-primary leading-tight">Arquitectura estratégica para marcas de alto impacto.</h2>
+    <div class="space-y-6 text-on-surface-variant leading-relaxed">
+      <p>En Artia, no solo creamos publicidad; diseñamos estructuras de comunicación que sostienen el crecimiento de su negocio. Con sede en Ecuador, operamos bajo una visión de precisión editorial y ejecución técnica impecable.</p>
+      <p>Nuestra metodología combina la creatividad audaz con el análisis de datos riguroso, asegurando que cada campaña no solo sea visualmente impactante, sino comercialmente rentable.</p>
+    </div>
+    <div class="flex gap-12 pt-4">
+      <div><p class="text-3xl font-bold text-primary">7+</p><p class="text-xs text-on-surface-variant uppercase tracking-wider">Años Exp</p></div>
+      <div><p class="text-3xl font-bold text-primary">221+</p><p class="text-xs text-on-surface-variant uppercase tracking-wider">Proyectos</p></div>
+      <div><p class="text-3xl font-bold text-primary">301</p><p class="text-xs text-on-surface-variant uppercase tracking-wider">Clientes Satisfechos</p></div>
+    </div>
+  </div>
+  <div class="relative group">
+    <div class="absolute -inset-4 bg-primary-fixed-dim/20 rounded-xl -z-10 group-hover:scale-105 transition-transform duration-700"></div>
+    <img class="rounded-lg shadow-2xl aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-[1.02]" src="https://i.ibb.co/7dW4Hy3j/estrategia-marca.avif" alt="Estrategia de marca"/>
+  </div>
+</section>
+
+<!-- Services Bento -->
+<section class="py-4 px-8 lg:px-24 bg-surface-container-low">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-10" data-sr>
+      <span class="text-secondary font-bold tracking-widest text-xs uppercase">Marketing y Publicidad Integral</span>
+      <h2 class="text-4xl font-headline font-bold text-primary mt-4">Soluciones Integrales</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
+      <div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.1">
+        <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkrCj75G7fp0M3gNhlb05OfTPza6hXYTpG-ryzlBBrQ3vJt3s-xY6xeGltAZfx7srqTrNgc-xlbmX5cVvMopbfU9zs1-KdWFSAKyAWqnuYxQ0wbEreAvdtAeJd5Pvf5TCezuOk5ElbMcAR5ove1m82Ysq5o4b9hGcnDc2zYTNQxDarz51gFSbMlvxskISvqViX4GBgsSISegGK6huRBUL4eii5-8HyJuR557esaOfUF2gVrfK4TnrTzpfWzSapB6Y3YLIsGS4gL7dH" alt="Marketing Digital"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+        <div class="relative h-full flex flex-col justify-end p-10 text-white">
+          <h3 class="text-3xl font-bold font-headline mb-4">Planes de Marketing Digital</h3>
+          <p class="max-w-md text-white/80 text-sm leading-relaxed mb-6 group-hover:opacity-100 opacity-0 transition-opacity duration-500">Estrategias omnicanal enfocadas en conversión, gestión de comunidades y posicionamiento SEO/SEM de alta precisión.</p>
+          <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-marketing-digital.html">Explorar plan <span class="material-symbols-outlined">trending_flat</span></a>
+        </div>
+      </div>
+      <div class="md:col-span-4 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.2">
+        <img class="absolute inset-0 w-full h-full object-cover opacity-60 scale-[2] group-hover:scale-[2.35] transition-transform duration-1000 ease-out" src="https://i.ibb.co/whf2FG1w/medios-impresos.jpg" alt="Medios Impresos"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent"></div>
+        <div class="relative h-full flex flex-col justify-end p-8 text-white">
+          <h3 class="text-2xl font-bold font-headline mb-4">Medios Impresos</h3>
+          <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-impresion.html">Ver Catálogo <span class="material-symbols-outlined">north_east</span></a>
+        </div>
+      </div>
+      <div class="md:col-span-12 group relative overflow-hidden bg-surface-container-lowest rounded-xl h-[300px] shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.3">
+        <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU18e3qRZ97M8llsYi1ffO7MkUGXB4NhW0NwY6DWq1avrlBgD2Xy-6DQEZuSmJovLsb3gfj8G4s7E0asWe0D7GiKVe_WDs5d10XVmogZif_GGkkJ2V399-OXB37o7gz0Yb4ciiPUipYVBGQHZ-0lqgWUNNK_Khls0bz0gvfpUfOhAgreSv8leOgz8KAMez6l2xx32XWNelH7iWdipRT4EwZ3M9CPsNCRE8DqTvhIQVxiPCDX_pJ25FvZ_UwcK1Rr4wxjwkHAnJMfnZ" alt="Fotografía"/>
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/90 to-transparent"></div>
+        <div class="relative h-full flex items-center p-10 text-white">
+          <div class="max-w-xl">
+            <h3 class="text-3xl font-bold font-headline mb-2">Fotografía y Audiovisual</h3>
+            <p class="text-primary-fixed-dim/80 text-sm mb-6">Producción de contenido visual premium que eleva la percepción de su marca.</p>
+            <a class="inline-block bg-white text-primary px-6 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-fixed-dim transition-colors" href="servicio-fotografia.html">Ver Portfolio</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Counter -->
+<div class="flex flex-col items-center justify-center py-2 bg-surface-container-lowest rounded-2xl shadow-2xl mx-6 my-10 border border-outline-variant/20" data-sr>
+  <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce">groups</span>
+  <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-2">Comunidad Artia</h3>
+  <div class="flex items-baseline gap-1">
+    <span id="global-visit-count" class="text-6xl md:text-8xl font-black font-headline text-primary tracking-tighter">—</span>
+    <span class="text-secondary text-4xl font-bold">+</span>
+  </div>
+  <p class="text-slate-400 text-sm font-medium mt-2">Visitas globales y contando</p>
+</div>
+
+<!-- Footer -->
+<footer class="bg-[#051522] w-full py-20 px-8 lg:px-16 mt-auto">
+  <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+    <div class="space-y-6">
+      <div><h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2><p class="text-[#8191a2] text-xs uppercase tracking-widest mt-1">Marketing Agency</p></div>
+      <div class="space-y-2"><p class="text-[#8191a2] text-sm">+593 96 993 7265</p><p class="text-[#8191a2] text-sm">artia.estudioin@gmail.com</p></div>
+      <p class="text-[#8191a2]/60 text-xs max-w-xs">Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.</p>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
+      <div class="space-y-4">
+        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
+        <nav class="flex flex-col gap-3">
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="index.html">Inicio</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="nosotros.html">Nosotros</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="servicio-marketing-digital.html">Servicios</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="clientes.html">Clientes</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
+        </nav>
+      </div>
+      <div class="space-y-4">
+        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
+        <nav class="flex flex-col gap-3">
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
+          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
+        </nav>
+      </div>
+      <div class="space-y-4 col-span-2 lg:col-span-1">
+        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
+        <nav class="flex gap-4">
+          <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#"><span class="material-symbols-outlined text-base">public</span></a>
+          <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#"><span class="material-symbols-outlined text-base">share</span></a>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+    <p class="text-[#8191a2]/40 text-xs">© 2026 ARTIA. All rights reserved.</p>
+    <button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top:0,behavior:'smooth'})">Volver arriba <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span></button>
+  </div>
+</footer>
+</main>
+
+<!-- GSAP Menu + ScrollReveal -->
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+  const toggle=document.getElementById('mobile-menu-toggle'),
+        close=document.getElementById('mobile-menu-close'),
+        menu=document.getElementById('mobile-menu'),
+        hdr=document.getElementById('mm-header'),
+        nav=document.getElementById('mm-nav'),
+        cta=document.getElementById('mm-cta');
+  gsap.set(menu,{xPercent:100,autoAlpha:0,display:'none'});
+  function open(){
+    document.body.style.overflow='hidden';
+    gsap.set(menu,{display:'flex'});
+    gsap.timeline()
+      .to(menu,{xPercent:0,autoAlpha:1,duration:0.45,ease:'power3.out'})
+      .from(hdr,{y:-20,opacity:0,duration:0.3,ease:'power2.out'},'-=0.2')
+      .from(nav.children,{y:24,opacity:0,duration:0.35,stagger:0.07,ease:'power2.out'},'-=0.1')
+      .from(cta,{y:16,opacity:0,duration:0.3,ease:'power2.out'},'-=0.1');
+  }
+  function closeMenu(){
+    gsap.to(menu,{xPercent:100,autoAlpha:0,duration:0.35,ease:'power3.in',onComplete:()=>{gsap.set(menu,{display:'none'});document.body.style.overflow='auto';}});
+  }
+  toggle.addEventListener('click',open);
+  close.addEventListener('click',closeMenu);
+  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+  const btn=document.getElementById('btn-toggle-servicios'),
+        sub=document.getElementById('submenu-movil'),
+        ico=document.getElementById('icon-flecha');
+  if(btn&&sub){btn.addEventListener('click',function(e){e.preventDefault();const c=sub.classList.contains('hidden');if(c){sub.classList.remove('hidden');sub.classList.add('flex');gsap.from(sub.children,{y:10,opacity:0,duration:0.25,stagger:0.06,ease:'power2.out'});gsap.to(ico,{rotation:180,duration:0.3});}else{sub.classList.add('hidden');sub.classList.remove('flex');gsap.to(ico,{rotation:0,duration:0.3});}});}
+  document.querySelectorAll('[data-sr]').forEach(function(el){
+    gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%',once:true},y:50,opacity:0,duration:0.8,delay:parseFloat(el.dataset.srDelay||0),ease:'power3.out'});
+  });
+})();
+</script>
+
+<!-- Counter Script -->
+<script>
+async function animateCounter() {
+  const el   = document.getElementById('global-visit-count');
+  const base = 1351;
+  const workspace = 'marlon-morenos-team-3593';
+  const counter   = 'artia-marketing-stats';
+  const key  = 'ut_bDowg5fY18Xom2dlTsml1cgUEd2AE1cYaftS5ftR';
+
+  try {
+    const r = await fetch(
+      `https://api.counterapi.dev/v2/${workspace}/${counter}/up`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + key
+        }
+      }
+    );
+
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+
+    const d = await r.json();
+
+    // ✅ CORRECCIÓN: v2 devuelve { "count": N }, no "value" ni "data.count"
+    const apiCount = d.count ?? d.value ?? d.data?.count ?? 0;
+    countUp(el, base + parseInt(apiCount));
+
+  } catch (e) {
+    console.warn('CounterAPI error:', e);
+    countUp(el, base); // fallback al base si falla
+  }
+}
+
+function countUp(el, target) {
+  const dur = 2800, t0 = performance.now();
+  (function step(now) {
+    const p    = Math.min((now - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.innerText = new Intl.NumberFormat('es-ES').format(Math.floor(ease * target));
+    p < 1 ? requestAnimationFrame(step)
+          : el.innerText = new Intl.NumberFormat('es-ES').format(target);
+  })(t0);
+}
+
+document.addEventListener('DOMContentLoaded', animateCounter);
+</script>
+<script>
+  const slides = document.querySelectorAll('.hero-slide');
+  let currentSlide = 0;
+
+  function nextSlide() {
+    // Ocultar imagen actual
+    slides[currentSlide].classList.replace('opacity-80', 'opacity-0');
+    
+    // Calcular siguiente índice
+    currentSlide = (currentSlide + 1) % slides.length;
+    
+    // Mostrar siguiente imagen
+    slides[currentSlide].classList.replace('opacity-0', 'opacity-80');
+  }
+
+  // Ejecutar cada 1.5 segundos
+  setInterval(nextSlide, 1500);
+</script>
+<!-- Modal Overlay -->
+<div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+    
+    <!-- Cabecera -->
+    <div class="bg-primary p-6 text-white relative">
+      <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-xl font-bold">Solicitar Información</h3>
+      <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="whatsappForm" class="p-8 space-y-4">
+      <input type="hidden" id="selectedPlan">
+      
+      <div>
+        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
+        <input type="text" id="userName" required placeholder="Ej. Carlitos" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
+        Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+<!-- Modal de Reserva de Menú -->
+<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
+    
+    <!-- Header Estilo Agencia -->
+    <div class="bg-blue-600 p-8 text-white relative">
+      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="reservaMenuForm" class="p-8 space-y-6">
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
+        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
+        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
+          <option value="" disabled selected>Selecciona una opción...</option>
+          <option value="Páginas Webs">Páginas Webs</option>
+          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
+          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
+          <option value="Branding Corporativo">Branding Corporativo</option>
+          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
+          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+function openModal(planName) {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    const displayPlan = document.getElementById('displayPlanName');
+    const hiddenInput = document.getElementById('selectedPlan');
+
+    displayPlan.innerText = planName;
+    hiddenInput.value = planName;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Animación de entrada
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// Lógica del Formulario
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('userName').value;
+    const plan = document.getElementById('selectedPlan').value;
+    const telefono = "593969937265"; 
+
+    // Creamos el mensaje con saltos de línea REALES
+    const mensajeFinal = `*¡Hola Artia!*
+Mi nombre es *${nombre}*.
+Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
+¿Podríamos agendar una breve reunión para revisar los detalles?
+
+Muchas gracias.`;
+
+    // CORRECCIÓN: Aquí usamos mensajeFinal dentro del encodeURIComponent
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    
+    window.open(url, '_blank');
+    
+    // Opcional: Cerrar el modal después de enviar
+    if(typeof closeModal === 'function') closeModal();
+});
+</script>
+<script>
+function openReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('reservaMenuNombre').value;
+    const servicio = document.getElementById('reservaMenuServicio').value;
+    const telefono = "593969937265";
+
+    // Mensaje con saltos de línea reales para evitar errores de codificación
+    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
+
+*Nombre:* ${nombre}
+*Servicio:* ${servicio}
+
+Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
+
+¡Quedo atento/a!`;
+
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    window.open(url, '_blank');
+    closeReservaMenu();
+});
+</script>
+</body>
+</html>
