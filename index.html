@@ -466,25 +466,29 @@ This code is the private property of Artia Studio.
         const displayElement = document.getElementById('global-visit-count');
         const baseVisits = 1351;
         
-        // PEGA AQUÍ EL CÓDIGO QUE COPIASTE EN "API TOKENS"
+        // Tu API Key y URL de la imagen
         const apiKey = 'ut_bDowg5fY18Xom2dlTsml1cgUEd2AE1cYaftS5ftR'; 
         const url = 'https://api.counterapi.dev/v2/marlon-morenos-team-3593/artia-marketing-stats/up';
 
         try {
             const response = await fetch(url, {
-                method: 'GET', // O POST según prefieras, la v2 acepta ambos
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             });
 
             if (!response.ok) throw new Error('Error en la API');
             
-            const data = await response.json();
-            // En la v2 el dato viene dentro de data.count
-            const targetNumber = parseInt(data.count) + baseVisits;
+            const jsonResponse = await response.json();
+            
+            // CORRECCIÓN AQUÍ: En la v2 el número está en jsonResponse.data.count
+            const apiCount = jsonResponse.data && jsonResponse.data.count ? jsonResponse.data.count : 0;
+            const targetNumber = parseInt(apiCount) + baseVisits;
 
-            // Animación suave
+            // Animación de conteo
             let startTime = null;
             const duration = 2500; 
 
@@ -493,6 +497,7 @@ This code is the private property of Artia Studio.
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 
+                // Efecto de frenado suave al final
                 const easeOutQuad = t => t * (2 - t);
                 const currentCount = Math.floor(easeOutQuad(progress) * targetNumber);
                 
@@ -500,18 +505,22 @@ This code is the private property of Artia Studio.
 
                 if (progress < 1) {
                     requestAnimationFrame(updateNumber);
+                } else {
+                    displayElement.innerText = new Intl.NumberFormat('es-ES').format(targetNumber);
                 }
             }
             requestAnimationFrame(updateNumber);
 
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error detallado:", error);
+            // Si falla, mostramos tu base para que no se vea vacío
             displayElement.innerText = new Intl.NumberFormat('es-ES').format(baseVisits);
         }
     }
 
     document.addEventListener('DOMContentLoaded', animateCounter);
 </script>
+
 
 
 <!-- Footer (Replicated from SCREEN_30) -->
