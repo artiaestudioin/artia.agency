@@ -29,6 +29,21 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 @keyframes blurToClear{to{filter:blur(0);opacity:1}}
 .wa-pulse{animation:waPulse 2s infinite}
 @keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+/* Contador websiteout */
+#wso-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+#wso-wrap a { line-height: 0; display: block; }
+#wso-wrap img {
+  transform: scale(6);
+  transform-origin: center center;
+  margin: 28px 0;
+  filter: hue-rotate(220deg) saturate(5) brightness(1);
+  image-rendering: crisp-edges;
+}
 </style>
 </head>
 <body class="bg-background font-body text-on-surface overflow-x-hidden">
@@ -322,16 +337,100 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     </div>
   </div>
 </section>
-<!-- Counter -->
-<div class="flex flex-col items-center justify-center py-16 bg-surface-container-lowest rounded-2xl shadow-2xl mx-6 my-10 border border-outline-variant/20" data-sr>
-  <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce">groups</span>
-  <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-2">Comunidad Artia</h3>
-  <div class="flex items-baseline gap-1">
-    <span id="global-visit-count" class="text-6xl md:text-8xl font-black font-headline text-primary tracking-tighter">—</span>
-    <span class="text-secondary text-4xl font-bold">+</span>
-  </div>
-  <p class="text-slate-400 text-sm font-medium mt-2">Visitas globales y contando</p>
-</div>
+<style>
+.digit-card {
+  width: 52px;
+  height: 72px;
+  background: #0b3baa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,17,58,0.18), inset 0 1px 0 rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease;
+}
+.digit-card::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(179,197,255,0.12);
+}
+.digit-sep {
+  font-family: 'Manrope', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #b3c5ff;
+  line-height: 1;
+  margin: 0 2px;
+  align-self: center;
+}
+@keyframes flipIn {
+  0%   { transform: rotateX(-90deg) translateY(-10px); opacity: 0; }
+  100% { transform: rotateX(0deg)   translateY(0);     opacity: 1; }
+}
+.digit-card.flip { animation: flipIn .35s cubic-bezier(.4,0,.2,1) forwards; }
+</style>
+
+<script>
+(function () {
+  const BASE    = 1351;
+  const STORE   = 'artia_visit_count';
+  const VISITED = 'artia_visited';
+
+  // Leer conteo guardado; si no existe, iniciar en BASE
+  let count = parseInt(localStorage.getItem(STORE) || BASE, 10);
+
+  // Solo sumar 1 por sesión de navegador (tab / ventana nueva cuenta)
+  if (!sessionStorage.getItem(VISITED)) {
+    count++;
+    localStorage.setItem(STORE, count);
+    sessionStorage.setItem(VISITED, '1');
+  }
+
+  function renderDigits(value) {
+    const wrap  = document.getElementById('visit-digits');
+    const str   = String(value).padStart(4, '0');
+    wrap.innerHTML = '';
+
+    str.split('').forEach((d, i) => {
+      // Separador de miles
+      if (i === str.length - 3) {
+        const sep = document.createElement('span');
+        sep.className = 'digit-sep';
+        sep.textContent = '.';
+        wrap.appendChild(sep);
+      }
+      const card = document.createElement('div');
+      card.className = 'digit-card flip';
+      card.style.animationDelay = (i * 80) + 'ms';
+      card.textContent = d;
+      wrap.appendChild(card);
+    });
+  }
+
+  // Animación contUp desde BASE hasta count
+  function countUp(target) {
+    const dur = 2600, t0 = performance.now();
+    (function step(now) {
+      const p    = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      renderDigits(Math.floor(BASE + ease * (target - BASE)));
+      if (p < 1) requestAnimationFrame(step);
+      else renderDigits(target);
+    })(t0);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => countUp(count));
+})();
+</script>
 <!-- Footer -->
 <footer class="bg-[#051522] w-full py-20 px-8 lg:px-16 mt-auto">
   <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
@@ -606,5 +705,6 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     closeReservaMenu();
 });
 </script>
+<script type="text/javascript" src="https://counter.websiteout.com/js/35/4/1351/0"></script>
 </body>
 </html>

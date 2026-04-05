@@ -32,6 +32,21 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 @keyframes revealAnim{100%{opacity:1;transform:translateY(0);filter:blur(0)}}
 .wa-pulse{animation:waPulse 2s infinite}
 @keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+/* Contador websiteout */
+#wso-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+#wso-wrap a { line-height: 0; display: block; }
+#wso-wrap img {
+  transform: scale(6);
+  transform-origin: center center;
+  margin: 28px 0;
+  filter: hue-rotate(220deg) saturate(5) brightness(1);
+  image-rendering: crisp-edges;
+}
 </style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-fixed-dim selection:text-primary">
@@ -329,60 +344,113 @@ window.addEventListener('scroll',function(){
     </div>
   </div>
 </section>
-
-<!-- Counter -->
+  <!-- Counter -->
 <div class="flex flex-col items-center justify-center py-2 bg-surface-container-lowest rounded-2xl shadow-2xl mx-6 my-10 border border-outline-variant/20" data-sr>
-  <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce">groups</span>
-  <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-2">Comunidad Artia</h3>
-  <div class="flex items-baseline gap-1">
-    <span id="global-visit-count" class="text-6xl md:text-8xl font-black font-headline text-primary tracking-tighter">—</span>
-    <span class="text-secondary text-4xl font-bold">+</span>
+  <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce" style="font-variation-settings:'FILL' 1">groups</span>
+  <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-6">Comunidad Artia</h3>
+
+  <!-- Dígitos del contador -->
+  <div id="visit-digits" class="flex items-center gap-2 mb-6">
+    <!-- Los dígitos se insertan aquí por JS -->
   </div>
-  <p class="text-slate-400 text-sm font-medium mt-2">Visitas globales y contando</p>
+
+  <p class="text-slate-400 text-sm font-medium">Visitas globales y contando</p>
 </div>
 
-<!-- Footer -->
-<footer class="bg-[#051522] w-full py-20 px-8 lg:px-16 mt-auto">
-  <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-    <div class="space-y-6">
-      <div><h2 class="text-white text-2xl font-bold tracking-tighter">ARTIA</h2><p class="text-[#8191a2] text-xs uppercase tracking-widest mt-1">Marketing Agency</p></div>
-      <div class="space-y-2"><p class="text-[#8191a2] text-sm">+593 96 993 7265</p><p class="text-[#8191a2] text-sm">artia.estudioin@gmail.com</p></div>
-      <p class="text-[#8191a2]/60 text-xs max-w-xs">Arquitectura de marcas sólidas mediante precisión estratégica y compromiso con resultados medibles.</p>
-    </div>
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
-      <div class="space-y-4">
-        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Agencia</h4>
-        <nav class="flex flex-col gap-3">
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="index.html">Inicio</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="nosotros.html">Nosotros</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="servicio-marketing-digital.html">Servicios</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="clientes.html">Clientes</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="https://wa.me/593969937265">Contacto</a>
-        </nav>
-      </div>
-      <div class="space-y-4">
-        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Legal</h4>
-        <nav class="flex flex-col gap-3">
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Privacidad</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Términos</a>
-          <a class="text-[#8191a2] hover:text-white text-sm transition-colors duration-300" href="#">Cookies</a>
-        </nav>
-      </div>
-      <div class="space-y-4 col-span-2 lg:col-span-1">
-        <h4 class="text-white text-xs font-bold uppercase tracking-widest">Síguenos</h4>
-        <nav class="flex gap-4">
-          <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#"><span class="material-symbols-outlined text-base">public</span></a>
-          <a class="w-8 h-8 rounded-full border border-outline-variant/20 flex items-center justify-center text-[#8191a2] hover:text-white hover:border-white transition-all" href="#"><span class="material-symbols-outlined text-base">share</span></a>
-        </nav>
-      </div>
-    </div>
-  </div>
-  <div class="max-w-screen-2xl mx-auto pt-16 mt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-    <p class="text-[#8191a2]/40 text-xs">© 2026 ARTIA. All rights reserved.</p>
-    <button class="text-[#8191a2] hover:text-white text-xs flex items-center gap-2 group transition-colors" onclick="window.scrollTo({top:0,behavior:'smooth'})">Volver arriba <span class="material-symbols-outlined text-sm group-hover:-translate-y-1 transition-transform">arrow_upward</span></button>
-  </div>
-</footer>
-</main>
+<style>
+.digit-card {
+  width: 52px;
+  height: 72px;
+  background: #0b3baa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,17,58,0.18), inset 0 1px 0 rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease;
+}
+.digit-card::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(179,197,255,0.12);
+}
+.digit-sep {
+  font-family: 'Manrope', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #b3c5ff;
+  line-height: 1;
+  margin: 0 2px;
+  align-self: center;
+}
+@keyframes flipIn {
+  0%   { transform: rotateX(-90deg) translateY(-10px); opacity: 0; }
+  100% { transform: rotateX(0deg)   translateY(0);     opacity: 1; }
+}
+.digit-card.flip { animation: flipIn .35s cubic-bezier(.4,0,.2,1) forwards; }
+</style>
+
+<script>
+(function () {
+  const BASE    = 1351;
+  const STORE   = 'artia_visit_count';
+  const VISITED = 'artia_visited';
+
+  // Leer conteo guardado; si no existe, iniciar en BASE
+  let count = parseInt(localStorage.getItem(STORE) || BASE, 10);
+
+  // Solo sumar 1 por sesión de navegador (tab / ventana nueva cuenta)
+  if (!sessionStorage.getItem(VISITED)) {
+    count++;
+    localStorage.setItem(STORE, count);
+    sessionStorage.setItem(VISITED, '1');
+  }
+
+  function renderDigits(value) {
+    const wrap  = document.getElementById('visit-digits');
+    const str   = String(value).padStart(4, '0');
+    wrap.innerHTML = '';
+
+    str.split('').forEach((d, i) => {
+      // Separador de miles
+      if (i === str.length - 3) {
+        const sep = document.createElement('span');
+        sep.className = 'digit-sep';
+        sep.textContent = '.';
+        wrap.appendChild(sep);
+      }
+      const card = document.createElement('div');
+      card.className = 'digit-card flip';
+      card.style.animationDelay = (i * 80) + 'ms';
+      card.textContent = d;
+      wrap.appendChild(card);
+    });
+  }
+
+  // Animación contUp desde BASE hasta count
+  function countUp(target) {
+    const dur = 2600, t0 = performance.now();
+    (function step(now) {
+      const p    = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      renderDigits(Math.floor(BASE + ease * (target - BASE)));
+      if (p < 1) requestAnimationFrame(step);
+      else renderDigits(target);
+    })(t0);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => countUp(count));
+})();
+</script>
 
 <!-- GSAP Menu + ScrollReveal -->
 <script>
@@ -419,71 +487,6 @@ window.addEventListener('scroll',function(){
   });
 })();
 </script>
-
-<!-- Counter Script -->
-<script>
-async function animateCounter() {
-  const el   = document.getElementById('global-visit-count');
-  const base = 1351;
-  const workspace = 'marlon-morenos-team-3593';
-  const counter   = 'artiastudio1sc';
-  const key  = 'ut_Hlh2yVokYQ4POT69VNTpyEBuGrOf7cYZwkZCGch8';
-
-  try {
-    const r = await fetch(
-      `https://api.counterapi.dev/v2/$marlon-morenos-team-3593/artiastudio1sc/up`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + key
-        }
-      }
-    );
-
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-
-    const d = await r.json();
-
-    // ✅ CORRECCIÓN: v2 devuelve { "count": N }, no "value" ni "data.count"
-    const apiCount = d.count ?? d.value ?? d.data?.count ?? 0;
-    countUp(el, base + parseInt(apiCount));
-
-  } catch (e) {
-    console.warn('CounterAPI error:', e);
-    countUp(el, base); // fallback al base si falla
-  }
-}
-
-function countUp(el, target) {
-  const dur = 2800, t0 = performance.now();
-  (function step(now) {
-    const p    = Math.min((now - t0) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.innerText = new Intl.NumberFormat('es-ES').format(Math.floor(ease * target));
-    p < 1 ? requestAnimationFrame(step)
-          : el.innerText = new Intl.NumberFormat('es-ES').format(target);
-  })(t0);
-}
-
-document.addEventListener('DOMContentLoaded', animateCounter);
-</script>
-<script>
-  const slides = document.querySelectorAll('.hero-slide');
-  let currentSlide = 0;
-
-  function nextSlide() {
-    // Ocultar imagen actual
-    slides[currentSlide].classList.replace('opacity-80', 'opacity-0');
-    
-    // Calcular siguiente índice
-    currentSlide = (currentSlide + 1) % slides.length;
-    
-    // Mostrar siguiente imagen
-    slides[currentSlide].classList.replace('opacity-0', 'opacity-80');
-  }
-
-  // Ejecutar cada 1.5 segundos
-  setInterval(nextSlide, 1500);
 </script>
 <!-- Modal Overlay -->
 <div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -654,5 +657,6 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     closeReservaMenu();
 });
 </script>
+<script type="text/javascript" src="https://counter.websiteout.com/js/35/4/1351/0"></script>
 </body>
 </html>
