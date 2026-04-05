@@ -464,9 +464,9 @@ This code is the private property of Artia Studio.
 <script>
     async function animateCounter() {
         const displayElement = document.getElementById('global-visit-count');
-        const baseVisits = 1351;
+        const baseVisits = 1351; // Tu base fija
         
-        // Tu API Key y URL de la imagen
+        // Datos de tu API (Verificados de tu imagen)
         const apiKey = 'ut_bDowg5fY18Xom2dlTsml1cgUEd2AE1cYaftS5ftR'; 
         const url = 'https://api.counterapi.dev/v2/marlon-morenos-team-3593/artia-marketing-stats/up';
 
@@ -475,53 +475,50 @@ This code is the private property of Artia Studio.
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
 
-            if (!response.ok) throw new Error('Error en la API');
+            if (!response.ok) throw new Error('Error en respuesta de API');
             
-            const jsonResponse = await response.json();
+            const res = await response.json();
             
-            // CORRECCIÓN AQUÍ: En la v2 el número está en jsonResponse.data.count
-            const apiCount = jsonResponse.data && jsonResponse.data.count ? jsonResponse.data.count : 0;
-            const targetNumber = parseInt(apiCount) + baseVisits;
+            // Según la doc V2, el valor puede venir en res.value o res.data.count
+            const apiValue = res.value || (res.data && res.data.count) || 0;
+            const targetNumber = parseInt(apiValue) + baseVisits;
 
-            // Animación de conteo
-            let startTime = null;
-            const duration = 2500; 
+            // Configuración de la animación
+            let start = 0;
+            const duration = 3000; // 3 segundos para que sea más impactante
+            const startTime = performance.now();
 
-            function updateNumber(currentTime) {
-                if (!startTime) startTime = currentTime;
+            function step(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 
-                // Efecto de frenado suave al final
-                const easeOutQuad = t => t * (2 - t);
-                const currentCount = Math.floor(easeOutQuad(progress) * targetNumber);
+                // Efecto "Ease Out" (frena suave al final)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentCount = Math.floor(easeOut * targetNumber);
                 
                 displayElement.innerText = new Intl.NumberFormat('es-ES').format(currentCount);
 
                 if (progress < 1) {
-                    requestAnimationFrame(updateNumber);
+                    requestAnimationFrame(step);
                 } else {
                     displayElement.innerText = new Intl.NumberFormat('es-ES').format(targetNumber);
                 }
             }
-            requestAnimationFrame(updateNumber);
+            requestAnimationFrame(step);
 
         } catch (error) {
-            console.error("Error detallado:", error);
-            // Si falla, mostramos tu base para que no se vea vacío
+            console.error("Detalle del error:", error);
+            // Si la API falla, mostramos tu número base con estilo
             displayElement.innerText = new Intl.NumberFormat('es-ES').format(baseVisits);
         }
     }
 
     document.addEventListener('DOMContentLoaded', animateCounter);
 </script>
-
-
 
 <!-- Footer (Replicated from SCREEN_30) -->
 <footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
