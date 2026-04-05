@@ -355,9 +355,9 @@ This code is the private property of Artia Studio.
         .wa-pulse { animation: titileo 2s infinite; }
 </style>
 <!-- About Section -->
-<section class="py-24 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+<section class="py-6 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
 <div class="space-y-8">
-<span class="text-secondary font-bold tracking-widest text-xs uppercase">Nuestra Esencia</span>
+<span class="text-secondary font-bold tracking-widest text-xs uppercase">Más que identidad...</span>
 <h2 class="text-4xl lg:text-5xl font-headline font-bold text-primary leading-tight">
                     Arquitectura estratégica para marcas de alto impacto.
                 </h2>
@@ -386,10 +386,10 @@ This code is the private property of Artia Studio.
 </div>
 </section>
 <!-- Services Section: Bento Grid Layout -->
-<section class="py-24 px-8 lg:px-24 bg-surface-container-low">
+<section class="py-4 px-8 lg:px-24 bg-surface-container-low">
 <div class="max-w-7xl mx-auto">
-<div class="mb-16">
-<span class="text-secondary font-bold tracking-widest text-xs uppercase">Especialidades</span>
+<div class="mb-10">
+<span class="text-secondary font-bold tracking-widest text-xs uppercase">Marketing y Publicidad Integral</span>
 <h2 class="text-4xl font-headline font-bold text-primary mt-4">Soluciones Integrales</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
@@ -442,7 +442,66 @@ This code is the private property of Artia Studio.
 </div>
 </div>
 </section>
+<div class="flex flex-col items-center justify-center py-1 bg-surface-container-lowest rounded-2xl shadow-2xl mx-6 my-10 border border-outline-variant/20">
+    <span class="material-symbols-outlined text-secondary text-5xl mb-4 animate-bounce">
+        groups
+    </span>
+    <h3 class="text-slate-500 uppercase tracking-[0.3em] text-xs font-bold mb-2">
+        Comunidad Artia
+    </h3>
+    <!-- Este es el número grande -->
+    <div class="flex items-baseline gap-1">
+        <span id="global-visit-count" class="text-6xl md:text-8xl font-black font-headline text-primary tracking-tighter">
+            1.351
+        </span>
+        <span class="text-secondary text-4xl font-bold">+</span>
+    </div>
+    <p class="text-slate-400 text-sm font-medium mt-2">
+        Visitas globales y contando
+    </p>
+</div>
 
+<<script>
+    async function animateCounter() {
+        const displayElement = document.getElementById('global-visit-count');
+        const baseVisits = 1351;
+        const namespace = 'artia_marketing_studio'; // Tu ID único
+        const key = 'main_page';
+
+        try {
+            const response = await fetch(`https://counterapi.dev{namespace}/${key}/up`);
+            const data = await response.json();
+            const targetNumber = parseInt(data.count) + baseVisits;
+
+            // Animación de incremento
+            let startNumber = 0;
+            const duration = 2000; // 2 segundos
+            const startTime = performance.now();
+
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Efecto de suavizado (Ease Out)
+                const currentCount = Math.floor(progress * targetNumber);
+                displayElement.innerText = new Intl.NumberFormat('es-ES').format(currentCount);
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                } else {
+                    displayElement.innerText = new Intl.NumberFormat('es-ES').format(targetNumber);
+                }
+            }
+
+            requestAnimationFrame(updateNumber);
+
+        } catch (error) {
+            displayElement.innerText = new Intl.NumberFormat('es-ES').format(baseVisits);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', animateCounter);
+</script>
 <!-- Footer (Replicated from SCREEN_30) -->
 <footer class="bg-[#051522] dark:bg-[#020817] w-full py-20 px-8 lg:px-16 mt-auto">
 <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
@@ -553,4 +612,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
 </body></html>
