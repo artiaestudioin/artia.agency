@@ -28,12 +28,12 @@
 <body class="bg-surface font-body text-on-surface">
 <aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-10 px-6 tonal-layering-no-borders z-50">
   <div>
-    <a class="mb-12 block group" href="index.html">
+    <a class="mb-12 block group" href="inicio.html">
       <span class="text-2xl font-bold tracking-tighter text-[#00113a] font-headline group-hover:opacity-70 transition-opacity">ARTIA</span>
       <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 font-semibold">Marketing Studio</p>
     </a>
     <nav class="flex flex-col gap-y-6">
-      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="index.html">Inicio</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="inicio.html">Inicio</a>
       <div class="group relative">
         <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
           <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
@@ -55,39 +55,98 @@
     <div class="flex items-center gap-3 pl-4 text-slate-500"><span class="material-symbols-outlined text-[18px]">help_outline</span><span class="text-xs font-medium">Soporte</span></div>
   </div>
 </aside>
-<!-- Mobile Top Navigation -->
-<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
-  <div class="w-10"></div>
-  <a class="text-xl font-black tracking-widest text-[#00113a] font-headline" href="index.html">ARTIA</a>
-  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
-</header>
-<!-- Mobile Navigation Overlay -->
-<div class="fixed inset-0 z-[60] bg-white flex-col p-10 lg:hidden" id="mobile-menu" style="display:none">
-  <div class="flex justify-between items-center mb-8" id="mm-header">
-    <a class="text-2xl font-black tracking-widest text-primary font-headline" href="index.html">ARTIA</a>
-    <button class="text-primary" id="mobile-menu-close"><span class="material-symbols-outlined text-3xl">close</span></button>
-  </div>
-  <nav class="flex flex-col gap-y-6" id="mm-nav">
-    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="index.html">Inicio</a>
-    <div class="relative">
-      <button id="btn-toggle-servicios" class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4">
-        <span>Servicios</span><span id="icon-flecha" class="material-symbols-outlined text-sm">expand_more</span>
-      </button>
-      <div id="submenu-movil" class="hidden flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
-        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-        <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+<!-- Desktop Side Navigation -->
+
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a href="inicio.html" class="block w-32 mb-10">
+      <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
+    </a>
+    <nav class="flex flex-col gap-y-6">
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
+          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+        </div>
       </div>
-    </div>
-    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="clientes.html">Clientes</a>
-    <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors" href="nosotros.html">Nosotros</a>
-  </nav>
-  <div class="mt-8" id="mm-cta">
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+  </div>
+  <div class="flex flex-col gap-6">
     <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
   RESERVAR
 </button>
+    <div class="flex items-center gap-3 pl-4 text-slate-500">
+      <span class="material-symbols-outlined text-[18px]">help_outline</span>
+      <span class="text-xs font-medium">Soporte</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a href="inicio.html" class="block w-32 mt-1">
+    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia">
+  </a>
+  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
+</header>
+
+<!-- Mobile Navigation Overlay (GSAP controlled) -->
+<div class="fixed inset-0 z-[60] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center p-10 lg:hidden text-center" id="mobile-menu" style="display:none">
+  
+  <!-- Botón cerrar (lo movemos a la esquina para que no estorbe el centro) -->
+  <button id="mobile-menu-close" class="absolute top-8 right-8 text-primary p-2">
+    <span class="material-symbols-outlined text-4xl">close</span>
+  </button>
+
+<!-- Logo (Reposicionado hacia arriba) -->
+<div id="mm-header" class="-mt-10 mb-20 flex justify-center w-full"> 
+    <!-- -mt-10 lo sube hacia la X | mb-20 le da aire a la palabra Inicio -->
+    <a href="inicio.html" class="inline-block w-64 transition-transform active:scale-95">
+        <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
+             alt="Logo Artia" 
+             class="w-full h-auto object-contain">
+    </a>
+</div>
+
+
+  <!-- Navegación (Más grande y centrada) -->
+  <nav class="flex flex-col gap-y-8 w-full" id="mm-nav">
+    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html">Inicio</a>
+    
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-center gap-2 w-full font-manrope text-2xl font-semibold tracking-tight text-slate-500">
+        <span>Servicios</span>
+        <span id="icon-flecha" class="material-symbols-outlined text-2xl transition-transform duration-300">expand_more</span>
+      </button>
+      
+      <!-- Submenu Ajustado -->
+      <div id="submenu-movil" class="hidden flex-col mt-4 gap-4 bg-slate-50/50 py-4 rounded-2xl">
+        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
+      </div>
+    </div>
+
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html">Nosotros</a>
+  </nav>
+
+  <!-- Botón Reservar -->
+  <div class="mt-12 w-full px-4" id="mm-cta">
+    <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
+      RESERVAR
+    </button>
   </div>
 </div>
+
 <!-- ===== POPUP EMAIL MODAL ===== -->
 <div id="emailModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 hidden">
   <div class="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl animate-[fadeIn_.2s_ease]">
@@ -148,36 +207,224 @@
 </div>
 
 <!-- ===== BOTÓN FLOTANTE ===== -->
-<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+
+<!-- DESKTOP: estático, sin drag (lg en adelante) -->
+<div class="fixed bottom-8 right-4 z-[60] group hidden lg:block">
   <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
     <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">¿Cómo podemos ayudarte?</div>
-
-    <!-- WhatsApp -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
       <span class="text-sm font-bold">WhatsApp</span>
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
     </a>
-
-    <!-- Llamar -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
       <span class="text-sm font-bold">Llamar ahora</span><span class="material-symbols-outlined">call</span>
     </a>
-
-    <!-- ✉️ NUEVO: Email -->
-    <button onclick="openEmailModal()"
-      class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
+    <button onclick="openEmailModal()" class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
       <span class="text-sm font-bold">Enviar Email</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="4" width="20" height="16" rx="2"/>
-        <path d="M2 7l10 7 10-7"/>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
     </button>
   </div>
-
   <button class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
     <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">chat</span>
   </button>
 </div>
+
+<!-- MOBILE: arrastrable como widget (solo visible en < lg) -->
+<div id="fab-mobile" class="lg:hidden" style="
+  position: fixed;
+  bottom: 32px;
+  left: 16px;
+  z-index: 60;
+  touch-action: none;
+  user-select: none;
+">
+  <!-- Menú que se abre encima del botón -->
+  <div id="fab-menu" style="
+    position: absolute;
+    bottom: 56px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    white-space: nowrap;
+  ">
+    <div style="background:#fff;padding:4px 10px;border-radius:8px;box-shadow:0 10px 30px rgba(0,17,58,0.12);font-size:8px;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#00113a;border:1px solid rgba(197,198,210,0.15);">¿Cómo podemos ayudarte?</div>
+
+    <a href="https://wa.me/593969937265" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);text-decoration:none;">
+      WhatsApp
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    </a>
+
+    <a href="tel:+593969937265" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);text-decoration:none;">
+      Llamar ahora <span class="material-symbols-outlined" style="font-size:18px;">call</span>
+    </a>
+
+    <button onclick="openEmailModal()" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);cursor:pointer;">
+      Enviar Email
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+    </button>
+  </div>
+
+  <!-- Botón principal circular -->
+  <button id="fab-btn" class="wa-pulse" style="
+    width: 48px; height: 48px;
+    background: #2552ca;
+    border-radius: 50%;
+    color: #fff;
+    border: none;
+    box-shadow: 0 10px 25px rgba(37,99,235,0.4);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  ">
+    <span id="fab-icon" class="material-symbols-outlined" style="font-size:24px;font-variation-settings:'FILL' 1;transition:transform 0.3s ease;">chat</span>
+  </button>
+</div>
+
+<script>
+(function () {
+  const fab   = document.getElementById('fab-mobile');
+  const btn   = document.getElementById('fab-btn');
+  const menu  = document.getElementById('fab-menu');
+  const icon  = document.getElementById('fab-icon');
+
+  // ── Estado ──
+  let menuOpen = false;
+  let dragging = false;
+  let dragMoved = false;
+
+  // Posición guardada
+  const STORE = 'artia_fab_pos';
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved) {
+    fab.style.left   = saved.x + 'px';
+    fab.style.top    = saved.y + 'px';
+    fab.style.bottom = 'auto';
+  }
+
+  // ── Drag con touch ──
+  let startX, startY, startLeft, startTop;
+
+  fab.addEventListener('touchstart', function (e) {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+
+    const rect = fab.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop  = rect.top;
+
+    dragging  = true;
+    dragMoved = false;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', function (e) {
+    if (!dragging) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    // Si se movió más de 6px consideramos que es drag, no clic
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+      dragMoved = true;
+      if (menuOpen) closeMenu();
+    }
+
+    // Límites para que no salga de pantalla
+    const size = 48;
+    const maxX = window.innerWidth  - size - 8;
+    const maxY = window.innerHeight - size - 8;
+
+    const newX = Math.max(8, Math.min(maxX, startLeft + dx));
+    const newY = Math.max(8, Math.min(maxY, startTop  + dy));
+
+    fab.style.left   = newX + 'px';
+    fab.style.top    = newY + 'px';
+    fab.style.bottom = 'auto';
+    fab.style.right  = 'auto';
+
+    // Escalar ligeramente para feedback visual
+    fab.style.transform = 'scale(1.08)';
+  }, { passive: true });
+
+  window.addEventListener('touchend', function () {
+    if (!dragging) return;
+    dragging = false;
+    fab.style.transform = 'scale(1)';
+
+    // Guardar posición
+    const rect = fab.getBoundingClientRect();
+    localStorage.setItem(STORE, JSON.stringify({ x: rect.left, y: rect.top }));
+
+    // Si no se arrastró → es un clic → toggle del menú
+    if (!dragMoved) {
+      toggleMenu();
+    }
+  });
+
+  // ── Toggle menú ──
+  function toggleMenu() {
+    menuOpen ? closeMenu() : openMenu();
+  }
+
+  function openMenu() {
+    menuOpen = true;
+
+    // Detectar en qué lado de la pantalla está el botón
+    const rect = fab.getBoundingClientRect();
+    const fabCenterX = rect.left + rect.width / 2;
+    const screenW = window.innerWidth;
+
+    if (fabCenterX < screenW / 2) {
+      // Botón en la mitad IZQUIERDA → menú abre hacia la DERECHA
+      menu.style.right = 'auto';
+      menu.style.left  = '0';
+      menu.style.alignItems = 'flex-start';
+    } else {
+      // Botón en la mitad DERECHA → menú abre hacia la IZQUIERDA
+      menu.style.left  = 'auto';
+      menu.style.right = '0';
+      menu.style.alignItems = 'flex-end';
+    }
+
+    // Detectar si hay espacio arriba o abrir hacia abajo
+    if (rect.top < 220) {
+      // Muy arriba → menú abre hacia ABAJO
+      menu.style.bottom = 'auto';
+      menu.style.top    = '56px';
+    } else {
+      // Normal → menú abre hacia ARRIBA
+      menu.style.top    = 'auto';
+      menu.style.bottom = '56px';
+    }
+
+    menu.style.opacity = '1';
+    menu.style.pointerEvents = 'auto';
+    menu.style.transform = 'translateY(0)';
+    icon.style.transform = 'rotate(20deg)';
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    menu.style.opacity = '0';
+    menu.style.pointerEvents = 'none';
+    menu.style.transform = 'translateY(8px)';
+    icon.style.transform = 'rotate(0deg)';
+  }
+
+  // Cerrar menú si toca fuera
+  document.addEventListener('touchstart', function (e) {
+    if (menuOpen && !fab.contains(e.target)) closeMenu();
+  }, { passive: true });
+
+})();
+</script>
 
 <!-- ===== JAVASCRIPT ===== -->
 <script>
@@ -305,13 +552,7 @@
                 <li>Diseño de Marca</li>
             </ul>
         </div>
-        <div>
-            <h4 class="text-white font-bold mb-6">Contacto</h4>
-            <ul class="space-y-4 text-slate-400 text-sm">
-                <li><a href="artia.estudioin@gmail.com" class="__cf_email__" data-cfemail="d7b6a5a3beb6f9b2a4a3a2b3beb8beb997b0bab6bebbf9b4b8ba">[email&#160;protected]</a></li>
-                <li>+593 96 993 7265</li>
-            </ul>
-        </div>
+        
     </div>
     <div class="max-w-7xl mx-auto pt-2 mt-2 border-t border-white/10 text-center">
         <p class="text-slate-500 text-xs">© 2023 Artia Studio. Todos los derechos reservados.</p>
