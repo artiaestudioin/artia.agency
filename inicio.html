@@ -14,6 +14,7 @@ Reproduction or distribution without permission is strictly prohibited.
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <script src="https://cloudflare.com"></script>
 <script src="https://cloudflare.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@200;400;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -21,9 +22,13 @@ Reproduction or distribution without permission is strictly prohibited.
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
   
-tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"redwin":"#A30016", "primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}
 </script>
 <style>
+  html {
+  scroll-behavior: smooth;
+}
+
   /* Posición MÓVIL (aplica por defecto) */
 .slide-torero  { object-position: 58% 0%;  }
 .slide-img9032 { object-position: 20% 15%; }
@@ -56,6 +61,38 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   filter: hue-rotate(220deg) saturate(5) brightness(1);
   image-rendering: crisp-edges;
 }
+</style>
+<style>
+  /* 1. Títulos en palo seco con rectángulo blur */
+  .title-blur-bg {
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    display: inline-block;
+    padding: 0.4rem 1.2rem;
+    z-index: 1;
+    font-weight: 800;
+  }
+  .title-blur-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    z-index: -1;
+  }
+
+  /* 2. Botón redondeado estilo "Reservar" */
+  .btn-rounded-custom {
+    border-radius: 50px !important;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+  }
+  
 </style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-fixed-dim selection:text-primary">
@@ -287,7 +324,9 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 <!-- Mobile Top Navigation -->
 <header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
   <div class="w-10"></div>
-  <a class="text-xl font-black tracking-widest text-[#00113a] font-headline" href="inicio.html">ARTIA</a>
+  <a href="inicio.html" class="block w-32 mt-1">
+    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia">
+  </a>
   <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
 </header>
 
@@ -300,9 +339,8 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   </button>
 
 <!-- Logo (Reposicionado hacia arriba) -->
-<div id="mm-header" class="-mt-10 mb-20 flex justify-center w-full"> 
-    <!-- -mt-10 lo sube hacia la X | mb-20 le da aire a la palabra Inicio -->
-    <a href="inicio.html" class="inline-block w-64 transition-transform active:scale-95">
+<div id="mm-header" class="mb-12 flex justify-center w-full"> 
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
         <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
              alt="Logo Artia" 
              class="w-full h-auto object-contain">
@@ -321,7 +359,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       </button>
       
       <!-- Submenu Ajustado -->
-      <div id="submenu-movil" class="hidden flex-col mt-4 gap-4 bg-slate-50/50 py-4 rounded-2xl">
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
         <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
@@ -338,6 +376,10 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       RESERVAR
     </button>
   </div>
+  <div class="mt-12 flex justify-center md:justify-start gap-6 text-xl text-gray-blue-500" >
+                        <a href="https://www.instagram.com/artiapublicidadintegral/"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/artiapublicidadintegral"><i class="fab fa-facebook"></i></a>
+                    </div>
 </div>
 
 
@@ -401,36 +443,224 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 </div>
 
 <!-- ===== BOTÓN FLOTANTE ===== -->
-<div class="fixed bottom-8 left-2 lg:left-auto lg:right-4 z-[60] group">
+
+<!-- DESKTOP: estático, sin drag (lg en adelante) -->
+<div class="fixed bottom-8 right-4 z-[60] group hidden lg:block">
   <div class="flex flex-col items-end gap-2 mb-2 pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
     <div class="bg-white px-3 py-1 rounded-lg shadow-[0_10px_30px_rgba(0,17,58,0.1)] text-[8px] uppercase tracking-wider font-black text-primary mb-0.5 border border-outline-variant/10">¿Cómo podemos ayudarte?</div>
-
-    <!-- WhatsApp -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-[#25D366] hover:text-white transition-colors" href="https://wa.me/593969937265">
       <span class="text-sm font-bold">WhatsApp</span>
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
     </a>
-
-    <!-- Llamar -->
     <a class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-primary hover:text-white transition-colors" href="tel:+593969937265">
       <span class="text-sm font-bold">Llamar ahora</span><span class="material-symbols-outlined">call</span>
     </a>
-
-    <!-- ✉️ NUEVO: Email -->
-    <button onclick="openEmailModal()"
-      class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
+    <button onclick="openEmailModal()" class="bg-surface-container-lowest text-on-surface p-3 rounded-full shadow-lg flex items-center gap-2 border border-outline-variant/15 hover:bg-blue-600 hover:text-white transition-colors">
       <span class="text-sm font-bold">Enviar Email</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="4" width="20" height="16" rx="2"/>
-        <path d="M2 7l10 7 10-7"/>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
     </button>
   </div>
-
   <button class="wa-pulse w-11 h-11 bg-blue-600 rounded-full text-white shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center transition-all duration-300 active:scale-90 hover:bg-blue-700 group-hover:rotate-12">
     <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">chat</span>
   </button>
 </div>
+
+<!-- MOBILE: arrastrable como widget (solo visible en < lg) -->
+<div id="fab-mobile" class="lg:hidden" style="
+  position: fixed;
+  bottom: 32px;
+  left: 16px;
+  z-index: 60;
+  touch-action: none;
+  user-select: none;
+">
+  <!-- Menú que se abre encima del botón -->
+  <div id="fab-menu" style="
+    position: absolute;
+    bottom: 56px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    white-space: nowrap;
+  ">
+    <div style="background:#fff;padding:4px 10px;border-radius:8px;box-shadow:0 10px 30px rgba(0,17,58,0.12);font-size:8px;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#00113a;border:1px solid rgba(197,198,210,0.15);">¿Cómo podemos ayudarte?</div>
+
+    <a href="https://wa.me/593969937265" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);text-decoration:none;">
+      WhatsApp
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    </a>
+
+    <a href="tel:+593969937265" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);text-decoration:none;">
+      Llamar ahora <span class="material-symbols-outlined" style="font-size:18px;">call</span>
+    </a>
+
+    <button onclick="openEmailModal()" style="background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);cursor:pointer;">
+      Enviar Email
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+    </button>
+  </div>
+
+  <!-- Botón principal circular -->
+  <button id="fab-btn" class="wa-pulse" style="
+    width: 48px; height: 48px;
+    background: #2552ca;
+    border-radius: 50%;
+    color: #fff;
+    border: none;
+    box-shadow: 0 10px 25px rgba(37,99,235,0.4);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  ">
+    <span id="fab-icon" class="material-symbols-outlined" style="font-size:24px;font-variation-settings:'FILL' 1;transition:transform 0.3s ease;">chat</span>
+  </button>
+</div>
+
+<script>
+(function () {
+  const fab   = document.getElementById('fab-mobile');
+  const btn   = document.getElementById('fab-btn');
+  const menu  = document.getElementById('fab-menu');
+  const icon  = document.getElementById('fab-icon');
+
+  // ── Estado ──
+  let menuOpen = false;
+  let dragging = false;
+  let dragMoved = false;
+
+  // Posición guardada
+  const STORE = 'artia_fab_pos';
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved) {
+    fab.style.left   = saved.x + 'px';
+    fab.style.top    = saved.y + 'px';
+    fab.style.bottom = 'auto';
+  }
+
+  // ── Drag con touch ── (solo sobre el botón circular, no el menú)
+  let startX, startY, startLeft, startTop;
+
+  btn.addEventListener('touchstart', function (e) {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+
+    const rect = fab.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop  = rect.top;
+
+    dragging  = true;
+    dragMoved = false;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', function (e) {
+    if (!dragging) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    // Si se movió más de 6px consideramos que es drag, no clic
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+      dragMoved = true;
+      if (menuOpen) closeMenu();
+    }
+
+    // Límites para que no salga de pantalla
+    const size = 48;
+    const maxX = window.innerWidth  - size - 8;
+    const maxY = window.innerHeight - size - 8;
+
+    const newX = Math.max(8, Math.min(maxX, startLeft + dx));
+    const newY = Math.max(8, Math.min(maxY, startTop  + dy));
+
+    fab.style.left   = newX + 'px';
+    fab.style.top    = newY + 'px';
+    fab.style.bottom = 'auto';
+    fab.style.right  = 'auto';
+
+    // Escalar ligeramente para feedback visual
+    btn.style.transform = 'scale(1.08)';
+  }, { passive: true });
+
+  btn.addEventListener('touchend', function () {
+    if (!dragging) return;
+    dragging = false;
+    btn.style.transform = 'scale(1)';
+
+    // Guardar posición
+    const rect = fab.getBoundingClientRect();
+    localStorage.setItem(STORE, JSON.stringify({ x: rect.left, y: rect.top }));
+
+    // Si no se arrastró → es un clic → toggle del menú
+    if (!dragMoved) {
+      toggleMenu();
+    }
+  });
+
+  // ── Toggle menú ──
+  function toggleMenu() {
+    menuOpen ? closeMenu() : openMenu();
+  }
+
+  function openMenu() {
+    menuOpen = true;
+
+    // Detectar en qué lado de la pantalla está el botón
+    const rect = fab.getBoundingClientRect();
+    const fabCenterX = rect.left + rect.width / 2;
+    const screenW = window.innerWidth;
+
+    if (fabCenterX < screenW / 2) {
+      // Botón en la mitad IZQUIERDA → menú abre hacia la DERECHA
+      menu.style.right = 'auto';
+      menu.style.left  = '0';
+      menu.style.alignItems = 'flex-start';
+    } else {
+      // Botón en la mitad DERECHA → menú abre hacia la IZQUIERDA
+      menu.style.left  = 'auto';
+      menu.style.right = '0';
+      menu.style.alignItems = 'flex-end';
+    }
+
+    // Detectar si hay espacio arriba o abrir hacia abajo
+    if (rect.top < 220) {
+      // Muy arriba → menú abre hacia ABAJO
+      menu.style.bottom = 'auto';
+      menu.style.top    = '56px';
+    } else {
+      // Normal → menú abre hacia ARRIBA
+      menu.style.top    = 'auto';
+      menu.style.bottom = '56px';
+    }
+
+    menu.style.opacity = '1';
+    menu.style.pointerEvents = 'auto';
+    menu.style.transform = 'translateY(0)';
+    icon.style.transform = 'rotate(20deg)';
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    menu.style.opacity = '0';
+    menu.style.pointerEvents = 'none';
+    menu.style.transform = 'translateY(8px)';
+    icon.style.transform = 'rotate(0deg)';
+  }
+
+  // Cerrar menú si toca fuera
+  document.addEventListener('touchstart', function (e) {
+    if (menuOpen && !fab.contains(e.target)) closeMenu();
+  }, { passive: true });
+
+})();
+</script>
 
 <!-- ===== JAVASCRIPT ===== -->
 <script>
@@ -465,7 +695,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     );
 
     // ⬇️ REEMPLAZA con tu correo real
-    window.location.href = `mailto:artia.estudioin@gmail.com?subject=${subject}&body=${body}`;
+    window.open(`mailto:artia.estudioin@gmail.com?subject=${subject}&body=${body}`, '_self');
 
     closeEmailModal();
   }
@@ -491,25 +721,25 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   </div>
 
   <!-- Contenido -->
-  <div id="hero-content" class="relative z-20 flex flex-col items-center justify-end pb-20 h-full w-full px-6 text-center">
+  <div id="hero-content" class="relative z-10 flex flex-col items-center justify-end pb-10 h-full w-full px-10 text-center">
 
     <!-- Tag -->
-    <div id="hero-tag" class="mb-5">
-      <span class="inline-block border border-white/25 text-white/65 text-[9px] uppercase tracking-[0.45em] px-5 py-2 rounded-full backdrop-blur-sm">
+    <div id="hero-tag" class="mb-1">
+      <span class="text-xs lg:text-xl border border-white/25 text-white/65 text-[9px] uppercase tracking-[0.22em] lg:tracking-[0.35em] px-5 py-2 rounded-full backdrop-blur-sm blur-to-clear" style="animation-delay: 0.8s;">
        · Ecuador - Riobamba ·
       </span>
     </div>
 
     <!-- Título principal -->
     <div class="overflow-hidden">
-      <h1 id="hero-title" class="text-[22vw] lg:text-[13rem] font-extrabold tracking-tighter text-white leading-[0.85] font-headline">
-        ARTIA
-      </h1>
+      <h1 id="hero-title" class="blur-to-clear text-[22vw] lg:text-[13rem] font-extrabold tracking-tighter text-white leading-[0.85] mb-2 font-headline">
+                    ARTIA
+      </h1> 
     </div>
 
     <!-- Subtítulo -->
-    <div id="hero-sub" class="mt-3">
-      <p class="text-sm lg:text-xl font-light tracking-[0.25em] lg:tracking-[0.55em] text-white/75 uppercase">
+    <div id="hero-sub" class="mt-1">
+      <p class="text-xs lg:text-xl font-light tracking-[0.25em] lg:tracking-[0.55em] text-white/75 uppercase blur-to-clear" style="animation-delay: 0.5s;">
         Marketing &amp; Publicidad Integral
       </p>
     </div>
@@ -518,9 +748,9 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     <div id="hero-cta" class="flex flex-wrap gap-3 justify-center mt-8">
       <button onclick="openReservaMenu()"
         class="bg-white text-primary font-bold text-[10px] uppercase tracking-[0.2em] px-7 py-3 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 active:scale-95 shadow-lg">
-        Reservar ahora
+        Contáctanos
       </button>
-      <a href="servicio-marketing-digital.html"
+      <a href="#solint"
         class="border border-white/35 text-white font-bold text-[10px] uppercase tracking-[0.2em] px-7 py-3 rounded-full hover:border-white hover:bg-white/10 transition-all duration-300">
         Ver servicios
       </a>
@@ -658,10 +888,12 @@ window.addEventListener('scroll',function(){
 <section class="py-16 px-8 lg:px-24 bg-surface max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center" data-sr>
   <div class="space-y-8">
     <span class="text-secondary font-bold tracking-widest text-xs uppercase">Más que identidad...</span>
-    <h2 class="text-4xl lg:text-5xl font-headline font-bold text-primary leading-tight">Arquitectura estratégica para marcas de alto impacto.</h2>
-    <div class="space-y-6 text-on-surface-variant leading-relaxed">
-      <p>En Artia, no solo creamos publicidad; diseñamos estructuras de comunicación que sostienen el crecimiento de su negocio. Con sede en Ecuador, operamos bajo una visión de precisión editorial y ejecución técnica impecable.</p>
-      <p>Nuestra metodología combina la creatividad audaz con el análisis de datos riguroso, asegurando que cada campaña no solo sea visualmente impactante, sino comercialmente rentable.</p>
+<h2 class="text-4xl lg:text-5xl font-headline font-bold text-primary leading-tight">
+  MARCAS DE ALTO <span class="text-redwin tracking-wide">IMPACTO.</span>
+</h2>
+
+ <div class="space-y-6 text-on-surface-variant leading-relaxed">
+      <p>Estrategia, datos y diseño: creamos marcas de alto impacto que convierten la publicidad en resultados rentables.</p>
     </div>
     <div class="flex gap-12 pt-4">
       <div><p class="text-3xl font-bold text-primary">7+</p><p class="text-xs text-on-surface-variant uppercase tracking-wider">Años Exp</p></div>
@@ -675,42 +907,62 @@ window.addEventListener('scroll',function(){
   </div>
 </section>
 
-<!-- Services Bento -->
-<section class="py-4 px-8 lg:px-24 bg-surface-container-low">
+<section id="solint" class="py-12 px-8 lg:px-24 bg-surface-container-low">
   <div class="max-w-7xl mx-auto">
     <div class="mb-10" data-sr>
       <span class="text-secondary font-bold tracking-widest text-xs uppercase">Marketing y Publicidad Integral</span>
       <h2 class="text-4xl font-headline font-bold text-primary mt-4">Soluciones Integrales</h2>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
-      <div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.1">
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto">
+      
+      <div class="md:col-span-8 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 min-h-[400px]" data-sr data-sr-delay="0.1">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkrCj75G7fp0M3gNhlb05OfTPza6hXYTpG-ryzlBBrQ3vJt3s-xY6xeGltAZfx7srqTrNgc-xlbmX5cVvMopbfU9zs1-KdWFSAKyAWqnuYxQ0wbEreAvdtAeJd5Pvf5TCezuOk5ElbMcAR5ove1m82Ysq5o4b9hGcnDc2zYTNQxDarz51gFSbMlvxskISvqViX4GBgsSISegGK6huRBUL4eii5-8HyJuR557esaOfUF2gVrfK4TnrTzpfWzSapB6Y3YLIsGS4gL7dH" alt="Marketing Digital"/>
         <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
         <div class="relative h-full flex flex-col justify-end p-10 text-white">
-          <h3 class="text-3xl font-bold font-headline mb-4">Planes de Marketing Digital</h3>
+          <div class="title-blur-rect mb-4">
+              <h3 class="text-2xl font-bold font-headline uppercase tracking-tight">Planes de Marketing Digital</h3>
+          </div>
           <p class="max-w-md text-white/80 text-sm leading-relaxed mb-6 group-hover:opacity-100 opacity-0 transition-opacity duration-500">Estrategias omnicanal enfocadas en conversión, gestión de comunidades y posicionamiento SEO/SEM de alta precisión.</p>
-          <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-marketing-digital.html">Explorar plan <span class="material-symbols-outlined">trending_flat</span></a>
+          <a class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-white text-primary px-8 py-3 rounded-full hover:bg-secondary hover:text-white transition-all w-fit" href="servicio-marketing-digital.html">Explorar plan <span class="material-symbols-outlined text-sm">trending_flat</span></a>
         </div>
       </div>
-      <div class="md:col-span-4 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.2">
+
+      <div class="md:col-span-4 group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 min-h-[400px]" data-sr data-sr-delay="0.2">
         <img class="absolute inset-0 w-full h-full object-cover opacity-60 scale-[2] group-hover:scale-[2.35] transition-transform duration-1000 ease-out" src="https://i.ibb.co/whf2FG1w/medios-impresos.jpg" alt="Medios Impresos"/>
         <div class="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent"></div>
         <div class="relative h-full flex flex-col justify-end p-8 text-white">
-          <h3 class="text-2xl font-bold font-headline mb-4">Medios Impresos</h3>
-          <a class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest" href="servicio-impresion.html">Ver Catálogo <span class="material-symbols-outlined">north_east</span></a>
-        </div>
-      </div>
-      <div class="md:col-span-12 group relative overflow-hidden bg-surface-container-lowest rounded-xl h-[300px] shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.3">
-        <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU18e3qRZ97M8llsYi1ffO7MkUGXB4NhW0NwY6DWq1avrlBgD2Xy-6DQEZuSmJovLsb3gfj8G4s7E0asWe0D7GiKVe_WDs5d10XVmogZif_GGkkJ2V399-OXB37o7gz0Yb4ciiPUipYVBGQHZ-0lqgWUNNK_Khls0bz0gvfpUfOhAgreSv8leOgz8KAMez6l2xx32XWNelH7iWdipRT4EwZ3M9CPsNCRE8DqTvhIQVxiPCDX_pJ25FvZ_UwcK1Rr4wxjwkHAnJMfnZ" alt="Fotografía"/>
-        <div class="absolute inset-0 bg-gradient-to-r from-primary/90 to-transparent"></div>
-        <div class="relative h-full flex items-center p-10 text-white">
-          <div class="max-w-xl">
-            <h3 class="text-3xl font-bold font-headline mb-2">Fotografía y Audiovisual</h3>
-            <p class="text-primary-fixed-dim/80 text-sm mb-6">Producción de contenido visual premium que eleva la percepción de su marca.</p>
-            <a class="inline-block bg-white text-primary px-6 py-2 rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-fixed-dim transition-colors" href="servicio-fotografia.html">Ver Portfolio</a>
+          <div class="title-blur-rect mb-4">
+              <h3 class="text-xl font-bold font-headline uppercase tracking-tight">Medios Impresos</h3>
           </div>
+          <a class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-white text-primary px-8 py-3 rounded-full hover:bg-primary hover:text-white transition-all w-fit" href="servicio-impresion.html">Ver Catálogo <span class="material-symbols-outlined text-sm">north_east</span></a>
         </div>
       </div>
+
+      <div class="md:col-span-6 group relative overflow-hidden bg-surface-container-lowest rounded-xl h-[400px] shadow-sm hover:shadow-xl transition-all duration-500" data-sr data-sr-delay="0.3">
+        <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU18e3qRZ97M8llsYi1ffO7MkUGXB4NhW0NwY6DWq1avrlBgD2Xy-6DQEZuSmJovLsb3gfj8G4s7E0asWe0D7GiKVe_WDs5d10XVmogZif_GGkkJ2V399-OXB37o7gz0Yb4ciiPUipYVBGQHZ-0lqgWUNNK_Khls0bz0gvfpUfOhAgreSv8leOgz8KAMez6l2xx32XWNelH7iWdipRT4EwZ3M9CPsNCRE8DqTvhIQVxiPCDX_pJ25FvZ_UwcK1Rr4wxjwkHAnJMfnZ" alt="Fotografía"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        <div class="relative h-full flex flex-col justify-end p-10 text-white">
+          <div class="title-blur-rect mb-4">
+            <h3 class="text-2xl font-bold font-headline uppercase tracking-tight">Fotografía y Audiovisual</h3>
+          </div>
+          <p class="text-white/80 text-sm mb-6 max-w-sm">Producción de contenido visual premium que eleva la percepción de su marca.</p>
+          <a class="inline-flex bg-white text-primary px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary-fixed-dim transition-colors w-fit shadow-lg" href="servicio-fotografia.html">Ver Portafolio</a>
+        </div>
+      </div>
+
+      <div onclick="window.location.href='clientes.html'" class="md:col-span-6 group relative overflow-hidden bg-primary rounded-xl h-[400px] shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border-4 border-transparent hover:border-white/20" data-sr data-sr-delay="0.4">
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-10 text-white z-10">
+            <span class="material-symbols-outlined text-6xl mb-4 opacity-50 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500">group</span>
+            <div class="title-blur-rect mb-4">
+                <h3 class="text-3xl font-bold font-headline uppercase tracking-tighter">Nuestros Clientes</h3>
+            </div>
+            <p class="text-white/70 text-sm mb-8">Marcas que han confiado en nuestra visión integral.</p>
+            <span class="bg-white text-primary px-10 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] group-hover:bg-secondary group-hover:text-white transition-colors">Ingresar</span>
+        </div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-primary to-black opacity-50"></div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -726,7 +978,63 @@ window.addEventListener('scroll',function(){
 
   <p class="text-slate-400 text-sm font-medium">Visitas globales y contando</p>
 </div>
+<!-- CTA -->
+<section class="py-24 px-8 md:px-16 text-center" data-sr>
+  <div class="max-w-2xl mx-auto space-y-8">
+    <h3 class="font-headline text-4xl font-bold text-primary tracking-tight">¿Listo para elevar su imagen de marca?</h3>
+    <p class="text-on-surface-variant text-lg">Permítanos transformar su visión en contenido audiovisual de clase mundial.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="openReservaMenu()" class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors" href="https://wa.me/593969937265" target="_blank">Solicitar Presupuesto</button>
+    </div>
+  </div>
+  <style>
+  .btn-animado {
+    display: inline-flex;
+    align-items: left;
+    gap: 4px;
+    padding: 10px 20px;
+    background-color: #FF0000; /* Rojo YouTube */
+    color: white;
+    text-decoration: none;
+    font-family: 'Arial', sans-serif;
+    font-weight: 950px;
+    font-size: 15px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); /* Sombra inicial para el pulso */
+    transition: transform 0.2s ease;
+    /* ESTA ES LA MAGIA DEL PULSO */
+    animation: pulso-atencion 2s infinite;
+  }
 
+  /* Efecto al pasar el mouse */  
+  .btn-animado:hover {
+    background-color: #cc0000;
+    transform: scale(1.05); /* Se agranda un poquito */
+    animation: none; /* Se detiene el pulso al tocarlo */
+  }
+
+  /* Definición de la animación de pulso */
+  @keyframes pulso-atencion {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+  }
+
+  .play-icon {
+    font-size: 15px;
+  }
+</style>
+</section>
 <style>
 .digit-card {
   width: 52px;
