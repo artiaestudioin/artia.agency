@@ -151,9 +151,8 @@
   </button>
 
 <!-- Logo (Reposicionado hacia arriba) -->
-<div id="mm-header" class="-mt-10 mb-20 flex justify-center w-full"> 
-    <!-- -mt-10 lo sube hacia la X | mb-20 le da aire a la palabra Inicio -->
-    <a href="inicio.html" class="inline-block w-64 transition-transform active:scale-95">
+<div id="mm-header" class="mb-12 flex justify-center w-full"> 
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
         <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
              alt="Logo Artia" 
              class="w-full h-auto object-contain">
@@ -172,7 +171,7 @@
       </button>
       
       <!-- Submenu Ajustado -->
-      <div id="submenu-movil" class="hidden flex-col mt-4 gap-4 bg-slate-50/50 py-4 rounded-2xl">
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
         <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
@@ -598,8 +597,8 @@
 <section id="seccion-precios" class="px-8 lg:px-16 py-24 bg-surface-container-low">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16" data-sr>
-      <h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter">Planes de Crecimiento</h2>
-      <p class="text-on-surface-variant max-w-xl mx-auto">Estructuras diseñadas para adaptarse al volumen y ambición de tu negocio.</p>
+      <h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter">Social Media y Marketing Digital</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto">Planes diseñadas para adaptarse al volumen y ambición de tu negocio.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col justify-between hover:shadow-2xl transition-shadow duration-500" data-sr data-sr-delay="0">
@@ -613,7 +612,7 @@
             <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Reporte Mensual</li>
           </ul>
         </div> 
-        <button onclick="openModal('Profesional')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors"  >Escríbenos ahora</button>
+        <button onclick="openModal('Esencial')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors"  >Escríbenos ahora</button>
 
       </div> 
       <div class="bg-primary p-8 rounded-lg flex flex-col justify-between relative transform md:scale-105 shadow-2xl z-10" data-sr data-sr-delay="0.1">
@@ -643,8 +642,65 @@
             <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">done</span> Content Manager Dedicado</li>
           </ul>
         </div> 
-        <button onclick="openModal('Profesional')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Cotiza</button>
+        <button onclick="openModal('Corporativo')" class="w-full py-4 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">Cotiza</button>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="seccion-precios-web" class="px-8 lg:px-16 py-24 bg-surface">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16" data-sr>
+      <h2 class="text-4xl font-bold text-primary mb-4 uppercase tracking-tighter font-headline">Presencia Digital Elite</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto">Arquitectura web de alto rendimiento y diseño cinematográfico para marcas que no aceptan lo convencional.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+      
+      <div class="bg-surface-container-lowest p-8 rounded-3xl flex flex-col justify-between hover:shadow-2xl transition-all duration-500 border border-outline-variant/30" data-sr data-sr-delay="0">
+        <div>
+          <h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">Landing Page</h4>
+          <div class="text-4xl font-black text-primary mb-6 font-headline">350<span class="text-sm font-normal text-on-surface-variant">/Único</span></div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Diseño One-Page Impactante</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Optimización para Móviles</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Integración con WhatsApp</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Hosting + Dominio (1 año)</li>
+          </ul>
+        </div> 
+        <button onclick="openReservaMenu(único)" class="w-full py-4 rounded-full border border-primary text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-300">Escríbenos ahora</button>
+      </div> 
+
+      <div class="bg-primary p-8 rounded-3xl flex flex-col justify-between relative transform md:scale-105 shadow-2xl z-10 border-4 border-secondary/20" data-sr data-sr-delay="0.1">
+        <a class="absolute top-0 right-8 -translate-y-1/2 bg-secondary text-white text-[10px] font-bold px-5 py-1.5 uppercase tracking-widest rounded-full shadow-lg">Más Solicitado</a>
+        <div>
+          <h4 class="text-xs font-bold text-primary-fixed-dim uppercase tracking-[0.2em] mb-4">Corporativo Pro</h4>
+          <div class="text-4xl font-black text-white mb-6 font-headline">600<span class="text-sm font-normal text-primary-fixed-dim">/Único</span></div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-white/90 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">verified</span> Hasta 6 Secciones</li>
+            <li class="text-sm text-white/90 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">verified</span> Animaciones GSAP Premium</li>
+            <li class="text-sm text-white/90 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">verified</span> SEO Estructural Avanzado</li>
+            <li class="text-sm text-white/90 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">verified</span> Panel de Control Autogestionable</li>
+            <li class="text-sm text-white/90 flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[18px]">verified</span> Soporte Técnico 6 meses</li>
+          </ul>
+        </div> 
+        <button onclick="openReservaMenu(Corporativo Pro)" class="w-full py-4 rounded-full bg-white text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-secondary hover:text-white transition-all duration-300 shadow-md">Solicitar Plan</button>
+      </div>
+
+      <div class="bg-surface-container-lowest p-8 rounded-3xl flex flex-col justify-between hover:shadow-2xl transition-all duration-500 border border-outline-variant/30" data-sr data-sr-delay="0.2">
+        <div>
+          <h4 class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-4">E-commerce Elite</h4>
+          <div class="text-4xl font-black text-primary mb-6 font-headline">850<span class="text-sm font-normal text-on-surface-variant">+</span></div>
+          <ul class="space-y-4 mb-8">
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">shopping_cart</span> Tienda Online Completa</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">shopping_cart</span> Pasarelas de Pago Integradas</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">shopping_cart</span> Gestión de Inventario</li>
+            <li class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">shopping_cart</span> Estrategia de Email Marketing</li>
+          </ul>
+        </div> 
+        <button onclick="openReservaMenu(E-commerce Elite)" class="w-full py-4 rounded-full border border-primary text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-300">Cotiza a medida</button>
+      </div>
+      
     </div>
   </div>
 </section>

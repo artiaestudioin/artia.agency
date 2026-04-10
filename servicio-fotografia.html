@@ -103,9 +103,8 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   </button>
 
 <!-- Logo (Reposicionado hacia arriba) -->
-<div id="mm-header" class="-mt-10 mb-20 flex justify-center w-full"> 
-    <!-- -mt-10 lo sube hacia la X | mb-20 le da aire a la palabra Inicio -->
-    <a href="inicio.html" class="inline-block w-64 transition-transform active:scale-95">
+<div id="mm-header" class="mb-12 flex justify-center w-full"> 
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
         <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
              alt="Logo Artia" 
              class="w-full h-auto object-contain">
@@ -124,7 +123,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       </button>
       
       <!-- Submenu Ajustado -->
-      <div id="submenu-movil" class="hidden flex-col mt-4 gap-4 bg-slate-50/50 py-4 rounded-2xl">
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
         <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
@@ -494,7 +493,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       </div>
       <div class="absolute bottom-0 left-0 p-8 space-y-2">
         <h4 class="font-headline text-2xl font-bold text-white">Video Corporativo</h4>
-        <p class="text-white/80 font-body text-sm max-w-md">Narrativas dinámicas que comunican la visión, cultura y valores de su empresa con calidad 4K.</p>
+        <p class="text-white/80 font-body text-sm max-w-md">Narrativas dinámicas que comunican la visión, cultura y valores de su empresa con calidad 4K y 6k.</p>
       </div>
     </div>
     <div class="md:col-span-4 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]" data-category="eventos" data-sr data-sr-delay="0.1">
@@ -558,7 +557,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     <h3 class="font-headline text-4xl font-bold text-primary tracking-tight">¿Listo para elevar su imagen de marca?</h3>
     <p class="text-on-surface-variant text-lg">Permítanos transformar su visión en contenido audiovisual de clase mundial.</p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors" href="https://wa.me/593969937265" target="_blank">Solicitar Presupuesto</a>
+      <button onclick="openReservaMenu()" class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors" href="https://wa.me/593969937265" target="_blank">Solicitar Presupuesto</button>
     </div>
   </div>
   <style>

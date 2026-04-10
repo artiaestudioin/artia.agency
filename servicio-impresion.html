@@ -105,9 +105,8 @@
   </button>
 
 <!-- Logo (Reposicionado hacia arriba) -->
-<div id="mm-header" class="-mt-10 mb-20 flex justify-center w-full"> 
-    <!-- -mt-10 lo sube hacia la X | mb-20 le da aire a la palabra Inicio -->
-    <a href="inicio.html" class="inline-block w-64 transition-transform active:scale-95">
+<div id="mm-header" class="mb-12 flex justify-center w-full"> 
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
         <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
              alt="Logo Artia" 
              class="w-full h-auto object-contain">
@@ -126,7 +125,7 @@
       </button>
       
       <!-- Submenu Ajustado -->
-      <div id="submenu-movil" class="hidden flex-col mt-4 gap-4 bg-slate-50/50 py-4 rounded-2xl">
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
         <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
         <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
@@ -539,15 +538,62 @@
   </div>
 </section>
 
-<!-- CTA -->
-<section class="py-24 px-8 lg:px-16" data-sr>
-  <div class="bg-primary-container p-12 lg:p-20 rounded-xl text-center relative overflow-hidden">
-    <h2 class="font-headline text-4xl lg:text-5xl font-bold text-white mb-8 relative z-10 leading-tight">¿Listo para materializar <br/>su próxima gran idea?</h2>
-    <div class="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
-      <a class="bg-secondary text-white px-8 py-4 rounded-lg font-bold tracking-widest hover:bg-secondary-container transition-all active:scale-95" href="https://wa.me/593969937265" target="_blank">SOLICITAR COTIZACIÓN</a>
-      <a class="bg-transparent border border-secondary-fixed-dim text-secondary-fixed-dim px-8 py-4 rounded-lg font-bold tracking-widest hover:bg-white/10 transition-all" href="servicio-fotografia.html">VER PORTAFOLIO</a>
+<<!-- CTA -->
+<section class="py-24 px-8 md:px-16 text-center" data-sr>
+  <div class="max-w-2xl mx-auto space-y-8">
+    <h3 class="font-headline text-4xl font-bold text-primary tracking-tight">¿Listo para elevar su imagen de marca?</h3>
+    <p class="text-on-surface-variant text-lg">Permítanos transformar su visión en contenido audiovisual de clase mundial.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="openReservaMenu()" class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors" href="https://wa.me/593969937265" target="_blank">Solicitar Presupuesto</button>
     </div>
   </div>
+  <style>
+  .btn-animado {
+    display: inline-flex;
+    align-items: left;
+    gap: 4px;
+    padding: 10px 20px;
+    background-color: #FF0000; /* Rojo YouTube */
+    color: white;
+    text-decoration: none;
+    font-family: 'Arial', sans-serif;
+    font-weight: 950px;
+    font-size: 15px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); /* Sombra inicial para el pulso */
+    transition: transform 0.2s ease;
+    /* ESTA ES LA MAGIA DEL PULSO */
+    animation: pulso-atencion 2s infinite;
+  }
+
+  /* Efecto al pasar el mouse */  
+  .btn-animado:hover {
+    background-color: #cc0000;
+    transform: scale(1.05); /* Se agranda un poquito */
+    animation: none; /* Se detiene el pulso al tocarlo */
+  }
+
+  /* Definición de la animación de pulso */
+  @keyframes pulso-atencion {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 15px rgba(255, 0, 0, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+  }
+
+  .play-icon {
+    font-size: 15px;
+  }
+</style>
 </section>
 
 <footer class="relative z-30 bg-[#051522] w-full py-5 px-8 lg:px-8 mt-0">
