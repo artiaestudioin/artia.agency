@@ -1,0 +1,10 @@
+# Variables de entorno — NUNCA subir al repositorio
+.env.local
+.env
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Test local — no necesario en producción
+test-email.mjs
