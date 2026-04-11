@@ -49,12 +49,15 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Demasiadas solicitudes. Intenta en 15 minutos.' });
   }
 
-  const { name, service, message } = req.body || {};
-  const cleanName    = sanitize(name, 100);
-  const cleanService = sanitize(service, 100);
-  const cleanMessage = sanitize(message, 1000);
+  const { name, emailFrom, service, message } = req.body || {};
+  const cleanName      = sanitize(name, 100);
+  const cleanEmailFrom = sanitize(emailFrom, 200);
+  const cleanService   = sanitize(service, 100);
+  const cleanMessage   = sanitize(message, 1000);
 
   if (!cleanName)                               return res.status(400).json({ error: 'El nombre es requerido.' });
+  if (!cleanEmailFrom || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmailFrom))
+                                                return res.status(400).json({ error: 'Correo del cliente no válido.' });
   if (!ALLOWED_SERVICES.includes(cleanService)) return res.status(400).json({ error: 'Servicio no válido.' });
 
   if (!process.env.RESEND_API_KEY) {
@@ -189,6 +192,16 @@ export default async function handler(req, res) {
         </td>
       </tr>
 
+      <!-- Email -->
+      <tr style="background:#fafbfc;">
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Correo electrónico</p>
+        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+          <a href="mailto:${cleanEmailFrom}" style="font-size:14px;font-weight:700;color:#2552ca;text-decoration:none;">${cleanEmailFrom}</a>
+        </td>
+      </tr>
+
       <!-- Servicio -->
       <tr style="background:#fafbfc;">
         <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
@@ -304,10 +317,11 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from:    'ARTIA Studio <onboarding@resend.dev>',
-        to:      ['artia.estudioin@gmail.com'],
-        subject: `[${folio}] Nueva consulta: ${cleanService} — ${cleanName}`,
-        html:    htmlEmail,
+        from:     'ARTIA Studio <onboarding@resend.dev>',
+        to:       ['artia.estudioin@gmail.com'],
+        reply_to: cleanEmailFrom,
+        subject:  `[${folio}] Nueva consulta: ${cleanService} — ${cleanName}`,
+        html:     htmlEmail,
       }),
     });
 
