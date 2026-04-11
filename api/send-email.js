@@ -1,7 +1,6 @@
 // api/send-email.js — Vercel Serverless Function
 // Versión segura: rate limiting, sanitización, validación estricta
 
-// ── Rate limiting en memoria (por IP) ──────────────────────────────────────
 const RATE_LIMIT_MAX    = 5;
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
 const ipStore = new Map();
@@ -22,13 +21,11 @@ setInterval(() => {
   }
 }, 60 * 60 * 1000);
 
-// ── Sanitizar texto ────────────────────────────────────────────────────────
 function sanitize(str, maxLen = 300) {
   if (typeof str !== 'string') return '';
   return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;').trim().slice(0, maxLen);
 }
 
-// ── Servicios permitidos (whitelist) ───────────────────────────────────────
 const ALLOWED_SERVICES = [
   'Páginas Webs',
   'Planes de Redes Sociales',
@@ -38,7 +35,6 @@ const ALLOWED_SERVICES = [
   'Vuelos de Drone Profesional',
 ];
 
-// ──────────────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', 'https://artiaagency.vercel.app');
@@ -58,7 +54,7 @@ export default async function handler(req, res) {
   const cleanService = sanitize(service, 100);
   const cleanMessage = sanitize(message, 1000);
 
-  if (!cleanName)                             return res.status(400).json({ error: 'El nombre es requerido.' });
+  if (!cleanName)                               return res.status(400).json({ error: 'El nombre es requerido.' });
   if (!ALLOWED_SERVICES.includes(cleanService)) return res.status(400).json({ error: 'Servicio no válido.' });
 
   if (!process.env.RESEND_API_KEY) {
@@ -66,77 +62,237 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Error de configuración del servidor.' });
   }
 
-  const fecha = new Date().toLocaleDateString('es-EC', {
+  // Número de folio único
+  const folio = 'ART-' + Date.now().toString(36).toUpperCase();
+
+  const now  = new Date();
+  const fecha = now.toLocaleDateString('es-EC', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     timeZone: 'America/Guayaquil',
   });
-
-  const year = new Date().getFullYear();
+  const hora = now.toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  });
+  const year = now.getFullYear();
 
   const htmlEmail = `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-<body style="margin:0;padding:0;background:#f0f2f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f2f7;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;">
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>Solicitud de Consultoría — ARTIA Studio</title>
+</head>
+<body style="margin:0;padding:0;background:#eef0f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-        <tr><td style="background:#00113a;border-radius:12px 12px 0 0;padding:36px 40px 28px;text-align:center;">
-          <img src="https://i.ibb.co/3mf5qLTc/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="160" style="display:block;margin:0 auto 16px;height:auto;"/>
-          <p style="margin:0;color:rgba(179,197,255,0.7);font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:600;">Marketing &amp; Publicidad Integral</p>
-        </td></tr>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef0f5;padding:32px 16px 48px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
 
-        <tr><td style="background:#2552ca;padding:14px 40px;">
-          <p style="margin:0;color:#fff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">📩 &nbsp;Nueva Solicitud de Consultoría</p>
-        </td></tr>
+  <!-- ══ PREHEADER ══ -->
+  <tr><td style="font-size:0;max-height:0;overflow:hidden;mso-hide:all;">
+    Nueva solicitud de consultoría recibida — ${cleanService} — Folio ${folio}
+  </td></tr>
 
-        <tr><td style="background:#ffffff;padding:40px 40px 32px;">
-          <p style="margin:0 0 24px;font-size:15px;color:#1e293b;line-height:1.6;">Hola equipo <strong>ARTIA</strong>, han recibido una nueva consulta a través del sitio web.</p>
+  <!-- ══ HEADER INSTITUCIONAL ══ -->
+  <tr><td style="background:linear-gradient(135deg,#00113a 0%,#001f6b 100%);border-radius:12px 12px 0 0;padding:0;overflow:hidden;">
 
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #e2e8f0;">
-              <p style="margin:0 0 2px;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;">Nombre del cliente</p>
-              <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${cleanName}</p>
-            </td></tr>
-            <tr><td style="padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#fff;">
-              <p style="margin:0 0 2px;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;">Servicio requerido</p>
-              <p style="margin:0;"><span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:700;padding:4px 14px;border-radius:999px;">${cleanService}</span></p>
-            </td></tr>
-            <tr><td style="padding:14px 20px;">
-              <p style="margin:0 0 6px;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;">Mensaje</p>
-              <p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${cleanMessage || '<em>El cliente no dejó mensaje adicional.</em>'}</p>
+    <!-- Banda superior decorativa -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="background:#2552ca;height:4px;font-size:0;">&nbsp;</td>
+        <td style="background:#1a3fa0;height:4px;font-size:0;">&nbsp;</td>
+        <td style="background:#0f2870;height:4px;font-size:0;">&nbsp;</td>
+      </tr>
+    </table>
+
+    <!-- Logo y nombre empresa -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:32px 40px 24px;text-align:center;">
+          <img src="https://i.ibb.co/3mf5qLTc/LOGO-ARTIA-blanco.png"
+            alt="ARTIA Studio" width="150"
+            style="display:block;margin:0 auto 12px;height:auto;"/>
+          <p style="margin:0 0 4px;color:rgba(179,197,255,0.9);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">
+            Marketing &amp; Publicidad Integral
+          </p>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:1px;">
+            ─────────────────────────────────
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Título del documento -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:0 40px 32px;text-align:center;">
+          <p style="margin:0 0 6px;color:#fff;font-size:20px;font-weight:800;letter-spacing:-0.3px;">
+            Solicitud de Consultoría
+          </p>
+          <p style="margin:0;color:rgba(179,197,255,0.6);font-size:11px;letter-spacing:1px;">
+            Documento generado automáticamente por el sistema web
+          </p>
+        </td>
+      </tr>
+    </table>
+
+  </td></tr>
+
+  <!-- ══ BANDA DE FOLIO ══ -->
+  <tr><td style="background:#2552ca;padding:10px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="color:#b3c5ff;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+          📋 &nbsp;Nueva Consulta Entrante
+        </td>
+        <td align="right" style="color:#fff;font-size:10px;font-weight:900;letter-spacing:1px;">
+          Folio: ${folio}
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- ══ CUERPO PRINCIPAL ══ -->
+  <tr><td style="background:#ffffff;padding:36px 40px 32px;">
+
+    <!-- Saludo formal -->
+    <p style="margin:0 0 8px;font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:1px;">
+      Estimado equipo ARTIA,
+    </p>
+    <p style="margin:0 0 28px;font-size:15px;color:#1e293b;line-height:1.7;">
+      A través del portal web de <strong>ARTIA Studio</strong> se ha recibido una nueva solicitud
+      de consultoría. A continuación se detallan los datos del prospecto:
+    </p>
+
+    <!-- Tabla de datos del cliente -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+      style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:28px;border-collapse:separate;">
+
+      <!-- Fila cabecera -->
+      <tr>
+        <td colspan="2" style="background:#f1f5f9;padding:10px 20px;border-bottom:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:9px;font-weight:900;color:#64748b;letter-spacing:2px;text-transform:uppercase;">
+            Información del Prospecto
+          </p>
+        </td>
+      </tr>
+
+      <!-- Nombre -->
+      <tr>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;width:36%;vertical-align:top;">
+          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Nombre completo</p>
+        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+          <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${cleanName}</p>
+        </td>
+      </tr>
+
+      <!-- Servicio -->
+      <tr style="background:#fafbfc;">
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Servicio de interés</p>
+        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
+          <span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800;padding:5px 16px;border-radius:999px;letter-spacing:0.3px;">
+            ${cleanService}
+          </span>
+        </td>
+      </tr>
+
+      <!-- Mensaje -->
+      <tr>
+        <td style="padding:14px 20px;vertical-align:top;">
+          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Mensaje / Consulta</p>
+        </td>
+        <td style="padding:14px 20px;vertical-align:top;">
+          <p style="margin:0;font-size:14px;color:#334155;line-height:1.75;font-style:${cleanMessage ? 'normal' : 'italic'};">
+            ${cleanMessage || 'El prospecto no dejó mensaje adicional.'}
+          </p>
+        </td>
+      </tr>
+
+    </table>
+
+    <!-- Datos de recepción -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+      style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:32px;">
+      <tr>
+        <td style="padding:12px 20px;border-right:1px solid #e2e8f0;width:50%;">
+          <p style="margin:0 0 2px;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Fecha de recepción</p>
+          <p style="margin:0;font-size:12px;font-weight:700;color:#334155;">${fecha}</p>
+        </td>
+        <td style="padding:12px 20px;">
+          <p style="margin:0 0 2px;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Hora (ECU)</p>
+          <p style="margin:0;font-size:12px;font-weight:700;color:#334155;">${hora}</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Botón de acción -->
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">
+      <tr>
+        <td style="background:#00113a;border-radius:8px;">
+          <a href="mailto:artia.estudioin@gmail.com?subject=Re: Consulta ${folio} — ${cleanName}"
+            style="display:inline-block;padding:14px 32px;color:#fff;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">
+            Responder a este prospecto →
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">
+      Tiempo recomendado de respuesta: <strong style="color:#64748b;">menos de 24 horas hábiles.</strong>
+    </p>
+
+  </td></tr>
+
+  <!-- ══ DATOS DE LA EMPRESA ══ -->
+  <tr><td style="background:#f8fafc;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;padding:28px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <!-- Logo pequeño -->
+        <td style="width:48px;vertical-align:top;padding-right:16px;">
+          <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png"
+            alt="ARTIA" width="40" style="display:block;height:auto;"/>
+        </td>
+        <!-- Info empresa -->
+        <td style="vertical-align:top;">
+          <p style="margin:0 0 2px;font-size:12px;font-weight:900;color:#00113a;letter-spacing:0.5px;">ARTIA Studio</p>
+          <p style="margin:0 0 6px;font-size:10px;color:#64748b;font-style:italic;">Marketing &amp; Publicidad Integral</p>
+          <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding-right:20px;">
+                <p style="margin:0;font-size:10px;color:#94a3b8;">🌐 &nbsp;<a href="https://artiaagency.vercel.app" style="color:#2552ca;text-decoration:none;font-weight:600;">artiaagency.vercel.app</a></p>
+              </td>
+              <td>
+                <p style="margin:0;font-size:10px;color:#94a3b8;">✉️ &nbsp;<a href="mailto:artia.estudioin@gmail.com" style="color:#2552ca;text-decoration:none;font-weight:600;">artia.estudioin@gmail.com</a></p>
+              </td>
+            </tr>
+            <tr><td colspan="2" style="padding-top:4px;">
+              <p style="margin:0;font-size:10px;color:#94a3b8;">📱 &nbsp;<a href="https://wa.me/593969937265" style="color:#2552ca;text-decoration:none;font-weight:600;">+593 969 937 265</a></p>
             </td></tr>
           </table>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-          <p style="margin:0 0 28px;font-size:12px;color:#94a3b8;">🗓 &nbsp;Recibido el <strong style="color:#64748b;">${fecha}</strong></p>
+  <!-- ══ FOOTER LEGAL ══ -->
+  <tr><td style="background:#00113a;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;">
+    <p style="margin:0 0 6px;font-size:10px;color:rgba(179,197,255,0.5);line-height:1.6;">
+      Este mensaje es confidencial y está destinado exclusivamente al equipo de <strong style="color:rgba(179,197,255,0.7);">ARTIA Studio</strong>.<br/>
+      Fue generado automáticamente desde el portal web — no responder directamente a este correo.
+    </p>
+    <p style="margin:8px 0 0;font-size:10px;color:rgba(179,197,255,0.3);">
+      © ${year} ARTIA Studio · Todos los derechos reservados · Ecuador
+    </p>
+  </td></tr>
 
-          <table cellpadding="0" cellspacing="0" border="0"><tr>
-            <td style="background:#2552ca;border-radius:8px;">
-              <a href="mailto:artia.estudioin@gmail.com" style="display:inline-block;padding:14px 28px;color:#fff;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;">Responder →</a>
-            </td>
-          </tr></table>
-        </td></tr>
+</table>
+</td></tr>
+</table>
 
-        <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:24px 40px;text-align:center;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#00113a;letter-spacing:1px;text-transform:uppercase;">ARTIA Studio</p>
-          <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;">Marketing &amp; Publicidad Integral</p>
-          <p style="margin:0;font-size:11px;color:#94a3b8;">
-            <a href="https://artiaagency.vercel.app" style="color:#2552ca;text-decoration:none;">artiaagency.vercel.app</a>
-            &nbsp;·&nbsp;
-            <a href="mailto:artia.estudioin@gmail.com" style="color:#2552ca;text-decoration:none;">artia.estudioin@gmail.com</a>
-          </p>
-        </td></tr>
-
-        <tr><td style="padding:20px 0 0;text-align:center;">
-          <p style="margin:0;font-size:10px;color:#cbd5e1;">
-            Este correo fue generado automáticamente desde el sitio web de ARTIA Studio.<br/>
-            © ${year} ARTIA Studio. Todos los derechos reservados.
-          </p>
-        </td></tr>
-
-      </table>
-    </td></tr>
-  </table>
 </body>
 </html>`;
 
@@ -150,7 +306,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from:    'ARTIA Studio <onboarding@resend.dev>',
         to:      ['artia.estudioin@gmail.com'],
-        subject: `Nueva consulta: ${cleanService} — ${cleanName}`,
+        subject: `[${folio}] Nueva consulta: ${cleanService} — ${cleanName}`,
         html:    htmlEmail,
       }),
     });
