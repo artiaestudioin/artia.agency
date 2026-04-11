@@ -544,10 +544,10 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"redwin":"#A30016", "pr
     fab.style.bottom = 'auto';
   }
 
-  // ── Drag con touch ── (solo sobre el botón circular, no el menú)
+  // ── Drag con touch ──
   let startX, startY, startLeft, startTop;
 
-  btn.addEventListener('touchstart', function (e) {
+  fab.addEventListener('touchstart', function (e) {
     const t = e.touches[0];
     startX = t.clientX;
     startY = t.clientY;
@@ -586,13 +586,13 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"redwin":"#A30016", "pr
     fab.style.right  = 'auto';
 
     // Escalar ligeramente para feedback visual
-    btn.style.transform = 'scale(1.08)';
+    fab.style.transform = 'scale(1.08)';
   }, { passive: true });
 
-  btn.addEventListener('touchend', function () {
+  window.addEventListener('touchend', function () {
     if (!dragging) return;
     dragging = false;
-    btn.style.transform = 'scale(1)';
+    fab.style.transform = 'scale(1)';
 
     // Guardar posición
     const rect = fab.getBoundingClientRect();
@@ -626,7 +626,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"redwin":"#A30016", "pr
       // Botón en la mitad DERECHA → menú abre hacia la IZQUIERDA
       menu.style.left  = 'auto';
       menu.style.right = '0';
-      menu.style.alignItems = 'flex-end';
+      menu.style.alignItems = 'flx-end';
     }
 
     // Detectar si hay espacio arriba o abrir hacia abajo
