@@ -62,6 +62,11 @@
             style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:14px;color:#1e293b;outline:none;background:#f8fafc;box-sizing:border-box;font-family:inherit;" />
         </div>
         <div>
+          <label style="display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;font-family:inherit;">Tu Correo Electrónico</label>
+          <input id="artia-emailFrom" type="email" placeholder="tucorreo@ejemplo.com"
+            style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:14px;color:#1e293b;outline:none;background:#f8fafc;box-sizing:border-box;font-family:inherit;" />
+        </div>
+        <div>
           <label style="display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;font-family:inherit;">Servicio Requerido</label>
           <select id="artia-emailService"
             style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:14px;color:#1e293b;outline:none;background:#f8fafc;appearance:none;cursor:pointer;font-family:inherit;">
@@ -350,12 +355,17 @@
   });
 
   window.artiaSendEmail = async function () {
-    const name    = document.getElementById('artia-emailName').value.trim();
-    const service = document.getElementById('artia-emailService').value;
-    const message = document.getElementById('artia-emailMessage').value.trim();
+    const name     = document.getElementById('artia-emailName').value.trim();
+    const emailFrom = document.getElementById('artia-emailFrom').value.trim();
+    const service  = document.getElementById('artia-emailService').value;
+    const message  = document.getElementById('artia-emailMessage').value.trim();
 
-    if (!name || !service) {
-      alert('Por favor completa tu nombre y selecciona un servicio.');
+    if (!name || !emailFrom || !service) {
+      alert('Por favor completa tu nombre, correo electrónico y selecciona un servicio.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFrom)) {
+      alert('Por favor ingresa un correo electrónico válido.');
       return;
     }
 
@@ -382,7 +392,7 @@
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, service, message }),
+        body: JSON.stringify({ name, emailFrom, service, message }),
       });
 
       const data = await res.json();
@@ -393,6 +403,7 @@
         setTimeout(() => {
           window.artiaCloseEmailModal();
           document.getElementById('artia-emailName').value    = '';
+          document.getElementById('artia-emailFrom').value    = '';
           document.getElementById('artia-emailService').value = '';
           document.getElementById('artia-emailMessage').value = '';
           submitBtn.disabled = false;
