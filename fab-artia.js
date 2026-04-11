@@ -224,6 +224,10 @@
   } catch(e) {}
 
   // Drag: SOLO en el botón circular
+  // touchStartedOnBtn garantiza que touchend solo actúe si el toque
+  // comenzó en el botón, nunca en los links del menú
+  let touchStartedOnBtn = false;
+
   btn.addEventListener('touchstart', function (e) {
     const t = e.touches[0];
     startX = t.clientX;
@@ -233,10 +237,11 @@
     startTop  = rect.top;
     dragging  = true;
     dragMoved = false;
+    touchStartedOnBtn = true;
   }, { passive: true });
 
   window.addEventListener('touchmove', function (e) {
-    if (!dragging) return;
+    if (!dragging || !touchStartedOnBtn) return;
     const t  = e.touches[0];
     const dx = t.clientX - startX;
     const dy = t.clientY - startY;
@@ -256,8 +261,9 @@
     btn.style.transform = 'scale(1.08)';
   }, { passive: true });
 
-  // touchend: SOLO en el botón circular
-  btn.addEventListener('touchend', function () {
+  window.addEventListener('touchend', function () {
+    if (!touchStartedOnBtn) return;
+    touchStartedOnBtn = false;
     if (!dragging) return;
     dragging = false;
     btn.style.transform = 'scale(1)';
@@ -310,40 +316,6 @@
   document.addEventListener('touchstart', function (e) {
     if (menuOpen && !fab.contains(e.target)) closeMenu();
   }, { passive: true });
-
-  // ── Handlers explícitos touchend para botones del menú mobile ──
-  // Necesario en iOS/Android: position:fixed + z-index alto puede bloquear clicks
-  function bindMenuItems() {
-    const waBtn    = document.getElementById('artia-menu-wa');
-    const telBtn   = document.getElementById('artia-menu-tel');
-    const emailBtn = document.getElementById('artia-menu-email');
-
-    if (waBtn) {
-      waBtn.addEventListener('touchend', function(e) {
-        e.stopPropagation();
-        closeMenu();
-        setTimeout(() => { window.location.href = 'https://wa.me/593969937265'; }, 50);
-      }, { passive: false });
-    }
-
-    if (telBtn) {
-      telBtn.addEventListener('touchend', function(e) {
-        e.stopPropagation();
-        closeMenu();
-        setTimeout(() => { window.location.href = 'tel:+593969937265'; }, 50);
-      }, { passive: false });
-    }
-
-    if (emailBtn) {
-      emailBtn.addEventListener('touchend', function(e) {
-        e.stopPropagation();
-        closeMenu();
-        setTimeout(() => { window.artiaOpenEmailModal(); }, 50);
-      }, { passive: false });
-    }
-  }
-
-  bindMenuItems();
 
   // ─────────────────────────────────────────────
   // 6. FUNCIONES GLOBALES DEL MODAL EMAIL
