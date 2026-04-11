@@ -141,7 +141,7 @@
       <a id="artia-menu-tel" href="tel:+593969937265" style="${BTN_STYLE}">
         Llamar ahora <span class="material-symbols-outlined" style="font-size:18px;">call</span>
       </a>
-      <button id="artia-menu-email" style="${BTN_STYLE}">
+      <button id="artia-menu-email" onclick="artiaOpenEmailModal()" style="${BTN_STYLE}">
         Enviar Email ${EMAIL_SVG}
       </button>
     </div>
@@ -161,6 +161,16 @@
 
   // Insertar HTML al final del body
   document.body.insertAdjacentHTML('beforeend', html);
+
+  // touchend explícito para el botón email en móvil
+  // onclick no siempre se dispara en position:fixed en iOS
+  document.addEventListener('touchend', function(e) {
+    const emailBtn = document.getElementById('artia-menu-email');
+    if (emailBtn && (e.target === emailBtn || emailBtn.contains(e.target))) {
+      e.preventDefault();
+      window.artiaOpenEmailModal && window.artiaOpenEmailModal();
+    }
+  }, { passive: false });
 
   // ─────────────────────────────────────────────
   // 3. MOSTRAR FAB SEGÚN TAMAÑO DE PANTALLA
