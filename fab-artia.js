@@ -1,9 +1,9 @@
 /**
  * fab-artia.js — Botón Flotante ARTIA Studio
- * Versión corregida: drag solo en botón circular, email con window.open
+ * Versión corregida: drag solo en botón circular, email con window.open, UX mejorado
  *
  * USO: Agrega esta línea antes de </body> en cada HTML:
- *   <script src="fab-artia.js"></script>
+ * <script src="fab-artia.js"></script>
  */
 
 (function () {
@@ -38,7 +38,6 @@
   const BTN_STYLE = `background:#fff;color:#191c1e;padding:10px 14px;border-radius:9999px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;border:1px solid rgba(197,198,210,0.2);text-decoration:none;font-family:inherit;cursor:pointer;`;
 
   const html = `
-  <!-- ===== MODAL EMAIL ===== -->
   <div id="artia-emailModal" style="
     position:fixed;inset:0;z-index:200;
     display:flex;align-items:center;justify-content:center;
@@ -46,7 +45,6 @@
     visibility:hidden;opacity:0;transition:opacity 0.2s ease,visibility 0.2s ease;
   ">
     <div style="background:#fff;border-radius:12px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
-      <!-- Header -->
       <div style="background:#2563eb;padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;">
         <div>
           <h2 style="color:#fff;font-size:18px;font-weight:900;letter-spacing:0.05em;margin:0;font-family:inherit;">ARTIA STUDIO</h2>
@@ -54,7 +52,6 @@
         </div>
         <button onclick="artiaCloseEmailModal()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0;font-family:inherit;">✕</button>
       </div>
-      <!-- Formulario -->
       <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
         <div>
           <label style="display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;font-family:inherit;">Tu Nombre</label>
@@ -92,12 +89,10 @@
     </div>
   </div>
 
-  <!-- ===== BOTÓN FLOTANTE DESKTOP (≥1024px) ===== -->
   <div id="artia-fab-desktop" style="
     position:fixed;bottom:32px;right:16px;z-index:60;
     display:none;flex-direction:column;align-items:flex-end;
   ">
-    <!-- Menú (visible al hacer hover con CSS de clase) -->
     <div id="artia-desk-menu" style="
       display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:8px;
       opacity:0;pointer-events:none;transform:translateY(16px);
@@ -115,7 +110,6 @@
         <span style="font-size:14px;font-weight:700;">Enviar Email</span>${EMAIL_SVG}
       </button>
     </div>
-    <!-- Botón principal -->
     <button id="artia-desk-btn" class="artia-wa-pulse" style="
       width:44px;height:44px;background:#2552ca;border-radius:50%;color:#fff;border:none;
       box-shadow:0 10px 25px rgba(37,99,235,0.4);display:flex;align-items:center;
@@ -125,12 +119,10 @@
     </button>
   </div>
 
-  <!-- ===== BOTÓN FLOTANTE MOBILE (<1024px) ===== -->
   <div id="artia-fab-mobile" style="
     position:fixed;bottom:32px;left:16px;z-index:60;
     user-select:none;
   ">
-    <!-- Menú -->
     <div id="artia-fab-menu" style="
       position:absolute;bottom:56px;right:0;
       display:flex;flex-direction:column;align-items:flex-end;gap:8px;
@@ -150,7 +142,6 @@
         Enviar Email ${EMAIL_SVG}
       </button>
     </div>
-    <!-- Botón principal circular -->
     <button id="artia-fab-btn" class="artia-wa-pulse" style="
       width:48px;height:48px;background:#2552ca;border-radius:50%;color:#fff;border:none;
       box-shadow:0 10px 25px rgba(37,99,235,0.4);display:flex;align-items:center;
@@ -168,7 +159,6 @@
   document.body.insertAdjacentHTML('beforeend', html);
 
   // touchend explícito para el botón email en móvil
-  // onclick no siempre se dispara en position:fixed en iOS
   document.addEventListener('touchend', function(e) {
     const emailBtn = document.getElementById('artia-menu-email');
     if (emailBtn && (e.target === emailBtn || emailBtn.contains(e.target))) {
@@ -227,7 +217,6 @@
   let dragMoved = false;
   let startX, startY, startLeft, startTop;
 
-  // Restaurar posición guardada
   const STORE = 'artia_fab_pos';
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
@@ -238,9 +227,6 @@
     }
   } catch(e) {}
 
-  // Drag: SOLO en el botón circular
-  // touchStartedOnBtn garantiza que touchend solo actúe si el toque
-  // comenzó en el botón, nunca en los links del menú
   let touchStartedOnBtn = false;
 
   btn.addEventListener('touchstart', function (e) {
@@ -349,7 +335,6 @@
     document.body.style.overflow = '';
   };
 
-  // Cerrar al tocar el fondo del modal
   document.getElementById('artia-emailModal').addEventListener('click', function (e) {
     if (e.target === this) window.artiaCloseEmailModal();
   });
@@ -399,7 +384,8 @@
 
       if (res.ok && data.ok) {
         submitBtn.style.background = '#16a34a';
-        submitBtn.innerHTML = '✔ ¡Consulta enviada! Te contactaremos pronto.';
+        // AQUI MODIFICAMOS EL MENSAJE PARA CONFIRMAR QUE LE LLEGÓ UN CORREO
+        submitBtn.innerHTML = '✔ ¡Consulta enviada! Revisa tu bandeja de entrada.';
         setTimeout(() => {
           window.artiaCloseEmailModal();
           document.getElementById('artia-emailName').value    = '';
@@ -409,7 +395,7 @@
           submitBtn.disabled = false;
           submitBtn.style.background = '#2563eb';
           submitBtn.innerHTML = originalHTML;
-        }, 2500);
+        }, 3500); // 1 segundo extra para que lea el mensaje
       } else {
         throw new Error(data.error || 'Error desconocido');
       }
