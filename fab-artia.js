@@ -123,7 +123,7 @@
   <!-- ===== BOTÓN FLOTANTE MOBILE (<1024px) ===== -->
   <div id="artia-fab-mobile" style="
     position:fixed;bottom:32px;left:16px;z-index:60;
-    touch-action:none;user-select:none;
+    user-select:none;
   ">
     <!-- Menú -->
     <div id="artia-fab-menu" style="
@@ -150,6 +150,7 @@
       width:48px;height:48px;background:#2552ca;border-radius:50%;color:#fff;border:none;
       box-shadow:0 10px 25px rgba(37,99,235,0.4);display:flex;align-items:center;
       justify-content:center;cursor:pointer;
+      touch-action:none;user-select:none;
       transition:transform 0.2s ease,background 0.2s ease;
       -webkit-tap-highlight-color:transparent;
     ">
