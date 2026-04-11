@@ -1,17 +1,15 @@
-// api/send-email.js — Vercel Serverless Function
-// Versión segura: rate limiting, sanitización, validación estricta + Confirmación a cliente
+// api/send-email.js
+import { createClient } from '@supabase/supabase-js';
 
-const RATE_LIMIT_MAX    = 5;
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
 const ipStore = new Map();
 
-function checkRateLimit(ip) {
-  const now  = Date.now();
-  const data = ipStore.get(ip) || { count: 0, start: now };
-  if (now - data.start > RATE_LIMIT_WINDOW) { data.count = 0; data.start = now; }
-  data.count++;
-  ipStore.set(ip, data);
-  return data.count <= RATE_LIMIT_MAX;
+function sanitize(str, maxLen = 300) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;').trim().slice(0, maxLen);
 }
 
 setInterval(() => {
@@ -36,37 +34,59 @@ const ALLOWED_SERVICES = [
 ];
 
 export default async function handler(req, res) {
-
+  // CORS y Validaciones
   res.setHeader('Access-Control-Allow-Origin', 'https://artiaagency.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')   return res.status(405).json({ error: 'Método no permitido.' });
-
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
-  if (!checkRateLimit(ip)) {
-    return res.status(429).json({ error: 'Demasiadas solicitudes. Intenta en 15 minutos.' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   const { name, emailFrom, service, message } = req.body || {};
-  const cleanName      = sanitize(name, 100);
+  const cleanName = sanitize(name, 100);
   const cleanEmailFrom = sanitize(emailFrom, 200);
-  const cleanService   = sanitize(service, 100);
-  const cleanMessage   = sanitize(message, 1000);
+  const cleanService = sanitize(service, 100);
+  const cleanMessage = sanitize(message, 1000);
+  const folio = 'ART-' + Date.now().toString(36).toUpperCase();
 
-  if (!cleanName)                               return res.status(400).json({ error: 'El nombre es requerido.' });
-  if (!cleanEmailFrom || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmailFrom))
-                                                return res.status(400).json({ error: 'Correo del cliente no válido.' });
-  if (!ALLOWED_SERVICES.includes(cleanService)) return res.status(400).json({ error: 'Servicio no válido.' });
+  try {
+    // 1. GUARDAR EN SUPABASE
+    const { error: dbError } = await supabase
+      .from('leads')
+      .insert([{ 
+        nombre: cleanName, 
+        email: cleanEmailFrom, 
+        servicio: cleanService, 
+        mensaje: cleanMessage, 
+        folio: folio 
+      }]);
 
-  if (!process.env.RESEND_API_KEY) {
-    console.error('Falta RESEND_API_KEY');
-    return res.status(500).json({ error: 'Error de configuración del servidor.' });
+    if (dbError) console.error('Error DB:', dbError.message);
+
+    // 2. ENVIAR CORREO A ARTIA (USANDO RESEND)
+    const responseArtia = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'ARTIA Studio <onboarding@resend.dev>',
+        to: ['artia.estudioin@gmail.com'],
+        reply_to: cleanEmailFrom,
+        subject: `[${folio}] Nueva consulta: ${cleanService}`,
+        html: `<h1>Nueva consulta de ${cleanName}</h1><p>${cleanMessage}</p>`, // Simplificado para el ejemplo
+      }),
+    });
+
+    if (responseArtia.ok) {
+      return res.status(200).json({ ok: true, folio });
+    } else {
+      throw new Error('Error enviando el correo');
+    }
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 
-  // Número de folio único
-  const folio = 'ART-' + Date.now().toString(36).toUpperCase();
+  
 
   const now  = new Date();
   const fecha = now.toLocaleDateString('es-EC', {
@@ -392,60 +412,26 @@ export default async function handler(req, res) {
 
 </body>
 </html>`;
-
-  try {
-    // Definición de correos
-    const emailToArtiaConfig = {
-      from:     'ARTIA Studio <onboarding@resend.dev>', // Preferible usar ej: no-reply@tudominio.com cuando lo verifiques en Resend
-      to:       ['artia.estudioin@gmail.com'],
-      reply_to: cleanEmailFrom,
-      subject:  `[${folio}] Nueva consulta: ${cleanService} — ${cleanName}`,
-      html:     htmlEmail,
-    };
-
-    const emailToClientConfig = {
-      from:     'ARTIA Studio <onboarding@resend.dev>', // IMPORTANTE: Debes verificar tu propio dominio en Resend para que esto llegue a tus clientes. Con 'onboarding' solo te llegará a tu propio correo registrado.
-      to:       [cleanEmailFrom],
-      subject:  `Confirmación de Recepción - Folio ${folio} | ARTIA Studio`,
-      html:     htmlClientEmail,
-    };
-
-    // Ejecutamos ambos envíos de forma simultánea mediante Promise.all
-    const [resArtia, resClient] = await Promise.all([
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailToArtiaConfig),
+await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'ARTIA Studio <onboarding@resend.dev>',
+        to: [cleanEmailFrom],
+        subject: `Hemos recibido tu solicitud — ARTIA Studio`,
+        html: htmlCliente,
       }),
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailToClientConfig),
-      })
-    ]);
+    });
 
-    if (!resArtia.ok) {
-      const err = await resArtia.json();
-      console.error('Resend error (Internal):', err);
-      return res.status(500).json({ error: 'Error al procesar la solicitud interna.' });
-    }
-
-    // Opcional: Registrar si el correo al cliente falló (probablemente por falta de dominio verificado en Resend)
-    if (!resClient.ok) {
-      const errClient = await resClient.json();
-      console.warn('Advertencia: No se pudo enviar el correo de confirmación al cliente (¿Dominio no verificado en Resend?):', errClient);
-    }
-
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, folio });
 
   } catch (err) {
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Error interno del servidor.' });
   }
-}
+
+
+
