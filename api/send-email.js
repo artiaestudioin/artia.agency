@@ -113,7 +113,7 @@ export default async function handler(req, res) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:32px 40px 24px;text-align:center;">
-          <img src="https://i.ibb.co/3mf5qLTc/LOGO-ARTIA-blanco.png"
+          <img src="https://kommodo.ai/i/lRYNCJ4OHE0OkJeAeOfc"
             alt="ARTIA Studio" width="150"
             style="display:block;margin:0 auto 12px;height:auto;"/>
           <p style="margin:0 0 4px;color:rgba(179,197,255,0.9);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">
@@ -251,7 +251,7 @@ export default async function handler(req, res) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="width:48px;vertical-align:top;padding-right:16px;">
-          <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png"
+          <img src="https://kommodo.ai/i/lRYNCJ4OHE0OkJeAeOfc"
             alt="ARTIA" width="40" style="display:block;height:auto;"/>
         </td>
         <td style="vertical-align:top;">
@@ -321,7 +321,7 @@ export default async function handler(req, res) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="padding:32px 40px;text-align:center;">
-          <img src="https://i.ibb.co/3mf5qLTc/LOGO-ARTIA-blanco.png"
+          <img src="https://kommodo.ai/i/lRYNCJ4OHE0OkJeAeOfc"
             alt="ARTIA Studio" width="130"
             style="display:block;margin:0 auto;height:auto;"/>
         </td>
