@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   const year = now.getFullYear();
 
   try {
-    // 1. GUARDAR EN SUPABASE y obtener el ID autoincremental
+    // 1. GUARDAR EN SUPABASE y obtener folio_num autoincremental
     const { data: insertData, error: dbError } = await supabase
       .from('leads')
       .insert([{
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         servicio: cleanService,
         mensaje: cleanMessage,
       }])
-      .select('id')
+      .select('folio_num')
       .single();
 
     if (dbError) {
@@ -67,14 +67,14 @@ export default async function handler(req, res) {
       throw new Error('Error guardando en base de datos');
     }
 
-    // Folio secuencial: id=1 → ASMKT-0362, id=2 → ASMKT-0363, etc.
-    const folio = 'ASMKT-' + String(361 + insertData.id).padStart(4, '0');
+    // folio_num=1 → ASMKT-0362, folio_num=2 → ASMKT-0363, etc.
+    const folio = 'ASMKT-' + String(361 + insertData.folio_num).padStart(4, '0');
 
-    // Actualizar el folio en Supabase ahora que lo tenemos calculado
+    // Guardar el folio calculado en el registro
     await supabase
       .from('leads')
       .update({ folio })
-      .eq('id', insertData.id);
+      .eq('folio_num', insertData.folio_num);
 
     // ==========================================
     // PLANTILLA 1: CORREO INTERNO (PARA ARTIA)
@@ -88,7 +88,6 @@ export default async function handler(req, res) {
   <title>Solicitud de Consultoría — Artia Studio</title>
 </head>
 <body style="margin:0;padding:0;background:#eef0f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef0f5;padding:32px 16px 48px;">
 <tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
@@ -106,21 +105,17 @@ export default async function handler(req, res) {
       </tr>
     </table>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="padding:32px 40px 24px;text-align:center;">
-          <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="150" style="display:block;margin:0 auto 12px;height:auto;"/>
-          <p style="margin:0 0 4px;color:rgba(179,197,255,0.9);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">Marketing &amp; Publicidad Integral</p>
-          <p style="margin:8px 0 0;color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:1px;">─────────────────────────────────</p>
-        </td>
-      </tr>
+      <tr><td style="padding:32px 40px 24px;text-align:center;">
+        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="150" style="display:block;margin:0 auto 12px;height:auto;"/>
+        <p style="margin:0 0 4px;color:rgba(179,197,255,0.9);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">Marketing &amp; Publicidad Integral</p>
+        <p style="margin:8px 0 0;color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:1px;">─────────────────────────────────</p>
+      </td></tr>
     </table>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="padding:0 40px 32px;text-align:center;">
-          <p style="margin:0 0 6px;color:#fff;font-size:20px;font-weight:800;letter-spacing:-0.3px;">Solicitud de Consultoría</p>
-          <p style="margin:0;color:rgba(179,197,255,0.6);font-size:11px;letter-spacing:1px;">Documento generado automáticamente por el sistema web</p>
-        </td>
-      </tr>
+      <tr><td style="padding:0 40px 32px;text-align:center;">
+        <p style="margin:0 0 6px;color:#fff;font-size:20px;font-weight:800;letter-spacing:-0.3px;">Solicitud de Consultoría</p>
+        <p style="margin:0;color:rgba(179,197,255,0.6);font-size:11px;letter-spacing:1px;">Documento generado automáticamente por el sistema web</p>
+      </td></tr>
     </table>
   </td></tr>
 
@@ -138,47 +133,27 @@ export default async function handler(req, res) {
     <p style="margin:0 0 28px;font-size:15px;color:#1e293b;line-height:1.7;">
       A través del portal web de <strong>Artia Studio</strong> se ha recibido una nueva solicitud de consultoría. A continuación se detallan los datos del prospecto:
     </p>
-
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:28px;border-collapse:separate;">
+      <tr><td colspan="2" style="background:#f1f5f9;padding:10px 20px;border-bottom:1px solid #e2e8f0;">
+        <p style="margin:0;font-size:9px;font-weight:900;color:#64748b;letter-spacing:2px;text-transform:uppercase;">Información del Prospecto</p>
+      </td></tr>
       <tr>
-        <td colspan="2" style="background:#f1f5f9;padding:10px 20px;border-bottom:1px solid #e2e8f0;">
-          <p style="margin:0;font-size:9px;font-weight:900;color:#64748b;letter-spacing:2px;text-transform:uppercase;">Información del Prospecto</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;width:36%;vertical-align:top;">
-          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Nombre completo</p>
-        </td>
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
-          <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${cleanName}</p>
-        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;width:36%;vertical-align:top;"><p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Nombre completo</p></td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;"><p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${cleanName}</p></td>
       </tr>
       <tr style="background:#fafbfc;">
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
-          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Correo electrónico</p>
-        </td>
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
-          <a href="mailto:${cleanEmailFrom}" style="font-size:14px;font-weight:700;color:#2552ca;text-decoration:none;">${cleanEmailFrom}</a>
-        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;"><p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Correo electrónico</p></td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;"><a href="mailto:${cleanEmailFrom}" style="font-size:14px;font-weight:700;color:#2552ca;text-decoration:none;">${cleanEmailFrom}</a></td>
       </tr>
       <tr>
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
-          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Servicio de interés</p>
-        </td>
-        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;">
-          <span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800;padding:5px 16px;border-radius:999px;letter-spacing:0.3px;">${cleanService}</span>
-        </td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;"><p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Servicio de interés</p></td>
+        <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;vertical-align:top;"><span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800;padding:5px 16px;border-radius:999px;letter-spacing:0.3px;">${cleanService}</span></td>
       </tr>
       <tr style="background:#fafbfc;">
-        <td style="padding:14px 20px;vertical-align:top;">
-          <p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Mensaje / Consulta</p>
-        </td>
-        <td style="padding:14px 20px;vertical-align:top;">
-          <p style="margin:0;font-size:14px;color:#334155;line-height:1.75;">${cleanMessage || 'El prospecto no dejó mensaje adicional.'}</p>
-        </td>
+        <td style="padding:14px 20px;vertical-align:top;"><p style="margin:0;font-size:9px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Mensaje / Consulta</p></td>
+        <td style="padding:14px 20px;vertical-align:top;"><p style="margin:0;font-size:14px;color:#334155;line-height:1.75;">${cleanMessage || 'El prospecto no dejó mensaje adicional.'}</p></td>
       </tr>
     </table>
-
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:32px;">
       <tr>
         <td style="padding:12px 20px;border-right:1px solid #e2e8f0;width:50%;">
@@ -191,13 +166,10 @@ export default async function handler(req, res) {
         </td>
       </tr>
     </table>
-
     <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">
-      <tr>
-        <td style="background:#00113a;border-radius:8px;">
-          <a href="mailto:${cleanEmailFrom}?subject=Re: Consulta ${folio} — ${cleanName}" style="display:inline-block;padding:14px 32px;color:#fff;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Responder a este prospecto →</a>
-        </td>
-      </tr>
+      <tr><td style="background:#00113a;border-radius:8px;">
+        <a href="mailto:${cleanEmailFrom}?subject=Re: Consulta ${folio} — ${cleanName}" style="display:inline-block;padding:14px 32px;color:#fff;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Responder a este prospecto →</a>
+      </td></tr>
     </table>
     <p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">Tiempo recomendado de respuesta: <strong style="color:#64748b;">menos de 24 horas hábiles.</strong></p>
   </td></tr>
@@ -250,7 +222,6 @@ export default async function handler(req, res) {
   <title>Recepción de Solicitud — Artia Studio</title>
 </head>
 <body style="margin:0;padding:0;background:#eef0f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef0f5;padding:32px 16px 48px;">
 <tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
@@ -264,19 +235,15 @@ export default async function handler(req, res) {
       <tr><td style="background:#2552ca;height:4px;font-size:0;">&nbsp;</td></tr>
     </table>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="padding:32px 40px;text-align:center;">
-          <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="130" style="display:block;margin:0 auto;height:auto;"/>
-        </td>
-      </tr>
+      <tr><td style="padding:32px 40px;text-align:center;">
+        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="130" style="display:block;margin:0 auto;height:auto;"/>
+      </td></tr>
     </table>
   </td></tr>
 
   <tr><td style="background:#2552ca;padding:12px 40px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="color:#fff;font-size:12px;font-weight:800;letter-spacing:1px;text-align:center;text-transform:uppercase;">✅ &nbsp;Confirmación de Recepción</td>
-      </tr>
+      <tr><td style="color:#fff;font-size:12px;font-weight:800;letter-spacing:1px;text-align:center;text-transform:uppercase;">✅ &nbsp;Confirmación de Recepción</td></tr>
     </table>
   </td></tr>
 
@@ -285,7 +252,6 @@ export default async function handler(req, res) {
     <p style="margin:0 0 20px;font-size:15px;color:#334155;line-height:1.7;">
       Gracias por contactar a <strong>Artia Studio</strong>. Te confirmamos que hemos recibido exitosamente tu solicitud de consultoría a través de nuestro portal web.
     </p>
-
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:24px;">
       <tr><td style="padding:16px 20px;">
         <p style="margin:0 0 8px;font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Detalles de tu solicitud</p>
@@ -294,18 +260,14 @@ export default async function handler(req, res) {
         <p style="margin:0;font-size:14px;color:#1e293b;"><strong>Fecha:</strong> ${fecha} — ${hora}</p>
       </td></tr>
     </table>
-
     <p style="margin:0 0 28px;font-size:15px;color:#334155;line-height:1.7;">
       Uno de nuestros asesores especializados está revisando tu requerimiento y se pondrá en contacto contigo en un plazo máximo de <strong>24 horas hábiles</strong>.
     </p>
-
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td align="center">
-          <p style="margin:0 0 12px;font-size:13px;color:#64748b;">Si tienes una consulta urgente, puedes escribirnos por WhatsApp:</p>
-          <a href="https://wa.me/593969937265" style="display:inline-block;background:#10b981;color:#fff;padding:12px 28px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Contactar por WhatsApp</a>
-        </td>
-      </tr>
+      <tr><td align="center">
+        <p style="margin:0 0 12px;font-size:13px;color:#64748b;">Si tienes una consulta urgente, puedes escribirnos por WhatsApp:</p>
+        <a href="https://wa.me/593969937265" style="display:inline-block;background:#10b981;color:#fff;padding:12px 28px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Contactar por WhatsApp</a>
+      </td></tr>
     </table>
   </td></tr>
 
