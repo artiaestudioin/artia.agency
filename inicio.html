@@ -760,7 +760,7 @@ window.addEventListener('scroll',function(){
 }
 .digit-card.flip { animation: flipIn .35s cubic-bezier(.4,0,.2,1) forwards; }
 </style>
-<script>
+<<script>
   // Bloquear click derecho
   document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -772,64 +772,6 @@ window.addEventListener('scroll',function(){
     if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
     if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
   };
- 
-  // ============================================
-  // NUEVA SEGURIDAD 3: Ofuscar código sensible
-  // ============================================
-  (function() {
-    // Ejemplo: ocultar variables sensibles
-    const _0x4a2b = ['log', 'SECRET_DATA'];
-    const _0x3c1d = function(_0x1a2b3c) {
-      return _0x1a2b3c;
-    };
-    
-    // Tu código sensible aquí
-    const sensitiveData = _0x3c1d(_0x4a2b[1]);
-    
-    // Hacer que sea difícil encontrar en el código
-    Object.defineProperty(window, 'sensitiveData', {
-      get: function() {
-        return sensitiveData;
-      },
-      set: function(val) {
-        console.warn('Intento de modificar datos sensibles');
-      }
-    });
-  })();
-
-  // ============================================
-  // NUEVA SEGURIDAD 4: Prevenir copiado
-  // ============================================
-  document.addEventListener('copy', function(e) {
-    e.preventDefault();
-    alert('El contenido está protegido');
-  });
-
-  // ============================================
-  // NUEVA SEGURIDAD 5: Detectar selección de texto
-  // ============================================
-  document.addEventListener('selectstart', function(e) {
-    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-    }
-  });
-   // 6. BLOQUEAR ARRASTRAR ELEMENTOS
-  // ============================================
-  document.addEventListener('dragstart', e => {
-    e.preventDefault();
-  });
-  // 7. BLOQUEAR CORTAR
-  // ============================================
-  document.addEventListener('cut', e => {
-    e.preventDefault();
-  });
- 
-  // 11. PROTEGER CONTRA "GUARDAR COMO"
-  // ============================================
-  window.addEventListener('beforeunload', e => {
-    e.preventDefault();
-    e.returnValue = '¿Estás seguro de que quieres salir? Tu progreso se perderá.';
-  });
 </script>
 <script>
 (function () {
