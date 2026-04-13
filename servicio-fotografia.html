@@ -59,28 +59,28 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
     </a>
     <nav class="flex flex-col gap-y-6">
-      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html">Inicio</a>
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html"><span data-i18n="nav.home">Inicio</span></a>
       <div class="group relative">
         <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
-          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+          <span><span data-i18n="nav.services">Servicios</span></span><span class="material-symbols-outlined text-sm">expand_more</span>
         </button>
         <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html"><span data-i18n="nav.marketing">Planes de Marketing Digital</span></a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html"><span data-i18n="nav.print">Medios Impresos</span></a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html"><span data-i18n="nav.photo">Fotografía y Audiovisual Profesional</span></a>
         </div>
       </div>
-      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
-      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html"><span data-i18n="nav.clients">Clientes</span></a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html"><span data-i18n="nav.about">Nosotros</span></a>
     </nav>
   </div>
   <div class="flex flex-col gap-6">
     <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
-  RESERVAR
+  <span data-i18n="nav.book">RESERVAR</span>
 </button>
     <div class="flex items-center gap-3 pl-4 text-slate-500">
       <span class="material-symbols-outlined text-[18px]">help_outline</span>
-      <span class="text-xs font-medium">Soporte</span>
+      <span class="text-xs font-medium"><span data-i18n="nav.support">Soporte</span></span>
     </div>
   </div>
 </aside>
@@ -114,30 +114,30 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 
   <!-- Navegación (Más grande y centrada) -->
   <nav class="flex flex-col gap-y-8 w-full" id="mm-nav">
-    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html">Inicio</a>
+    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html"><span data-i18n="nav.home">Inicio</span></a>
     
     <div class="relative">
       <button id="btn-toggle-servicios" class="flex items-center justify-center gap-2 w-full font-manrope text-2xl font-semibold tracking-tight text-slate-500">
-        <span>Servicios</span>
+        <span><span data-i18n="nav.services">Servicios</span></span>
         <span id="icon-flecha" class="material-symbols-outlined text-2xl transition-transform duration-300">expand_more</span>
       </button>
       
       <!-- Submenu Ajustado -->
       <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
-        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
-        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
-        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html"><span data-i18n="nav.marketing">Planes de Marketing Digital</span></a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html"><span data-i18n="nav.print">Medios Impresos</span></a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html"><span data-i18n="nav.photo.short">Fotografía y Audiovisual</span></a>
       </div>
     </div>
 
-    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html">Clientes</a>
-    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html">Nosotros</a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html"><span data-i18n="nav.clients">Clientes</span></a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html"><span data-i18n="nav.about">Nosotros</span></a>
   </nav>
 
   <!-- Botón Reservar -->
   <div class="mt-12 w-full px-4" id="mm-cta">
     <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
-      RESERVAR
+      <span data-i18n="nav.book">RESERVAR</span>
     </button>
   </div>
 </div>
@@ -298,7 +298,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
             <p class="text-slate-400 max-w-sm mb-8">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</p>
         </div>
         <div>
-            <h4 class="text-white font-bold mb-6">Servicios</h4>
+            <h4 class="text-white font-bold mb-6"><span data-i18n="nav.services">Servicios</span></h4>
             <ul class="space-y-4 text-slate-400 text-sm">
                 <li>Marketing Digital</li>
                 <li>Fotografía Profesional</li>
@@ -308,7 +308,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
         
     </div>
     <div class="max-w-7xl mx-auto pt-2 mt-2 border-t border-white/10 text-center">
-        <p class="text-slate-500 text-xs">© 2023 Artia Studio. Todos los derechos reservados.</p>
+        <p class="text-slate-500 text-xs"><span data-i18n="footer.rights">© 2026 Artia Studio. Todos los derechos reservados.</span></p>
     </div>
 </footer>
 </main>
@@ -562,5 +562,6 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     closeReservaMenu();
 });
 </script>
+<script src="lang-artia.js"></script>
 </body>
 </html>
