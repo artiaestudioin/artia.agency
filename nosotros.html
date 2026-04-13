@@ -56,28 +56,28 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
     </a>
     <nav class="flex flex-col gap-y-6">
-      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html"><span data-i18n="nav.home">Inicio</span></a>
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html"><span class="artia-es">Inicio</span><span class="artia-en">Home</span></a>
       <div class="group relative">
         <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
-          <span><span data-i18n="nav.services">Servicios</span></span><span class="material-symbols-outlined text-sm">expand_more</span>
+          <span><span class="artia-es">Servicios</span><span class="artia-en">Services</span></span><span class="material-symbols-outlined text-sm">expand_more</span>
         </button>
         <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html"><span data-i18n="nav.marketing">Planes de Marketing Digital</span></a>
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html"><span data-i18n="nav.print">Medios Impresos</span></a>
-          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html"><span data-i18n="nav.photo">Fotografía y Audiovisual Profesional</span></a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html"><span class="artia-es">Planes de Marketing Digital</span><span class="artia-en">Digital Marketing Plans</span></a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html"><span class="artia-es">Medios Impresos</span><span class="artia-en">Print Media</span></a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html"><span class="artia-es">Fotografía y Audiovisual Profesional</span><span class="artia-en">Professional Photography &amp; Audiovisual</span></a>
         </div>
       </div>
-      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html"><span data-i18n="nav.clients">Clientes</span></a>
-      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html"><span data-i18n="nav.about">Nosotros</span></a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html"><span class="artia-es">Clientes</span><span class="artia-en">Clients</span></a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html"><span class="artia-es">Nosotros</span><span class="artia-en">About Us</span></a>
     </nav>
   </div>
   <div class="flex flex-col gap-6">
     <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
-  <span data-i18n="nav.book">RESERVAR</span>
+  RESERVAR
 </button>
     <div class="flex items-center gap-3 pl-4 text-slate-500">
       <span class="material-symbols-outlined text-[18px]">help_outline</span>
-      <span class="text-xs font-medium"><span data-i18n="nav.support">Soporte</span></span>
+      <span class="text-xs font-medium"><span class="artia-es">Soporte</span><span class="artia-en">Support</span></span>
     </div>
   </div>
 </aside>
@@ -111,31 +111,33 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 
   <!-- Navegación (Más grande y centrada) -->
   <nav class="flex flex-col gap-y-8 w-full" id="mm-nav">
-    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html"><span data-i18n="nav.home">Inicio</span></a>
+    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html"><span class="artia-es">Inicio</span><span class="artia-en">Home</span></a>
     
     <div class="relative">
       <button id="btn-toggle-servicios" class="flex items-center justify-center gap-2 w-full font-manrope text-2xl font-semibold tracking-tight text-slate-500">
-        <span><span data-i18n="nav.services">Servicios</span></span>
+        <span><span class="artia-es">Servicios</span><span class="artia-en">Services</span></span>
         <span id="icon-flecha" class="material-symbols-outlined text-2xl transition-transform duration-300">expand_more</span>
       </button>
       
       <!-- Submenu Ajustado -->
       <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
-        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html"><span data-i18n="nav.marketing">Planes de Marketing Digital</span></a>
-        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html"><span data-i18n="nav.print">Medios Impresos</span></a>
-        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html"><span data-i18n="nav.photo.short">Fotografía y Audiovisual</span></a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html"><span class="artia-es">Planes de Marketing Digital</span><span class="artia-en">Digital Marketing Plans</span></a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html"><span class="artia-es">Medios Impresos</span><span class="artia-en">Print Media</span></a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html"><span class="artia-es">Fotografía y Audiovisual</span><span class="artia-en">Photography &amp; Audiovisual</span></a>
       </div>
     </div>
 
-    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html"><span data-i18n="nav.clients">Clientes</span></a>
-    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html"><span data-i18n="nav.about">Nosotros</span></a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html"><span class="artia-es">Clientes</span><span class="artia-en">Clients</span></a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html"><span class="artia-es">Nosotros</span><span class="artia-en">About Us</span></a>
   </nav>
 
   <!-- Botón Reservar -->
   <div class="mt-12 w-full px-4" id="mm-cta">
-    <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
-      <span data-i18n="nav.book">RESERVAR</span>
-    </button>
+    <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all"><span class="artia-es">
+      RESERVAR
+    </button></span><span class="artia-en">
+      BOOK NOW
+    </button></span>
   </div>
 </div>
 <script src="fab-artia.js"></script>
@@ -148,9 +150,9 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   </div>
   <div class="relative z-10 grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
     <div class="space-y-8 aspect-square">
-      <span class="inline-block px-3 py-1 bg-primary-container text-white text-[0.65rem] font-bold tracking-[0.2em] uppercase rounded-sm" data-i18n="about.tag">Nuestra Historia</span>
-      <h2 class="font-headline text-5xl lg:text-7xl text-primary leading-[1.1] tracking-tight blur-reveal">No solo existas <br/><span class="italic text-secondary">conecta</span> e impacta.</h2>
-      <p class="font-headline text-xl" data-i18n="about.sub">Tu marca merece ser líder.</p> <span class="text-on-surface-variant text-lg max-w-lg leading-relaxed"  >Transformamos tu presencia digital en una máquina de resultados.</span>
+      <span class="inline-block px-3 py-1 bg-primary-container text-white text-[0.65rem] font-bold tracking-[0.2em] uppercase rounded-sm"><span class="artia-es">Nuestra Historia</span><span class="artia-en">Our Story</span></span>
+      <h2 class="font-headline text-5xl lg:text-7xl text-primary leading-[1.1] tracking-tight blur-reveal"><span class="artia-es">No solo existas <br/><span</span><span class="artia-en">Don't just exist <br/><span</span> class="italic text-secondary"><span class="artia-es">conecta</span><span class="artia-en">connect</span></span><span class="artia-es"> e impacta.</span><span class="artia-en"> and make an impact.</span></h2>
+      <p class="font-headline text-xl"><span class="artia-es">Tu marca merece ser líder.</span><span class="artia-en">Your brand deserves to be a leader.</span></p> <span class="text-on-surface-variant text-lg max-w-lg leading-relaxed"  ><span class="artia-es">Transformamos tu presencia digital en una máquina de resultados.</span><span class="artia-en">We transform your digital presence into a results machine.</span></span>
     </div>
     <div class="relative group">
       <div class="aspect-square overflow-hidden rounded-lg shadow-2xl transition-transform duration-700 group-hover:scale-[1.02]">
@@ -158,7 +160,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       </div>
       <div class="absolute -bottom-8 -left-8 w-48 h-48 bg-primary p-6 hidden lg:flex flex-col justify-end">
         <span class="text-on-primary text-4xl font-black">7+</span>
-        <span class="text-on-primary/70 text-xs font-label uppercase tracking-widest">Años de experticia</span>
+        <span class="text-on-primary/70 text-xs font-label uppercase tracking-widest"><span class="artia-es">Años de experticia</span><span class="artia-en">Years of expertise</span></span>
       </div>
     </div>
   </div>
@@ -169,18 +171,18 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   <div class="max-w-7xl mx-auto grid lg:grid-cols-3 gap-12">
     <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6" data-sr data-sr-delay="0">
       <span class="material-symbols-outlined text-secondary text-4xl">architecture</span>
-      <h3 class="font-headline text-2xl text-primary" data-i18n="about.mission.t">Misión</h3>
-      <p class="text-on-surface-variant text-sm leading-relaxed">Proveer soluciones de marketing integral que trascienden lo convencional, transformando la visión de nuestros clientes en realidades comerciales potentes y sostenibles.</p>
+      <h3 class="font-headline text-2xl text-primary"><span class="artia-es">Misión</span><span class="artia-en">Mission</span></h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed"><span class="artia-es">Proveer soluciones de marketing integral que trascienden lo convencional, transformando la visión de nuestros clientes en realidades comerciales potentes y sostenibles.</span><span class="artia-en">To provide comprehensive marketing solutions that transcend the conventional, transforming our clients' vision into powerful and sustainable commercial realities.</span></p>
     </div>
     <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6 lg:mt-12" data-sr data-sr-delay="0.12">
       <span class="material-symbols-outlined text-secondary text-4xl">visibility</span>
-      <h3 class="font-headline text-2xl text-primary" data-i18n="about.vision.t">Visión</h3>
-      <p class="text-on-surface-variant text-sm leading-relaxed">Ser reconocidos como la agencia boutique líder en estrategia publicitaria en la región, destacando por nuestra excelencia técnica y ética profesional.</p>
+      <h3 class="font-headline text-2xl text-primary"><span class="artia-es">Visión</span><span class="artia-en">Vision</span></h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed"><span class="artia-es">Ser reconocidos como la agencia boutique líder en estrategia publicitaria en la región, destacando por nuestra excelencia técnica y ética profesional.</span><span class="artia-en">To be recognized as the leading boutique agency in advertising strategy in the region, standing out for our technical excellence and professional ethics.</span></p>
     </div>
     <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6 lg:mt-24" data-sr data-sr-delay="0.24">
       <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
-      <h3 class="font-headline text-2xl text-primary" data-i18n="about.values.t">Valores</h3>
-      <p class="text-on-surface-variant text-sm leading-relaxed">Integridad, innovación disruptiva y compromiso absoluto. Creemos que la transparencia es el cimiento de toda relación profesional exitosa.</p>
+      <h3 class="font-headline text-2xl text-primary"><span class="artia-es">Valores</span><span class="artia-en">Values</span></h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed"><span class="artia-es">Integridad, innovación disruptiva y compromiso absoluto. Creemos que la transparencia es el cimiento de toda relación profesional exitosa.</span><span class="artia-en">Integrity, disruptive innovation and absolute commitment. We believe transparency is the foundation of every successful professional relationship.</span></p>
     </div>
   </div>
 </section>
@@ -192,13 +194,13 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <img alt="CEO Portrait" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACHNCdK4mVNTpw34N1YhvIet7H_oAkAH317ZCzlJsHcP-UDBd0obATlyjj_4B1Rv4Oe21y9uFpCuIhnyxPmY7AGDY7eRXfcx2qzDTQj3QrAiRt5QTNav3uFqdusTA_v4jEghazSUOeMdRMqodFFeYZHusswSLrbcudJjGeXFtbQPSJQ9TL0hHkQwEX3avFKq5Oz5dBHeqL79c2jVluVlkxqYFcKRbkkGZxQaKlafdnzhiHH24QP8e-ugXtmbES5rsUyc7waY0fpufr"/>
     </div>
     <div class="lg:col-span-7 space-y-8">
-      <h4 class="text-on-surface-variant font-label text-xs uppercase tracking-[0.3em]" data-i18n="about.ceo.label">Liderazgo Ejecutivo</h4>
-      <h2 class="font-headline text-4xl text-primary">"Nuestra meta es construir legados, no solo campañas."</h2>
+      <h4 class="text-on-surface-variant font-label text-xs uppercase tracking-[0.3em]"><span class="artia-es">Liderazgo Ejecutivo</span><span class="artia-en">Executive Leadership</span></h4>
+      <h2 class="font-headline text-4xl text-primary"><span class="artia-es">"Nuestra meta es construir legados, no solo campañas."</span><span class="artia-en">"Our goal is to build legacies, not just campaigns."</span></h2>
       <div class="space-y-4">
-        <p class="text-on-surface-variant leading-relaxed">Bajo la dirección de nuestro fundador, ARTIA ha evolucionado de ser un taller creativo a una consultoría de marketing de espectro completo. Con una visión centrada en el cliente y una obsesión por los detalles, lideramos el mercado con integridad.</p>
+        <p class="text-on-surface-variant leading-relaxed"><span class="artia-es">Bajo la dirección de nuestro fundador, ARTIA ha evolucionado de ser un taller creativo a una consultoría de marketing de espectro completo. Con una visión centrada en el cliente y una obsesión por los detalles, lideramos el mercado con integridad.</span><span class="artia-en">Under the direction of our founder, ARTIA has evolved from a creative workshop to a full-spectrum marketing consultancy. With a client-centered vision and an obsession for detail, we lead the market with integrity.</span></p>
         <div class="pt-6 border-t border-outline-variant/20">
-          <p class="font-headline text-xl text-primary" data-i18n="about.ceo.role">Director General</p>
-          <p class="text-secondary text-sm font-label uppercase tracking-widest">Estrategia &amp; Visión</p>
+          <p class="font-headline text-xl text-primary"><span class="artia-es">Director General</span><span class="artia-en">General Director</span></p>
+          <p class="text-secondary text-sm font-label uppercase tracking-widest"><span class="artia-es">Estrategia &amp; Visión</span><span class="artia-en">Strategy &amp; Vision</span></p>
         </div>
       </div>
     </div>
@@ -209,13 +211,13 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 <section class="py-24 px-8 lg:px-16 bg-surface-container-high">
   <div class="max-w-7xl mx-auto space-y-16">
     <div class="text-center space-y-4" data-sr>
-      <h2 class="font-headline text-4xl text-primary" data-i18n="about.team.title">Mentes Maestras</h2>
-      <p class="text-on-surface-variant max-w-xl mx-auto">Un equipo multidisciplinario dedicado a la precisión y el impacto visual.</p>
+      <h2 class="font-headline text-4xl text-primary"><span class="artia-es">Mentes Maestras</span><span class="artia-en">Master Minds</span></h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto"><span class="artia-es">Un equipo multidisciplinario dedicado a la precisión y el impacto visual.</span><span class="artia-en">A multidisciplinary team dedicated to precision and visual impact.</span></p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300" data-sr data-sr-delay="0">
         <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB36Dk696MgEPrC98_gnya6fDmNBt-3je8T6N_m0iOoy3RyB61Lehnwf9pUHfon_QKXAmyZsfinGmr8hPJQcgi7SgAX0xo_S6GhKgAJ7Z-8qDLv3Ny0niJcssGmGXdWCrq-SD9LQ0GQ11If_ethDgPOW1wFDft_efsFOciHzkqeTpzGDwMuE_IAKNOJA3nWCg6bwcuKKqqsFU3M7jUr-9Xa_O99I4gk5ZrEWRyHjuzVLXmRfZzlbukCV9xIaP4MrKVLYM7c2XvXsTQG"/></div>
-        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Creative Lead</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Diseño &amp; Concepto</p></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Creative Lead</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest"><span class="artia-es">Diseño &amp; Concepto</span><span class="artia-en">Design &amp; Concept</span></p></div>
       </div>
       <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300 lg:mt-8" data-sr data-sr-delay="0.1">
         <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBG-3Eq_Gx-iKFU61RSkmtJ4BfxPwEs-l2XdFS6CSBdcdCwrUi8hJqFygDSv84HBJmyikyTHsQ5M6-xXsNLazCtDleauNHXMizHNMuus_Ho53P3dfV4U0XbDQexbdAJ1HG-U_CMHXTul0TAPYqKUSd4rFMD-5BLqYUc_pSgOKq9Fm01h4P3nqXVyTqKQlWk3xTK9gc0z43B5BkJvjhSPzyfVMiILqGrzchh8a5q_OhvROGRSzK-Zr_po2f2wxoT9AV-yjQsMQfT2qVj"/></div>
@@ -223,11 +225,11 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       </div>
       <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300" data-sr data-sr-delay="0.2">
         <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWIlv0dZ9VO3ETRyUtfzP6nnqporAHUDdr-G8C8jI6Wfdif9N8GcFHM9uB0Y267Qj0LV8r-XqwW3L8sPgB8fq0kPegJ5wxp6efMzrQB4fFYrzL0mtkm4MunuyjAtaJptHg3kgEhgy4wLHt5wha-kE71yADbaVNjQKI3uAJoUou0H9oA1JPmJa704NZZXB9ggdgxgOuVU76gaUMQ1h2NjuIYKOtc87KFvtAKJAzcOibVPDwMIOjHG39aMVOJdtk4ud5guXN5L88uGbG"/></div>
-        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Account Manager</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Relaciones &amp; Gestión</p></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Account Manager</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest"><span class="artia-es">Relaciones &amp; Gestión</span><span class="artia-en">Relationships &amp; Management</span></p></div>
       </div>
       <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300 lg:mt-8" data-sr data-sr-delay="0.3">
         <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN8R68pD7hAimoxNuVfdaeiBMJwWx8MnAPxAvYY4Ft9hgEnpeNvwZviqTka2buvdD6G8aEICs_RaCxZDVoOFT197TnwiC7VonsNRlD7888jFwbPk7ljcP38v40c4QGM8C4UhzaRFFlMKLJ0AEIbtRt3YLVbVlFje3yUCArH-9PVZ_3BQp00u0byUZbB0vIx0ayD4TVgTO2Ye_1Tu1edlLqy7qcszmQqCphKMLqDGAjN55rHaDvq9pDKUzEr_OUtfltGINkFADksNBY"/></div>
-        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Production Head</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Logística &amp; Ejecución</p></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Production Head</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest"><span class="artia-es">Logística &amp; Ejecución</span><span class="artia-en">Logistics &amp; Execution</span></p></div>
       </div>
     </div>
   </div>
@@ -343,19 +345,19 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         <div class="col-span-1 md:col-span-2">
             <h2 class="text-3xl font-bold text-white mb-6 font-headline">ARTIA</h2>
-            <p class="text-slate-400 max-w-sm mb-8" data-i18n="footer.slogan">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</p>
+            <p class="text-slate-400 max-w-sm mb-8"><span class="artia-es">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</span><span class="artia-en">We elevate the visual standard of your brand through strategic marketing and audiovisual production.</span></p>
         </div>
         <div>
-            <h4 class="text-white font-bold mb-6"><span data-i18n="nav.services">Servicios</span></h4>
+            <h4 class="text-white font-bold mb-6"><span class="artia-es">Servicios</span><span class="artia-en">Services</span></h4>
             <ul class="space-y-4 text-slate-400 text-sm">
-                <li>Marketing Digital</li>
-                <li>Fotografía Profesional</li>
-                <li>Diseño de Marca</li>
+                <li><span class="artia-es">Marketing Digital</span><span class="artia-en">Digital Marketing</span></li>
+                <li><span class="artia-es">Fotografía Profesional</span><span class="artia-en">Professional Photography</span></li>
+                <li><span class="artia-es">Diseño de Marca</span><span class="artia-en">Brand Design</span></li>
             </ul>
         </div>
     </div>
     <div class="max-w-7xl mx-auto pt-2 mt-2 border-t border-white/10 text-center">
-        <p class="text-slate-500 text-xs"><span data-i18n="footer.rights">© 2026 Artia Studio. Todos los derechos reservados.</span></p>
+        <p class="text-slate-500 text-xs"><span class="artia-es">© 2023 Artia Studio. Todos los derechos reservados.</span><span class="artia-en">© 2026 Artia Studio. All rights reserved.</span></p>
     </div>
 </footer>
 </main>
@@ -432,7 +434,7 @@ document.addEventListener('DOMContentLoaded', animateCounter);
       <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
         <span class="material-symbols-outlined">close</span>
       </button>
-      <h3 class="text-xl font-bold">Solicitar Información</h3>
+      <h3 class="text-xl font-bold"><span class="artia-es">Solicitar Información</span><span class="artia-en">Request Information</span></h3>
       <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
     </div>
 
@@ -441,13 +443,13 @@ document.addEventListener('DOMContentLoaded', animateCounter);
       <input type="hidden" id="selectedPlan">
       
       <div>
-        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
-        <input type="text" id="userName" required placeholder="Ej. Carlitos" 
+        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1"><span class="artia-es">Tu Nombre</span><span class="artia-en">Your Name</span></label>
+        <input type="text" id="userName" required <span class="artia-es">placeholder="Ej. Carlitos"</span><span class="artia-en">placeholder="e.g. Carlos"</span> 
                class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
       </div>
 
       <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
-        Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
+        <span class="artia-es">Enviar a WhatsApp </span><span class="artia-en">Send via WhatsApp </span><span class="material-symbols-outlined text-sm">send</span>
       </button>
     </form>
   </div>
@@ -462,32 +464,32 @@ document.addEventListener('DOMContentLoaded', animateCounter);
         <span class="material-symbols-outlined">close</span>
       </button>
       <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
-      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1"><span class="artia-es">Reserva de Consultoría</span><span class="artia-en">Consultation Booking</span></p>
     </div>
 
     <!-- Formulario -->
     <form id="reservaMenuForm" class="p-8 space-y-6">
       <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
-        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido" 
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2"><span class="artia-es">Tu Nombre</span><span class="artia-en">Your Name</span></label>
+        <input type="text" id="reservaMenuNombre" required <span class="artia-es">placeholder="Nombre y Apellido"</span><span class="artia-en">placeholder="Full Name"</span> 
                class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
       </div>
 
       <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2"><span class="artia-es">Servicio Requerido</span><span class="artia-en">Required Service</span></label>
         <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
-          <option value="" disabled selected>Selecciona una opción...</option>
-          <option value="Páginas Webs">Páginas Webs</option>
-          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
-          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
-          <option value="Branding Corporativo">Branding Corporativo</option>
-          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
-          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
+          <option value="" disabled selected><span class="artia-es">Selecciona una opción...</span><span class="artia-en">Select an option...</span></option>
+          <option value="Páginas Webs"><span class="artia-es">Páginas Webs</span><span class="artia-en">Web Pages</span></option>
+          <option value="Planes de Redes Sociales"><span class="artia-es">Planes de Redes Sociales</span><span class="artia-en">Social Media Plans</span></option>
+          <option value="Impresión o Sublimados"><span class="artia-es">Impresión o Sublimados</span><span class="artia-en">Printing or Sublimation</span></option>
+          <option value="Branding Corporativo"><span class="artia-es">Branding Corporativo</span><span class="artia-en">Corporate Branding</span></option>
+          <option value="Fotografía o Video Profesionales"><span class="artia-es">Fotografía o Video Profesionales</span><span class="artia-en">Professional Photography or Video</span></option>
+          <option value="Vuelos de Drone Profesional"><span class="artia-es">Vuelos de Drone profesional</span><span class="artia-en">Professional Drone Flights</span></option>
         </select>
       </div>
 
       <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
-        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
+        <span class="artia-es">Confirmar Reserva </span><span class="artia-en">Confirm Booking </span><span class="material-symbols-outlined text-sm">event_available</span>
       </button>
     </form>
   </div>
