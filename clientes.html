@@ -480,57 +480,7 @@
     if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
     if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
   };
-  // ============================================
-  // NUEVA SEGURIDAD 1: Proteger console.log
-  // ============================================
-  (function() {
-    const originalConsole = console;
-    const protectedConsole = {
-      log: function() {},
-      warn: function() {},
-      error: function() {},
-      info: function() {}
-    };
-    
-    Object.keys(originalConsole).forEach(method => {
-      if (typeof originalConsole[method] === 'function') {
-        protectedConsole[method] = function() {
-          // Solo permitir logs si hay un token secreto
-          if (arguments[0] && arguments[0].toString().includes('SECRET_TOKEN_123')) {
-            originalConsole[method].apply(originalConsole, arguments);
-          }
-        };
-      }
-    });
-    
-    window.console = protectedConsole;
-  })();
-
-  // ============================================
-  // NUEVA SEGURIDAD 2: Detectar DevTools abierto
-  // ============================================
-  (function() {
-    let devtoolsOpen = false;
-    
-    function detectDevTools() {
-      const threshold = 160;
-      if (window.outerWidth - window.innerWidth > threshold ||
-          window.outerHeight - window.innerHeight > threshold) {
-        if (!devtoolsOpen) {
-          devtoolsOpen = true;
-          document.body.innerHTML = '<h1>⚠️ Acceso no autorizado</h1>';
-          // O redirigir:
-          // window.location.href = 'https://tusitio.com';
-        }
-      } else {
-        devtoolsOpen = false;
-      }
-    }
-    
-    window.addEventListener('resize', detectDevTools);
-    setInterval(detectDevTools, 1000);
-  })();
-
+ 
   // ============================================
   // NUEVA SEGURIDAD 3: Ofuscar código sensible
   // ============================================
@@ -581,35 +531,13 @@
   document.addEventListener('cut', e => {
     e.preventDefault();
   });
-
-  // ============================================
-  //87. DETECTAR SI ESTÁ EN IFRAME (evitar embedding)
-  // ============================================
-  if(window.top !== window.self) {
-    document.body.innerHTML = '<h1>⚠️ Esta página no puede ser incrustada</h1>';
-    // O redirigir:
-    // window.top.location = window.self.location;
-  }
-   // 9. DESHABILITAR IMPRESIÓN
-  // ============================================
-  window.addEventListener('beforeprint', e => {
-    e.preventDefault();
-    alert('La impresión está deshabilitada');
-  });
+ 
   // 11. PROTEGER CONTRA "GUARDAR COMO"
   // ============================================
   window.addEventListener('beforeunload', e => {
     e.preventDefault();
     e.returnValue = '¿Estás seguro de que quieres salir? Tu progreso se perderá.';
   });
-  // 14. DESHABILITAR CLICK EN ELEMENTOS CLAVE
-  // ============================================
-  document.addEventListener('click', e => {
-    // Si quieres bloquear clics en ciertos elementos
-    // if(e.target.classList.contains('protected')) {
-    //   e.preventDefault();
-    // }
-  }, true);
 </script>
 <script>
 (function(){
