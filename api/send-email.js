@@ -369,7 +369,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from:    'ARTIA Studio <onboarding@resend.dev>',
+        from:    'ARTIA Studio <artia.estudioin@gmail.com>',
         to:      [cleanEmailFrom],
         subject: `Hemos recibido tu solicitud — ARTIA Studio [${folio}]`,
         html:    htmlClientEmail,
