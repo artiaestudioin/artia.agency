@@ -637,12 +637,11 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
             Enviar por Correo
             <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">mail</span>
           </button>
-          <a href="https://wa.me/593969937265?text=Hola%20Artia,%20necesito%20más%20información%20sobre%20Papelería%20Premium"
-             target="_blank"
-             class="flex-1 bg-slate-100 text-[#00113a] py-4 rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 no-underline">
-            Más Info
-            <span class="material-symbols-outlined text-sm">chat</span>
-          </a>
+          <a href="#" onclick="enviarPedido(); return false;"
+   class="flex-1 bg-slate-100 text-[#00113a] py-4 rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 no-underline">
+  Más Info
+  <span class="material-symbols-outlined text-sm">chat</span>
+</a>
         </div>
 
       </div>
@@ -651,6 +650,7 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
 </div>
 
 <script>
+  
 // =====================================================
 //  MODAL IMPRESIÓN EXPRESS — lógica completa
 // =====================================================
@@ -881,7 +881,39 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     }
   };
 
-})();
+// ── Botón "Más Info" → WhatsApp con resumen automático ──
+window.enviarPedido = function () {
+  const nombre   = document.getElementById('impNombre').value.trim();
+  const correo   = document.getElementById('impCorreo').value.trim();
+  const telefono = document.getElementById('impTelefono').value.trim();
+
+  // Construir resumen de productos seleccionados
+  const lineas = Object.entries(impSelected).map(([id, qty]) => {
+    const prod = IMP_PRODUCTS.find(p => p.id === id);
+    return `• ${prod ? prod.name : id}: *${qty} unidades*`;
+  });
+
+  const resumen = lineas.length > 0
+    ? lineas.join('\n')
+    : '_Ningún producto seleccionado aún_';
+
+  const msg = `*SOLICITUD PAPELERÍA EXPRESS — ARTIA*
+Hola Artia, me gustaría recibir más información y cotización para este pedido. ¿Tienen disponibilidad?
+
+*Productos solicitados:*
+${resumen}
+> *Cliente:* ${nombre || '_(sin nombre)_'}
+> *Correo:* ${correo || '_(no provisto)_'}
+`;
+
+  window.open(
+    `https://wa.me/593969937265?text=${encodeURIComponent(msg)}`,
+    '_blank'
+  );
+};
+})
+();
+
 </script>
 </body>
 </html>
