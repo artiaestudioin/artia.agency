@@ -212,11 +212,10 @@
         </div>
 
         <div class="mt-6">
-            <a href="https://wa.me/593969937265?text=Hola%20Artia,%20solicito%20Papelería%20Premium" 
-               target="_blank" 
+            <button onclick="openImpresionModal()"
                class="relative z-20 w-full inline-flex justify-center items-center px-7 py-5 bg-white text-primary text-[10px] font-bold rounded-full uppercase tracking-[0.2em] hover:bg-secondary hover:text-white transition-all shadow-lg active:scale-95">
                 ENTREGA EXPRESS
-            </a>
+            </button>
         </div>
     </div>
 </div>
@@ -571,6 +570,318 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     window.open(url, '_blank');
     closeReservaMenu();
 });
+</script>
+<!-- =========================================
+     MODAL PAPELERÍA PREMIUM — ENTREGA EXPRESS
+     ========================================= -->
+<div id="impresionExpressModal" class="hidden fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+  <div id="impresionExpressContent"
+       class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.35)] scale-95 opacity-0 transition-all duration-300 flex flex-col"
+       style="max-height:92vh;">
+
+    <!-- ── Header azul ── -->
+    <div class="bg-[#2552ca] px-7 py-6 text-white relative flex-shrink-0">
+      <button onclick="closeImpresionModal()"
+              class="absolute top-4 right-4 bg-white/20 hover:bg-white/35 transition-colors rounded-full w-7 h-7 flex items-center justify-center">
+        <span class="material-symbols-outlined text-[18px] leading-none">close</span>
+      </button>
+      <span class="material-symbols-outlined text-3xl mb-2 block"
+            style="font-variation-settings:'FILL' 1;">print</span>
+      <h3 class="font-headline text-xl font-black tracking-tighter">ARTIA STUDIO</h3>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Papelería Premium — Entrega Express</p>
+    </div>
+
+    <!-- ── Cuerpo scrollable ── -->
+    <div class="overflow-y-auto flex-1 px-7 py-6">
+      <div class="space-y-5">
+
+        <!-- Nombre -->
+        <div>
+          <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">
+            Tu Nombre y Apellidos <span class="text-red-400">*</span>
+          </label>
+          <input type="text" id="impNombre" placeholder="Nombre completo"
+                 class="w-full border-b-2 border-slate-100 py-2 focus:border-[#2552ca] outline-none transition-colors text-sm font-medium text-slate-700">
+        </div>
+
+        <!-- Correo -->
+        <div>
+          <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">
+            Correo Electrónico <span class="text-red-400">*</span>
+          </label>
+          <input type="email" id="impCorreo" placeholder="tucorreo@ejemplo.com"
+                 class="w-full border-b-2 border-slate-100 py-2 focus:border-[#2552ca] outline-none transition-colors text-sm font-medium text-slate-700">
+        </div>
+
+        <!-- Teléfono -->
+        <div>
+          <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">
+            Número de Teléfono
+            <span class="text-slate-300 text-[9px] normal-case tracking-normal font-normal ml-1">(opcional — para comunicarnos más rápido)</span>
+          </label>
+          <input type="tel" id="impTelefono" placeholder="+593 999 999 999"
+                 class="w-full border-b-2 border-slate-100 py-2 focus:border-[#2552ca] outline-none transition-colors text-sm font-medium text-slate-700">
+        </div>
+
+        <!-- Productos de impresión -->
+        <div>
+          <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-1">Servicios de Impresión</label>
+          <p class="text-[11px] text-slate-400 mb-3">Selecciona el producto y la cantidad que necesitas:</p>
+          <div id="impProductList" class="space-y-2"></div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex gap-3 pt-2 pb-1">
+          <button type="button" id="impSendBtn" onclick="sendImpresionEmail()"
+                  class="flex-1 bg-[#2552ca] text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+            Enviar por Correo
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">mail</span>
+          </button>
+          <a href="https://wa.me/593969937265?text=Hola%20Artia,%20necesito%20más%20información%20sobre%20Papelería%20Premium"
+             target="_blank"
+             class="flex-1 bg-slate-100 text-[#00113a] py-4 rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 no-underline">
+            Más Info
+            <span class="material-symbols-outlined text-sm">chat</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================
+//  MODAL IMPRESIÓN EXPRESS — lógica completa
+// =====================================================
+(function () {
+
+  // Catálogo de productos
+  const IMP_PRODUCTS = [
+    { id: 'tarjetas',    name: 'Tarjetas de presentación',                        qtys: ['100', '500', '1000+'] },
+    { id: 'carpetas',    name: 'Carpetas corporativas',                            qtys: ['100', '500', '1000+'] },
+    { id: 'rollup',      name: 'Rollup con estructura',                            qtys: ['100', '500', '1000+'] },
+    { id: 'tripticos',   name: 'Trípticos',                                        qtys: ['100', '500', '1000+'] },
+    { id: 'afiches',     name: 'Afiches',                                          qtys: ['100', '500', '1000+'] },
+    { id: 'flyers',      name: 'Flyers',                                           qtys: ['100', '500', '1000+'] },
+    { id: 'calendarios', name: 'Calendarios (anillados, de pared o triangulares)', qtys: ['100', '500', '1000+'] },
+    { id: 'etiquetas',   name: 'Etiquetas',                                        qtys: ['50',  '100', '500+'] },
+    { id: 'esferos',     name: 'Esferos',                                          qtys: ['100', '500', '1000+'] },
+  ];
+
+  // Estado de selección { id: cantidad }
+  const impSelected = {};
+
+  // ── Construcción dinámica del listado de productos ──
+  function buildImpProductList() {
+    const container = document.getElementById('impProductList');
+    if (!container || container.children.length > 0) return;
+
+    IMP_PRODUCTS.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'imp-row border-2 border-slate-100 rounded-xl p-3 transition-all cursor-pointer select-none';
+      row.dataset.id = p.id;
+
+      const qtyPills = p.qtys.map(q =>
+        `<button type="button"
+                 onclick="impSelectQty(event,'${p.id}','${q}')"
+                 class="imp-qty-pill px-3 py-1 rounded-full border-2 border-slate-200 text-xs font-bold text-slate-500 hover:border-[#2552ca] hover:text-[#2552ca] transition-all"
+                 data-qty="${q}">${q}</button>`
+      ).join('');
+
+      row.innerHTML = `
+        <div class="flex items-center gap-3" onclick="impToggleProduct('${p.id}')">
+          <div id="impChk-${p.id}"
+               class="w-5 h-5 rounded-md border-2 border-slate-300 flex items-center justify-center flex-shrink-0 transition-all">
+            <span class="material-symbols-outlined text-white hidden"
+                  id="impChkIcon-${p.id}"
+                  style="font-size:14px;font-variation-settings:'FILL' 1;">check</span>
+          </div>
+          <span class="text-sm font-semibold text-slate-700 leading-snug">${p.name}</span>
+        </div>
+        <div id="impQty-${p.id}" class="hidden ml-8 mt-2 flex gap-2 flex-wrap">
+          ${qtyPills}
+        </div>
+      `;
+
+      container.appendChild(row);
+    });
+  }
+
+  // ── Toggle selección de producto ──
+  window.impToggleProduct = function (id) {
+    const chk    = document.getElementById('impChk-' + id);
+    const icon   = document.getElementById('impChkIcon-' + id);
+    const qtyDiv = document.getElementById('impQty-' + id);
+    const row    = document.querySelector(`.imp-row[data-id="${id}"]`);
+
+    if (impSelected[id] !== undefined) {
+      // Deseleccionar
+      delete impSelected[id];
+      chk.classList.remove('bg-[#2552ca]', 'border-[#2552ca]');
+      chk.classList.add('border-slate-300');
+      icon.classList.add('hidden');
+      qtyDiv.classList.add('hidden');
+      row.classList.remove('border-[#2552ca]', 'bg-blue-50/40');
+      row.classList.add('border-slate-100');
+      // Limpiar pills
+      qtyDiv.querySelectorAll('.imp-qty-pill').forEach(btn => {
+        btn.classList.remove('bg-[#2552ca]', 'text-white', 'border-[#2552ca]');
+        btn.classList.add('border-slate-200', 'text-slate-500');
+      });
+    } else {
+      // Seleccionar (cantidad por defecto: primera opción)
+      const pills   = qtyDiv.querySelectorAll('.imp-qty-pill');
+      const firstQty = pills[0].dataset.qty;
+      impSelected[id] = firstQty;
+
+      chk.classList.add('bg-[#2552ca]', 'border-[#2552ca]');
+      chk.classList.remove('border-slate-300');
+      icon.classList.remove('hidden');
+      qtyDiv.classList.remove('hidden');
+      row.classList.add('border-[#2552ca]', 'bg-blue-50/40');
+      row.classList.remove('border-slate-100');
+
+      // Marcar primera pill
+      pills.forEach((btn, i) => {
+        if (i === 0) {
+          btn.classList.add('bg-[#2552ca]', 'text-white', 'border-[#2552ca]');
+          btn.classList.remove('border-slate-200', 'text-slate-500');
+        }
+      });
+    }
+  };
+
+  // ── Selección de cantidad ──
+  window.impSelectQty = function (e, id, qty) {
+    e.stopPropagation();
+    impSelected[id] = qty;
+    const qtyDiv = document.getElementById('impQty-' + id);
+    qtyDiv.querySelectorAll('.imp-qty-pill').forEach(btn => {
+      if (btn.dataset.qty === qty) {
+        btn.classList.add('bg-[#2552ca]', 'text-white', 'border-[#2552ca]');
+        btn.classList.remove('border-slate-200', 'text-slate-500');
+      } else {
+        btn.classList.remove('bg-[#2552ca]', 'text-white', 'border-[#2552ca]');
+        btn.classList.add('border-slate-200', 'text-slate-500');
+      }
+    });
+  };
+
+  // ── Abrir / Cerrar modal ──
+  window.openImpresionModal = function () {
+    buildImpProductList();
+    const modal   = document.getElementById('impresionExpressModal');
+    const content = document.getElementById('impresionExpressContent');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      content.classList.remove('scale-95', 'opacity-0');
+      content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+  };
+
+  window.closeImpresionModal = function () {
+    const modal   = document.getElementById('impresionExpressModal');
+    const content = document.getElementById('impresionExpressContent');
+    content.classList.add('scale-95', 'opacity-0');
+    content.classList.remove('scale-100', 'opacity-100');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }, 300);
+  };
+
+  // Cerrar al hacer clic en el fondo
+  document.getElementById('impresionExpressModal').addEventListener('click', function (e) {
+    if (e.target === this) window.closeImpresionModal();
+  });
+
+  // ── Enviar solicitud por correo ──
+  window.sendImpresionEmail = async function () {
+    const nombre   = document.getElementById('impNombre').value.trim();
+    const correo   = document.getElementById('impCorreo').value.trim();
+    const telefono = document.getElementById('impTelefono').value.trim();
+
+    if (!nombre || !correo) {
+      alert('Por favor completa tu nombre y correo electrónico.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+      alert('Por favor ingresa un correo electrónico válido.');
+      return;
+    }
+    if (Object.keys(impSelected).length === 0) {
+      alert('Por favor selecciona al menos un servicio de impresión.');
+      return;
+    }
+
+    const products = Object.entries(impSelected).map(([id, qty]) => {
+      const prod = IMP_PRODUCTS.find(p => p.id === id);
+      return { name: prod.name, quantity: qty };
+    });
+
+    // Estado: cargando
+    const btn = document.getElementById('impSendBtn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:artiaSpinAnim 0.8s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enviando...`;
+
+    if (!document.getElementById('imp-spin-style')) {
+      const s = document.createElement('style');
+      s.id = 'imp-spin-style';
+      s.textContent = '@keyframes artiaSpinAnim { to { transform: rotate(360deg); } }';
+      document.head.appendChild(s);
+    }
+
+    try {
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'impresion',
+          name: nombre,
+          emailFrom: correo,
+          phone: telefono,
+          products,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        btn.style.background = '#16a34a';
+        btn.innerHTML = '✔ ¡Solicitud enviada! Te contactaremos pronto.';
+        setTimeout(() => {
+          window.closeImpresionModal();
+          // Reset campos
+          document.getElementById('impNombre').value = '';
+          document.getElementById('impCorreo').value = '';
+          document.getElementById('impTelefono').value = '';
+          // Reset productos seleccionados
+          Object.keys(impSelected).forEach(id => { if (impSelected[id] !== undefined) window.impToggleProduct(id); });
+          btn.disabled = false;
+          btn.style.background = '';
+          btn.innerHTML = originalHTML;
+        }, 2600);
+      } else {
+        throw new Error(data.error || 'Error desconocido');
+      }
+
+    } catch (err) {
+      btn.style.background = '#dc2626';
+      btn.innerHTML = '✕ Error al enviar. Intenta de nuevo.';
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.style.background = '';
+        btn.innerHTML = originalHTML;
+      }, 3000);
+    }
+  };
+
+})();
 </script>
 </body>
 </html>
