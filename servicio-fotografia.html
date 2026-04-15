@@ -924,5 +924,52 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
     closeReservaMenu();
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Lógica del Menú Móvil Principal
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (mobileMenuToggle && mobileMenuClose && mobileMenu) {
+        // Abrir menú
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.style.display = 'flex';
+            // Animación suave aprovechando que ya usas GSAP
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(mobileMenu, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+            }
+        });
+
+        // Cerrar menú
+        mobileMenuClose.addEventListener('click', () => {
+            if (typeof gsap !== 'undefined') {
+                gsap.to(mobileMenu, { 
+                    opacity: 0, 
+                    duration: 0.3, 
+                    onComplete: () => mobileMenu.style.display = 'none' 
+                });
+            } else {
+                mobileMenu.style.display = 'none';
+            }
+        });
+    }
+
+    // 2. Lógica del Submenú "Servicios" en la versión móvil
+    const btnToggleServicios = document.getElementById('btn-toggle-servicios');
+    const submenuMovil = document.getElementById('submenu-movil');
+    const iconFlecha = document.getElementById('icon-flecha');
+
+    if (btnToggleServicios && submenuMovil && iconFlecha) {
+        btnToggleServicios.addEventListener('click', () => {
+            // Alternar entre oculto (hidden) y visible (flex)
+            submenuMovil.classList.toggle('hidden');
+            submenuMovil.classList.toggle('flex');
+            // Rotar la flechita para mejor feedback visual
+            iconFlecha.classList.toggle('rotate-180');
+        });
+    }
+});
+</script>
 </body>
 </html>
