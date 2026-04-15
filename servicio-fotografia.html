@@ -13,6 +13,8 @@ Reproduction or distribution without permission is strictly prohibited.
 <script src="https://cloudflare.com"></script>
 <script src="https://cloudflare.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -158,62 +160,311 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 </section>
 
 <!-- Services Bento Grid -->
-<section class="py-24 px-8 md:px-16 bg-surface">
-  <div class="mb-16" data-sr>
-    <h3 class="font-headline text-3xl font-bold text-primary tracking-tight">Excelencia Visual</h3>
-    <p class="text-on-surface-variant mt-3 max-w-xl">Haz clic en cada categoría para ver ejemplos de nuestro trabajo.</p>
-    <div class="h-1 w-12 bg-secondary mt-4"></div>
+
+<section id="galeria-fotografica" class="px-8 lg:px-16 py-24 bg-[#06101a] overflow-hidden">
+
+  <div class="max-w-6xl mx-auto">
+
+   
+
+    <!-- Header -->
+
+    <div class="mb-16" data-sr>
+
+      <span class="text-secondary font-bold tracking-[0.25em] text-xs uppercase block mb-3">Portafolio Visual</span>
+
+      <h2 class="text-5xl lg:text-6xl font-extrabold text-white leading-tight font-headline">Cada momento,<br><span class="text-slate-500">una obra.</span></h2>
+
+    </div>
+
+
+
+    <!-- Grid de Categorías -->
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="cat-grid">
+
+     
+
+      <!-- Bodas -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="bodas" data-label="Bodas" style="background:#1a1a2e">
+
+        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80"
+
+             alt="Bodas" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Bodas</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Conciertos -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="conciertos" data-label="Conciertos" style="background:#0d1117">
+
+        <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80"
+
+             alt="Conciertos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Conciertos</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Carreras -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="carreras" data-label="Carreras" style="background:#0a0f1a">
+
+        <img src="https://i.ibb.co/Xxt6c7qz/P1010793-compressed.jpg" style="object-position: 50% 55%"
+
+             alt="Carreras" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Carreras</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Retrato -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="retrato" data-label="Retrato" style="background:#111827">
+
+        <img src="https://i.ibb.co/kVdBN7Jn/retratro.jpg" style="object-position: 40% 20%"
+
+             alt="Retrato" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Retrato</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Producto -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="producto" data-label="Producto" style="background:#0c0c14">
+
+        <img src="https://i.ibb.co/PvD2BDTP/sue-os-de-azucar.jpg"
+
+             alt="Producto" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Producto</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Aérea -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="aerea" data-label="Aérea" style="background:#060d1a">
+
+        <img src="https://i.ibb.co/Q3NC33ZG/iglesia-la-liberta.jpg"
+
+             alt="Aérea" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Aérea</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Bautizos -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="bautizos" data-label="Bautizos" style="background:#16101a">
+
+        <img src="https://i.ibb.co/Rp7zrN1D/IMG-7118-compressed.jpg"
+
+             alt="Bautizos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Bautizos</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Eventos -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="eventos" data-label="Eventos" style="background:#0a1020">
+
+        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80"
+
+             alt="Eventos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Eventos</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+      <!-- Inmobiliaria / Interiores -->
+
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]"
+
+           data-cat="inmobiliaria" data-label="Inmobiliaria" style="background:#10120e">
+
+        <img src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&q=80"
+
+             alt="Inmobiliaria" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Inmobiliaria</span>
+
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Interiores · Ver galería</p>
+
+        </div>
+
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+      </div>
+
+
+
+    </div><!-- /cat-grid -->
+
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-    <div class="md:col-span-8 category-card group relative overflow-hidden bg-surface-container-low rounded-xl min-h-[300px] md:h-[400px] w-full" 
-    data-category="video-corporativo" data-sr data-sr-delay="0">
-      <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVhijB3qX7mw0mv4czqioq6B8pjjwj-y0aTxZgYf7kUqompfOXukTSlafELi_3yq4Waziok1aOMfEXBd0Xdc_LMel3OtZcqAxzr_2p3ej8tblNVOECTkJ5_T1JMMoJN7bPPkGSlS3YXJ2kfms8vo1shl71cS8FRPdJLYvQhtvxnFvx-Jz3aLCISi_vx5ZVK31ou7Oy3ycrMoK4KGxxvUqYVcKMK0NWbbZS4NJSi66GJTzf_U-E-A6MAYXum7-C1qGDI6HYJ9wl8n2s" 
-      alt="Video Corporativo"/>
-      <div class="absolute inset-0 bg-primary/40 group-hover:bg-primary/20 transition-all duration-500"></div>
-      <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span class="bg-white/20 backdrop-blur-sm text-white text-sm font-bold px-3 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-sm">photo_library</span> Ver galería</span>
-      </div>
-      <div class="absolute bottom-0 left-0 p-8 space-y-2">
-        <h4 class="font-headline text-2xl font-bold text-white">Video Corporativo</h4>
-        <p class="text-white/80 font-body text-sm max-w-md">Narrativas dinámicas que comunican la visión, cultura y valores de su empresa con calidad 4K y 6k.</p>
-      </div>
-    </div>
-    <div class="md:col-span-4 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]" data-category="eventos" data-sr data-sr-delay="0.1">
-      <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClhApXV-VZc8pXQNQXpRv4-tViFykq55Z_uBmMtpIcLubflWU9c2OsLHFucSdA3Mdv5eHKFhbFID7iplNiuKlDNmt-NMi-S4sDy4Rt2DPPAO-3zUh11N26ORY4IFDWse3Wtvij4FeDN56WmyT4iQDXn9SpD69_rR9gWm82FvdX1Zxu8Tj2dkhyY5-6fCI7CY3RhtS0hRbsVA4SpabnxiYtUhQyVyn5sxwX1sCPJBHw9SNUOiOXxLiwmx7uRtGDFUUJSo1Tao7HuqkW" alt="Eventos"/>
-      <div class="absolute inset-0 bg-secondary/30 group-hover:bg-secondary/10 transition-all duration-500"></div>
-      <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span class="bg-white/20 backdrop-blur-sm text-white text-sm  font-bold px-3 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-sm">photo_library</span> Ver galería</span>
-      </div>
-      <div class="absolute bottom-0 left-0 p-8 space-y-2">
-        <h4 class="font-headline text-2xl font-bold text-white">Eventos</h4>
-        <p class="text-white/80 font-body text-sm">Documentación integral de congresos, lanzamientos y galas corporativas.</p>
-      </div>
-    </div>
-    <div class="md:col-span-4 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]" data-category="productos" data-sr data-sr-delay="0.2">
-      <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://i.ibb.co/20Lz9w32/producto.jpg" alt="Producto"/>
-      <div class="absolute inset-0 bg-tertiary/40 group-hover:bg-tertiary/20 transition-all duration-500"></div>
-      <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span class="bg-white/20 backdrop-blur-sm text-white text-sm  font-bold px-3 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-sm">photo_library</span> Ver galería</span>
-      </div>
-      <div class="absolute bottom-0 left-0 p-8 space-y-2">
-        <h4 class="font-headline text-2xl font-bold text-white">Producto</h4>
-        <p class="text-white/80 font-body text-sm">Imágenes de alto impacto para catálogos y plataformas de e-commerce.</p>
-      </div>
-    </div>
-    <div class="md:col-span-8 category-card group relative overflow-hidden bg-surface-container-low rounded-xl h-[400px]" data-category="contenidos-digitales" data-sr data-sr-delay="0.3">
-      <img class="absolute inset-0 w-full h-full object-cover  transition-transform duration-700 group-hover:scale-105" style="object-position: 90% 50%"  src="https://i.ibb.co/6Jf9dczB/collage-people-using-reels-1.jpg" alt="Contenido Digital"/>
-      <div class="absolute inset-0 bg-primary-container/40 group-hover:bg-primary-container/20 transition-all duration-500"></div>
-      <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span class="bg-white/20 backdrop-blur-sm text-white text-sm  font-bold px-3 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-sm">photo_library</span> Ver galería</span>
-      </div>
-      <div class="absolute bottom-0 left-0 p-8 space-y-2">
-        <h4 class="font-headline text-2xl font-bold text-white">Contenido Digital</h4>
-        <p class="text-white/80 font-body text-sm max-w-md">Creación de piezas audiovisuales optimizadas para redes sociales y campañas publicitarias.</p>
-      </div>
-    </div>
-  </div>
+
 </section>
 
+
+<div id="cat-lightbox" class="fixed inset-0 z-[200] hidden bg-[#06101a] overflow-hidden" style="display:none">
+  
+  <div class="absolute inset-0 w-full h-full">
+  <img id="billboard-img" src="" class="w-full h-full object-contain object-top" alt="Cartelera principal">
+  <div class="absolute inset-0 bg-gradient-to-t from-[#06101a] via-[#06101a]/40 to-[#06101a]/80"></div>
+</div>
+
+  <div id="lb-header" class="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5 bg-white/5 backdrop-blur-md border-b border-white/10">
+    <div class="flex items-center gap-4">
+      <button id="lb-back" class="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-medium group">
+        <span class="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
+        Volver a Categorías
+      </button>
+    </div>
+    <button id="lb-close" class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+
+  <div class="absolute bottom-0 left-0 w-full z-20 bg-gradient-to-t from-[#06101a] via-[#06101a] to-transparent pt-12">
+  
+  <div class="px-8 lg:px-12 mb-6">
+    <h2 id="lb-cat-name" class="text-3xl md:text-5xl font-extrabold text-white tracking-[0.1em] uppercase font-headline mb-4"></h2>
+    
+    <div class="flex gap-4">
+      <button class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-white/20 transition-all">
+        <span class="material-symbols-outlined text-[18px]">info</span> INFORMACIÓN
+      </button>
+      </div>
+  </div>
+
+  <h3 class="text-white/40 text-[10px] uppercase font-bold px-8 lg:px-12 mb-3 tracking-[0.2em]">Explorar Galería</h3>
+  <div class="swiper billboardSwiper w-full px-8 lg:px-12 pb-8">
+    <div class="swiper-wrapper" id="lb-thumbnails">
+      </div>
+  </div>
+</div>
+
+</div>
 <!-- Process -->
 <section class="py-24 px-8 md:px-16 bg-surface-container-low">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
@@ -312,100 +563,211 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
     </div>
 </footer>
 </main>
-
-<!-- Lightbox -->
-<div id="lightbox">
-  <button id="lb-close"><span class="material-symbols-outlined">close</span></button>
-  <button id="lb-prev"><span class="material-symbols-outlined">chevron_left</span></button>
-  <img id="lb-img" src="" alt=""/>
-  <button id="lb-next"><span class="material-symbols-outlined">chevron_right</span></button>
-  <span id="lb-caption"></span>
-</div>
-
-<!-- Gallery Modal -->
-<div id="gallery-modal">
-  <div id="gallery-modal-inner">
-    <div class="flex justify-between items-center mb-6">
-      <div><h3 id="gallery-title" class="font-headline text-2xl font-bold text-primary"></h3><p id="gallery-subtitle" class="text-on-surface-variant text-sm mt-1"></p></div>
-      <button id="gallery-close" class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-3xl">close</span></button>
-    </div>
-    <div id="gallery-grid" class="gallery-grid"></div>
-    <p class="text-xs text-on-surface-variant/50 mt-6 text-center">Haz clic en cualquier imagen para ampliarla</p>
-  </div>
-</div>
-
-<!-- GSAP Menu + ScrollReveal -->
 <script>
-(function(){
-  gsap.registerPlugin(ScrollTrigger);
-  const toggle=document.getElementById('mobile-menu-toggle'),close=document.getElementById('mobile-menu-close'),menu=document.getElementById('mobile-menu'),hdr=document.getElementById('mm-header'),nav=document.getElementById('mm-nav'),cta=document.getElementById('mm-cta');
-  gsap.set(menu,{xPercent:100,autoAlpha:0,display:'none'});
-  function open(){document.body.style.overflow='hidden';gsap.set(menu,{display:'flex'});gsap.timeline().to(menu,{xPercent:0,autoAlpha:1,duration:0.45,ease:'power3.out'}).from(hdr,{y:-20,opacity:0,duration:0.3,ease:'power2.out'},'-=0.2').from(nav.children,{y:24,opacity:0,duration:0.35,stagger:0.07,ease:'power2.out'},'-=0.1').from(cta,{y:16,opacity:0,duration:0.3,ease:'power2.out'},'-=0.1');}
-  function closeMenu(){gsap.to(menu,{xPercent:100,autoAlpha:0,duration:0.35,ease:'power3.in',onComplete:()=>{gsap.set(menu,{display:'none'});document.body.style.overflow='auto';}});}
-  toggle.addEventListener('click',open);close.addEventListener('click',closeMenu);
-  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
-  const btn=document.getElementById('btn-toggle-servicios'),sub=document.getElementById('submenu-movil'),ico=document.getElementById('icon-flecha');
-  if(btn&&sub){btn.addEventListener('click',function(e){e.preventDefault();const c=sub.classList.contains('hidden');if(c){sub.classList.remove('hidden');sub.classList.add('flex');gsap.from(sub.children,{y:10,opacity:0,duration:0.25,stagger:0.06,ease:'power2.out'});gsap.to(ico,{rotation:180,duration:0.3});}else{sub.classList.add('hidden');sub.classList.remove('flex');gsap.to(ico,{rotation:0,duration:0.3});}});}
-  document.querySelectorAll('[data-sr]').forEach(function(el){gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%',once:true},y:50,opacity:0,duration:0.8,delay:parseFloat(el.dataset.srDelay||0),ease:'power3.out'});});
+(function() {
+  // ── Datos de fotos por categoría (Mantenemos tus datos) ─────────────────
+  const catPhotos = {
+    bodas: [
+      'https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80',
+      'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1400&q=80',
+      'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1400&q=80',
+      'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=1400&q=80',
+      'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=1400&q=80',
+      'https://i.ibb.co/PZzNkyvq/IMG-3454-compressed.jpg',
+        'https://i.ibb.co/zWj4SFMy/IMG-3462-compressed.jpg',
+    ],
+    conciertos:[
+      'https://i.ibb.co/Xf2SSDhm/IMG-0259-compressed.jpg',
+'https://i.ibb.co/fG412TTQ/IMG-0279-compressed.jpg',
+'https://i.ibb.co/HLDWG2cQ/IMG-0281-compressed.jpg',
+'https://i.ibb.co/N6rHHY5G/IMG-0298-compressed.jpg',
+'https://i.ibb.co/k2GgVdb9/IMG-0313-compressed.jpg',
+'https://i.ibb.co/ym09nH64/IMG-0315-compressed.jpg',
+'https://i.ibb.co/ynzKVqMb/IMG-0327-compressed.jpg',
+'https://i.ibb.co/vC5y4dgR/IMG-0247-compressed.jpg',
+     ],
+carreras:[
+  'https://i.ibb.co/Xxt6c7qz/P1010793-compressed.jpg',
+  'https://i.ibb.co/WWHQXv15/P1023119-compressed.jpg',
+     'https://i.ibb.co/N65NjJ2M/P1023091-compressed.jpg',
+'https://i.ibb.co/5xkLtLNZ/P1011005-compressed.jpg',
+'https://i.ibb.co/nMwsFmNK/IMG-6494-compressed.jpg',
+'https://i.ibb.co/dwsq5Mhh/IMG-6264-compressed.jpg',
+'https://i.ibb.co/hFvHF5zx/IMG-6247-Mejorado-NR-compressed.jpg'
+],
+retrato:[
+  'https://i.ibb.co/KppFmjr4/2-compressed.jpg',
+  'https://i.ibb.co/kVdBN7Jn/retratro.jpg',
+  'https://i.ibb.co/gbVDzvS2/IMG-9032-compressed.jpg',
+     'https://i.ibb.co/gLYRx4LZ/IMG-7207-compressed.jpg',
+     'https://i.ibb.co/7x6XyRWD/IMG-3099-compressed.jpg',
+'https://i.ibb.co/gZp4JYY0/IMG-1969-compressed.jpg',
+'https://i.ibb.co/m5jFStG5/IMG-1994-compressed.jpg',
+'https://i.ibb.co/ynqh0znv/IMG-0268-compressed.jpg',
+'https://i.ibb.co/Gvyh9wQC/IMG-1987-compressed.jpg',
+'https://i.ibb.co/4nY1kyP9/IMG-7252-compressed.jpg',
+'https://i.ibb.co/yFYHhGN9/IMG-9397-compressed.jpg'
+],
+producto:[
+  'https://i.ibb.co/wZtvyMN7/sue-os-de-azucar-2.jpg',
+'https://i.ibb.co/PvD2BDTP/sue-os-de-azucar.jpg',
+'https://i.ibb.co/V0ZLxfsL/SOLDADURA-compressed-1.jpg',
+'https://i.ibb.co/dsWBM32k/DSC-0318-compressed.jpg',
+'https://i.ibb.co/rGTSqj9x/DSC-0369-compressed.jpg',
+'https://i.ibb.co/jPDRpn5s/producto3.jpg',
+'https://i.ibb.co/35GYQBkD/producto1.jpg',
+'https://i.ibb.co/YF3zn531/BODEGUILLA-28-marzo.jpg',
+'https://i.ibb.co/DPV81w5Z/bdg-TIEMPO-DE-MOJITO.jpg',
+'https://i.ibb.co/gM3tLMvy/BODEGUILLA-24-MARZO.jpg',
+'https://i.ibb.co/wNb73ScW/ssf.png',
+'https://i.ibb.co/4wQvmWn4/68e6934a98fac.png',
+'https://i.ibb.co/rGMTLmsN/krea-edit-2.png'
+],
+aerea:[
+  'https://i.ibb.co/Q3NC33ZG/iglesia-la-liberta.jpg',
+  'https://i.ibb.co/twGq2tWh/040426-1.jpg',
+'https://i.ibb.co/4RGvGrtj/041426-3-compressed-2.jpg',
+'https://i.ibb.co/fdrMSR88/041426-1-compressed-2.jpg',
+'https://i.ibb.co/BVQHk9Sp/041426-5-compressed-2.jpg',
+'https://i.ibb.co/jvSj5Xd7/041426-4-compressed-2.jpg',
+'https://i.ibb.co/pBSVtjKc/catedral-central.jpg',
+'https://i.ibb.co/Z1t0NmBR/plaza-roja.jpg',
+'https://i.ibb.co/k2h7V5hM/iglesia-loma-de-quito.jpg',
+'https://i.ibb.co/Q7YYQ3QH/Flux2-Klein-00026.png'
+],
+bautizos:[
+  'https://i.ibb.co/99zx8fd8/IMG-7140-Mejorado-NR-compressed.jpg',
+'https://i.ibb.co/bjGxDbBx/IMG-7180-Mejorado-NR-compressed.jpg',
+'https://i.ibb.co/s9vR0R7R/IMG-7293-Mejorado-NR-compressed.jpg',
+'https://i.ibb.co/Rp7zrN1D/IMG-7118-compressed.jpg',
+'https://i.ibb.co/Kx5qP002/IMG-6679-Mejorado-NR-compressed.jpg',
+'https://i.ibb.co/5hM4xtNh/IMG-6726-Mejorado-NR-compressed.jpg',
+'https://i.ibb.co/204nkp8Y/IMG-6706-Mejorado-NR-compressed.jpg'
+],
+eventos:[
+  'https://i.ibb.co/3YB3p0Sm/IMG-2059-compressed.jpg'
+],
+inmobiliaria:[
+  'https://i.ibb.co/gLn4861r/IMG-9287-V1-compressed.jpg'
+],
+
+    // ... (Asegúrate de copiar aquí el resto de tus categorías originales)
+    // Nota: Cambié w=600 por w=1400 en los enlaces para que se vean bien en pantalla completa.
+  };
+
+  const lightbox = document.getElementById('cat-lightbox');
+  const lbCatName = document.getElementById('lb-cat-name');
+  const lbThumbnails = document.getElementById('lb-thumbnails');
+  const billboardImg = document.getElementById('billboard-img');
+  const lbBack = document.getElementById('lb-back');
+  const lbClose = document.getElementById('lb-close');
+
+  let currentPhotos = [];
+  let swiperInstance = null;
+
+  // ── Animación de entrada de las tarjetas (Tu código original) ───────────
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from('#cat-grid .cat-card', {
+      scrollTrigger: { trigger: '#cat-grid', start: 'top 80%', once: true },
+      y: 60, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out',
+    });
+  }
+
+  // ── Función para cambiar la imagen de fondo con transición ──────────────
+  function updateBillboard(src) {
+    if (billboardImg.src === src) return;
+    
+    // Transición suave con GSAP
+    gsap.to(billboardImg, {
+      opacity: 0.4,
+      duration: 0.3,
+      onComplete: () => {
+        billboardImg.src = src;
+        gsap.to(billboardImg, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+      }
+    });
+  }
+
+  // ── Abrir lightbox de categoría ─────────────────────────────────────────
+  document.querySelectorAll('.cat-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const cat = card.dataset.cat;
+      const label = card.dataset.label;
+      
+      // Si la categoría no existe en el objeto, usamos un array vacío o de prueba
+      currentPhotos = catPhotos[cat] || [card.querySelector('img').src]; 
+
+      lbCatName.textContent = label;
+      lbThumbnails.innerHTML = '';
+
+      // Inyectar la primera imagen como fondo inicial
+      billboardImg.src = currentPhotos[0];
+
+      // Construir miniaturas para el Swiper
+      currentPhotos.forEach((src, i) => {
+        const slide = document.createElement('div');
+        
+        // El truco aquí es: altura fija (h-24, h-32, etc.) y ancho automático (!w-auto)
+        slide.className = 'swiper-slide !w-auto h-24 md:h-32 lg:h-40 relative rounded-md overflow-hidden cursor-pointer group border-2 border-transparent hover:border-white transition-all duration-300';
+        
+        slide.innerHTML = `
+          <img src="${src}" alt="Miniatura ${i}" class="block h-full w-auto object-cover transition-transform duration-500 group-hover:scale-110"/>
+          <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-300"></div>
+        `;
+        
+        // Evento Hover para cambiar la cartelera
+        slide.addEventListener('mouseenter', () => updateBillboard(src));
+        
+        lbThumbnails.appendChild(slide);
+      });
+
+      // Mostrar lightbox
+      lightbox.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+
+      gsap.fromTo(lightbox,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: 'power2.out' }
+      );
+
+      // Inicializar Swiper
+      if (swiperInstance) swiperInstance.destroy();
+      swiperInstance = new Swiper('.billboardSwiper', {
+        slidesPerView: 'auto', // Esto permite que Swiper respete el ancho natural de cada foto
+        spaceBetween: 15,
+        freeMode: true,
+        // Eliminamos los breakpoints porque 'auto' se adapta solo a cualquier pantalla
+      });
+      
+      // Animar entrada de las miniaturas del Swiper
+      gsap.fromTo('.swiper-slide',
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'back.out(1.2)', delay: 0.2 }
+      );
+    });
+  });
+
+  // ── Cerrar lightbox ──────────────────────────────────────────────────────
+  function closeLightbox() {
+    gsap.to(lightbox, {
+      opacity: 0, duration: 0.4, ease: 'power2.in',
+      onComplete: () => {
+        lightbox.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  lbBack.addEventListener('click', closeLightbox);
+  lbClose.addEventListener('click', closeLightbox);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lightbox.style.display !== 'none') closeLightbox();
+  });
+
 })();
 </script>
-
-<!-- Gallery + Lightbox Script -->
-<script>
-document.addEventListener('DOMContentLoaded',function(){
-  const lightbox=document.getElementById('lightbox'),lbImg=document.getElementById('lb-img'),lbCaption=document.getElementById('lb-caption'),lbClose=document.getElementById('lb-close'),lbPrev=document.getElementById('lb-prev'),lbNext=document.getElementById('lb-next');
-  let lbImages=[],lbIndex=0;
-  function openLightbox(images,idx){lbImages=images;lbIndex=idx;showLbSlide();lightbox.classList.add('open');document.body.style.overflow='hidden';}
-  function closeLightbox(){lightbox.classList.remove('open');document.body.style.overflow='';}
-  function showLbSlide(){lbImg.src=lbImages[lbIndex].src;lbImg.alt=lbImages[lbIndex].alt;lbCaption.textContent=(lbIndex+1)+' / '+lbImages.length;lbPrev.style.display=lbImages.length>1?'flex':'none';lbNext.style.display=lbImages.length>1?'flex':'none';}
-  lbClose.addEventListener('click',closeLightbox);
-  lightbox.addEventListener('click',function(e){if(e.target===lightbox)closeLightbox();});
-  lbPrev.addEventListener('click',function(){lbIndex=(lbIndex-1+lbImages.length)%lbImages.length;showLbSlide();});
-  lbNext.addEventListener('click',function(){lbIndex=(lbIndex+1)%lbImages.length;showLbSlide();});
-  document.addEventListener('keydown',function(e){if(!lightbox.classList.contains('open'))return;if(e.key==='Escape')closeLightbox();if(e.key==='ArrowLeft'){lbIndex=(lbIndex-1+lbImages.length)%lbImages.length;showLbSlide();}if(e.key==='ArrowRight'){lbIndex=(lbIndex+1)%lbImages.length;showLbSlide();}});
-  document.querySelectorAll('.lightbox-img').forEach(function(img){img.addEventListener('click',function(){openLightbox([{src:img.src,alt:img.alt}],0);});});
-
-  const galleries={
-    'video-corporativo':{title:'Video Corporativo',subtitle:'Producción audiovisual · calidad 4K',images:[{src:'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&q=80',alt:'Video corporativo 1'},{src:'https://images.unsplash.com/photo-1536240478700-b869ad10e2ab?w=800&q=80',alt:'Video corporativo 2'},{src:'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80',alt:'Video corporativo 3'},{src:'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=80',alt:'Video corporativo 4'},{src:'https://images.unsplash.com/photo-1478737270197-d9a2d374c2b6?w=800&q=80',alt:'Video corporativo 5'},{src:'https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=800&q=80',alt:'Video corporativo 6'}]},
-    'eventos':{title:'Eventos',subtitle:'Congresos, galas y lanzamientos',images:[{src:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',alt:'Evento 1'},{src:'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80',alt:'Evento 2'},{src:'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80',alt:'Evento 3'},{src:'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80',alt:'Evento 4'},{src:'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=800&q=80',alt:'Evento 5'},{src:'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=800&q=80',alt:'Evento 6'}]},
-    'productos':{title:'Fotografía de Producto',subtitle:'E-commerce, catálogos y publicidad',images:[{src:'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',alt:'Producto 1'},{src:'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800&q=80',alt:'Producto 2'},{src:'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&q=80',alt:'Producto 3'},{src:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',alt:'Producto 4'},{src:'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&q=80',alt:'Producto 5'},{src:'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&q=80',alt:'Producto 6'}]},
-    'contenidos-digitales':{title:'Contenido Digital',subtitle:'Redes sociales y campañas digitales',images:[{src:'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80',alt:'Contenido digital 1'},{src:'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&q=80',alt:'Contenido digital 2'},{src:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',alt:'Contenido digital 3'},{src:'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&q=80',alt:'Contenido digital 4'},{src:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',alt:'Contenido digital 5'},{src:'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=800&q=80',alt:'Contenido digital 6'}]}
-  };
-
-  const galleryModal=document.getElementById('gallery-modal'),galleryClose=document.getElementById('gallery-close'),galleryTitle=document.getElementById('gallery-title'),gallerySubtitle=document.getElementById('gallery-subtitle'),galleryGrid=document.getElementById('gallery-grid');
-  function openGallery(category){const data=galleries[category];if(!data)return;galleryTitle.textContent=data.title;gallerySubtitle.textContent=data.subtitle;galleryGrid.innerHTML='';data.images.forEach(function(img,i){const el=document.createElement('img');el.src=img.src;el.alt=img.alt;el.className='gallery-thumb';el.loading='lazy';el.addEventListener('click',function(){openLightbox(data.images,i);});galleryGrid.appendChild(el);});galleryModal.classList.add('open');document.body.style.overflow='hidden';}
-  function closeGallery(){galleryModal.classList.remove('open');document.body.style.overflow='';}
-  document.querySelectorAll('.category-card').forEach(function(card){card.addEventListener('click',function(){openGallery(card.dataset.category);});});
-  galleryClose.addEventListener('click',closeGallery);
-  galleryModal.addEventListener('click',function(e){if(e.target===galleryModal)closeGallery();});
-});
-</script>
-<script>
-  // Bloquear click derecho
-  document.addEventListener('contextmenu', event => event.preventDefault());
-
-  // Bloquear atajos de teclado para inspeccionar
-  document.onkeydown = function(e) {
-    if(e.keyCode == 123) return false; // F12
-    if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
-    if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
-    if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
-    if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-  };
-</script>
-<!-- Modal Overlay -->
-<div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
-    
-    <!-- Cabecera -->
-    <div class="bg-primary p-6 text-white relative">
-      <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h3 class="text-xl font-bold">Solicitar Información</h3>
-      <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
-    </div>
-
     <!-- Formulario -->
     <form id="whatsappForm" class="p-8 space-y-4">
       <input type="hidden" id="selectedPlan">
