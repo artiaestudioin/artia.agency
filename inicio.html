@@ -1034,5 +1034,74 @@ Hola Artia, me gustaría agendar una reunión para profundizar en los detalles d
 });
 </script>
 <script type="text/javascript" src="https://counter.websiteout.com/js/35/4/1351/0"></script>
+<div id="ai-chat-container" class="fixed bottom-5 right-5 z-[100]">
+    <button id="chat-toggle" class="bg-black text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform">
+        <span class="material-symbols-outlined">smart_toy</span>
+    </button>
+
+    <div id="chat-window" class="hidden absolute bottom-16 right-0 w-80 h-96 bg-white rounded-2xl shadow-2xl flex-col overflow-hidden border border-gray-100">
+        <div class="bg-black p-4 text-white flex justify-between items-center">
+            <span class="font-bold">Artia AI</span>
+            <button id="chat-close" class="material-symbols-outlined text-sm">close</button>
+        </div>
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-sm flex flex-col gap-2 text-black">
+            </div>
+        <div class="p-3 border-t flex gap-2">
+            <input type="text" id="chat-input" placeholder="Pregúntame algo..." class="flex-1 text-xs p-2 border rounded-lg focus:outline-none focus:border-black text-black">
+            <button id="chat-send" class="bg-black text-white p-2 rounded-lg material-symbols-outlined">send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatToggle = document.getElementById('chat-toggle');
+const chatWindow = document.getElementById('chat-window');
+const chatClose = document.getElementById('chat-close');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+const chatMessages = document.getElementById('chat-messages');
+
+let messages = [];
+
+// Abrir/Cerrar
+chatToggle.onclick = () => chatWindow.classList.toggle('hidden');
+chatClose.onclick = () => chatWindow.classList.add('hidden');
+
+async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Mostrar mensaje del usuario
+    appendMessage('user', text);
+    chatInput.value = '';
+    messages.push({ role: 'user', content: text });
+
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages })
+        });
+        const data = await res.json();
+        const aiResponse = data.choices[0].message.content;
+        
+        appendMessage('assistant', aiResponse);
+        messages.push({ role: 'assistant', content: aiResponse });
+    } catch (e) {
+        appendMessage('assistant', 'Lo siento, tuve un problema técnico.');
+    }
+}
+
+function appendMessage(role, text) {
+    const div = document.createElement('div');
+    div.className = `p-2 rounded-lg ${role === 'user' ? 'bg-gray-100 self-end' : 'bg-blue-50 self-start text-gray-800'}`;
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+chatSend.onclick = sendMessage;
+chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+</script>
 </body>
 </html>
