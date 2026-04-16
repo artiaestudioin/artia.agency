@@ -114,11 +114,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   .sv-grid {
     grid-template-columns: 1fr;
   }
-  /* En mobile solo se muestra la primera tarjeta */
-  .sv-card:nth-child(2),
-  .sv-card:nth-child(3) {
-    display: none;
-  }
+  
   #section-videos {
     padding: 72px 20px 60px;
   }
@@ -617,9 +613,9 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
         <!-- Thumbnail: reemplaza VIDEO_ID_1 con el ID real de tu video -->
         <img
           class="sv-thumbnail"
-          src="https://img.youtube.com/vi/_4GTc2ytk88&t=9s/maxresdefault.jpg"
+          src="https://img.youtube.com/vi/_4GTc2ytk88/maxresdefault.jpg"
           alt="Video Artia 1"
-          onerror="this.src='https://img.youtube.com/vi/_4GTc2ytk88&t=9s/hqdefault.jpg'"
+          onerror="this.src='https://img.youtube.com/vi/_4GTc2ytk88/hqdefault.jpg'"
         />
         <div class="sv-overlay"></div>
         <!-- iframe oculto hasta que se presione play -->
@@ -633,7 +629,7 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
         <!-- Badge -->
         <span class="sv-badge">Audiovisual</span>
         <!-- Botón Play -->
-        <button class="sv-play-btn" data-video-id="_4GTc2ytk88&t=9s" data-iframe="sv-iframe-1" data-card="sv-card-1" aria-label="Reproducir video">
+        <button class="sv-play-btn" data-video-id="_4GTc2ytk88" data-iframe="sv-iframe-1" data-card="sv-card-1" aria-label="Reproducir video">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 5v14l11-7z"/>
           </svg>
