@@ -1182,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gsap.set('#ai-chat-container', { y: 120, opacity: 0 });
     
     // 2. Timeline con delay (esperamos 3.5s para que el usuario aterrice en la web)
-    const chatTimeline = gsap.timeline({ delay: 10 });
+    const chatTimeline = gsap.timeline({ delay: 10000 });
 
     chatTimeline
         // Animación de salto del contenedor completo
