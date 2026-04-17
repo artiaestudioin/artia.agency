@@ -113,7 +113,7 @@ export default async function handler(req, res) {
     </table>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td style="padding:32px 40px 24px;text-align:center;">
-        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="150" style="display:block;margin:0 auto 12px;height:auto;"/>
+        <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA Studio" width="150" style="display:block;margin:0 auto 12px;height:auto;"/>
         <p style="margin:0 0 4px;color:rgba(179,197,255,0.9);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">Marketing &amp; Publicidad Integral</p>
         <p style="margin:8px 0 0;color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:1px;">─────────────────────────────────</p>
       </td></tr>
@@ -185,7 +185,7 @@ export default async function handler(req, res) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="width:48px;vertical-align:top;padding-right:16px;">
-          <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA" width="40" style="display:block;height:auto;"/>
+          <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA" width="40" style="display:block;height:auto;"/>
         </td>
         <td style="vertical-align:top;">
           <p style="margin:0 0 2px;font-size:12px;font-weight:900;color:#00113a;letter-spacing:0.5px;">Artia Studio</p>
@@ -243,7 +243,7 @@ export default async function handler(req, res) {
     </table>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr><td style="padding:32px 40px;text-align:center;">
-        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA Studio" width="130" style="display:block;margin:0 auto;height:auto;"/>
+        <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA Studio" width="130" style="display:block;margin:0 auto;height:auto;"/>
       </td></tr>
     </table>
   </td></tr>
@@ -279,7 +279,7 @@ export default async function handler(req, res) {
   </td></tr>
 
   <tr><td style="background:#00113a;border-radius:0 0 12px 12px;padding:28px 40px;text-align:center;">
-    <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA" width="30" style="display:block;margin:0 auto 12px;opacity:0.8;"/>
+    <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA" width="30" style="display:block;margin:0 auto 12px;opacity:0.8;"/>
     <p style="margin:0 0 6px;font-size:12px;color:#fff;font-weight:700;letter-spacing:1px;">Equipo de Artia</p>
     <p style="margin:0 0 12px;font-size:11px;color:rgba(255,255,255,0.6);">Marketing &amp; Publicidad Integral</p>
     <p style="margin:0 0 6px;font-size:10px;color:rgba(255,255,255,0.4);">
@@ -419,7 +419,7 @@ async function handleImpresion({ name, emailFrom, phone, products }, res) {
     </table>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:32px 40px 24px;text-align:center;">
-        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA" width="140" style="display:block;margin:0 auto 10px;height:auto;"/>
+        <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA" width="140" style="display:block;margin:0 auto 10px;height:auto;"/>
         <p style="margin:0;color:rgba(179,197,255,0.85);font-size:9px;letter-spacing:5px;text-transform:uppercase;font-weight:700;">Papelería Premium — Entrega Express</p>
       </td></tr>
     </table>
@@ -504,7 +504,7 @@ async function handleImpresion({ name, emailFrom, phone, products }, res) {
     </table>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:32px 40px;text-align:center;">
-        <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA" width="130" style="display:block;margin:0 auto;height:auto;"/>
+        <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png" alt="ARTIA" width="130" style="display:block;margin:0 auto;height:auto;"/>
       </td></tr>
     </table>
   </td></tr>
@@ -550,7 +550,7 @@ async function handleImpresion({ name, emailFrom, phone, products }, res) {
   </td></tr>
 
   <tr><td style="background:#00113a;border-radius:0 0 12px 12px;padding:28px 40px;text-align:center;">
-    <img src="https://i.postimg.cc/fR4wJgg5/LOGO-ARTIA-blanco.png" alt="ARTIA" width="30" style="display:block;margin:0 auto 10px;opacity:0.8;"/>
+    <img src="https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/logo%20artia%20azul.png" alt="ARTIA" width="30" style="display:block;margin:0 auto 10px;opacity:0.8;"/>
     <p style="margin:0 0 4px;font-size:12px;color:#fff;font-weight:700;">Equipo Artia Studio</p>
     <p style="margin:0 0 8px;font-size:11px;color:rgba(255,255,255,0.55);">Marketing &amp; Publicidad Integral · Ecuador</p>
     <p style="margin:0 0 4px;font-size:10px;color:rgba(255,255,255,0.4);">
