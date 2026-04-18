@@ -2,8 +2,24 @@
   "name": "artia-agency",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
-    "nodemailer": "^6.9.14"
+    "@supabase/ssr": "^0.5.0",
+    "next": "^15.0.0",
+    "nodemailer": "^6.9.14",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.0"
   }
 }
