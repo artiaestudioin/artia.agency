@@ -1,10 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/inicio.html" },
-    { "source": "/nosotros", "destination": "/nosotros.html" },
-    { "source": "/clientes", "destination": "/clientes.html" },
-    { "source": "/servicios/marketing-digital", "destination": "/servicio-marketing-digital.html" },
-    { "source": "/servicios/impresion", "destination": "/servicio-impresion.html" },
-    { "source": "/servicios/fotografia", "destination": "/servicio-fotografia.html" }
-  ]
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "outputDirectory": ".next"
 }
