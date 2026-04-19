@@ -12,15 +12,15 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // En Server Components de solo lectura, set falla silenciosamente.
-            // El middleware se encarga de refrescar la sesión.
-          }
+        // Busca esta línea y agrégale el tipo ": any" (o el tipo específico de Supabase)
+setAll(cookiesToSet: any) { 
+  try {
+    cookiesToSet.forEach(({ name, value, options }: any) =>
+      cookieStore.set(name, value, options)
+    )
+  } catch {
+    // El manejo de cookies en Server Components a veces falla si no se envuelve en try-catch
+  }
         },
       },
     }
