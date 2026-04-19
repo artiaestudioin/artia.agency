@@ -13,11 +13,14 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet: any) {
+          // 1. Actualizamos los cookies en la petición original
           cookiesToSet.forEach(({ name, value }: any) =>
             request.cookies.set(name, value)
           )
+          // 2. Sincronizamos la respuesta
           supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
+          // 3. AGREGADO: :any para corregir el error de Vercel
+          cookiesToSet.forEach(({ name, value, options }: any) =>
             supabaseResponse.cookies.set(name, value, options)
           )
         },
@@ -26,20 +29,20 @@ export async function middleware(request: NextRequest) {
   )
 
   // Refresca la sesión — obligatorio en middleware con Supabase SSR
+  // Usar getUser() es lo más seguro según la documentación
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
   const isAdminRoute = path.startsWith('/admin')
   const isLoginPage  = path === '/admin/login'
 
-  // Sin sesión intentando entrar al admin → redirigir a login
+  // Lógica de Redirección
   if (isAdminRoute && !isLoginPage && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin/login'
     return NextResponse.redirect(url)
   }
 
-  // Ya tiene sesión y va al login → redirigir al dashboard
   if (isLoginPage && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
@@ -50,6 +53,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Solo intercepta rutas /admin/*. Las rutas /api/* y los HTML estáticos no pasan por aquí.
+  // Ajuste opcional: es mejor proteger todo /admin incluyendo el login 
+  // para que el middleware gestione la redirección si ya hay sesión.
   matcher: ['/admin/:path*'],
 }
