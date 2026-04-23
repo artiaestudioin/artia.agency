@@ -24,15 +24,26 @@ const nextConfig: NextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
-  silent:  !process.env.CI,
-  org:     process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  // ── Identificación del proyecto ──────────────────────────────────────────
+  org:       process.env.SENTRY_ORG      ?? '',
+  project:   process.env.SENTRY_PROJECT  ?? '',
+  authToken: process.env.SENTRY_AUTH_TOKEN,        // ← Requerido para uploads
 
+  // ── Build behavior ───────────────────────────────────────────────────────
+  silent:          true,   // no spam en logs de Vercel
+  disableLogger:   true,
+
+  // ── Source maps ──────────────────────────────────────────────────────────
   widenClientFileUpload: true,
-
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
+    // Si no hay auth token válido, no intentes subir (evita el build error)
+    disable: !process.env.SENTRY_AUTH_TOKEN,
   },
 
+  // ── Tunnel para evitar blockers de ad-blockers ───────────────────────────
   tunnelRoute: '/monitoring-tunnel',
+
+  // ── Vercel Cron Monitors ─────────────────────────────────────────────────
+  automaticVercelMonitors: true,
 })
