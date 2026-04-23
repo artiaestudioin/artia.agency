@@ -15,7 +15,7 @@ const STEPS = [
   { estado: 'nuevo',      label: 'Solicitud recibida',  sublabel: 'Tu solicitud llegó a nuestro equipo',    icon: '◎', code: 'RECV' },
   { estado: 'contactado', label: 'En revisión',         sublabel: 'Analizando los detalles de tu proyecto', icon: '◈', code: 'ANLZ' },
   { estado: 'en_proceso', label: 'En producción',       sublabel: 'Tu proyecto está siendo desarrollado',   icon: '⬡', code: 'PROD' },
-  { estado: 'cerrado',    label: 'Entregado',           sublabel: '¡Tu proyecto fue completado con éxito!', icon: '★', code: 'DONE' },
+  { estado: 'cerrado',    label: 'Entregado',           sublabel: '¡Tu proyecto fue completado con éxito!', icon: '★', code: 'FINAL' },
 ]
 
 const ESTADO_IDX: Record<string, number> = {
@@ -163,7 +163,7 @@ const CSS = `
 
   .sf-folio-id {
     font-family: 'Syne', sans-serif;
-    font-size: 30px; font-weight: 900;
+    font-size: 20px; font-weight: 400;
     color: #111827; letter-spacing: 1px; line-height: 1;
     position: relative;
   }
@@ -353,7 +353,7 @@ const CSS = `
 
   /* FOOTER */
   .sf-footer { margin-top: 36px; text-align: center; opacity: 0; animation: sfFadeIn .8s ease 2.9s forwards; }
-  .sf-footer p { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: #d1d5db; }
+  .sf-footer p { font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: #1a1f27; }
 
   /* NOT FOUND */
   .sf-nf { text-align: center; padding: 100px 20px; opacity: 0; animation: sfFadeIn .8s ease .3s forwards; }

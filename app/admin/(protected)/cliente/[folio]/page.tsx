@@ -36,7 +36,7 @@ export default async function AdminClienteFolioPage({
             <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, color: '#6366f1', background: 'rgba(99,102,241,.08)', border: '1px solid rgba(99,102,241,.2)', padding: '2px 10px', borderRadius: 6 }}>
               FOLIO
             </span>
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
               {folio}
             </h1>
           </div>
