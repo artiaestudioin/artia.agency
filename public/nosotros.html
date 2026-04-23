@@ -1,0 +1,617 @@
+<!--
+@license
+© 2026 Artia Studio. All rights reserved.
+This code is the private property of Artia Studio.
+Reproduction or distribution without permission is strictly prohibited.
+-->
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nosotros | ARTIA Marketing Studio</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<script src="https://cloudflare.com"></script>
+<script src="https://cloudflare.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}
+</script>
+<style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+.tonal-layering-no-borders{box-shadow:none;border-right:1px solid rgba(197,198,210,0.15)}
+.blur-reveal{filter:blur(10px);opacity:0;animation:blurToClear 1.2s cubic-bezier(0.22,1,0.36,1) forwards}
+@keyframes blurToClear{to{filter:blur(0);opacity:1}}
+.wa-pulse{animation:waPulse 2s infinite}
+@keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+/* Contador websiteout */
+#wso-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+#wso-wrap a { line-height: 0; display: block; }
+#wso-wrap img {
+  transform: scale(6);
+  transform-origin: center center;
+  margin: 28px 0;
+  filter: hue-rotate(220deg) saturate(5) brightness(1);
+  image-rendering: crisp-edges;
+}
+</style>
+</head>
+<body class="bg-background font-body text-on-surface overflow-x-hidden">
+
+<!-- Desktop Side Navigation -->
+
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a href="inicio.html" class="block w-32 mb-10">
+      <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
+    </a>
+    <nav class="flex flex-col gap-y-6">
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
+          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+        </div>
+      </div>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+  </div>
+  <div class="flex flex-col gap-6">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+  RESERVAR
+</button>
+    <div class="flex items-center gap-3 pl-4 text-slate-500">
+      <span class="material-symbols-outlined text-[18px]">help_outline</span>
+      <span class="text-xs font-medium">Soporte</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a href="inicio.html" class="block w-32 mt-1">
+    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia">
+  </a>
+  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
+</header>
+
+<!-- Mobile Navigation Overlay (GSAP controlled) -->
+<div class="fixed inset-0 z-[60] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center p-10 lg:hidden text-center" id="mobile-menu" style="display:none">
+  
+  <!-- Botón cerrar (lo movemos a la esquina para que no estorbe el centro) -->
+  <button id="mobile-menu-close" class="absolute top-8 right-8 text-primary p-2">
+    <span class="material-symbols-outlined text-4xl">close</span>
+  </button>
+
+<!-- Logo (Reposicionado hacia arriba) -->
+<div id="mm-header" class="mb-12 flex justify-center w-full"> 
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
+        <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" 
+             alt="Logo Artia" 
+             class="w-full h-auto object-contain">
+    </a>
+</div>
+
+
+  <!-- Navegación (Más grande y centrada) -->
+  <nav class="flex flex-col gap-y-8 w-full" id="mm-nav">
+    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html">Inicio</a>
+    
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-center gap-2 w-full font-manrope text-2xl font-semibold tracking-tight text-slate-500">
+        <span>Servicios</span>
+        <span id="icon-flecha" class="material-symbols-outlined text-2xl transition-transform duration-300">expand_more</span>
+      </button>
+      
+      <!-- Submenu Ajustado -->
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
+        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
+      </div>
+    </div>
+
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html">Nosotros</a>
+  </nav>
+
+  <!-- Botón Reservar -->
+  <div class="mt-12 w-full px-4" id="mm-cta">
+    <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
+      RESERVAR
+    </button>
+  </div>
+</div>
+<script src="fab-artia.js"></script>
+<main class="lg:ml-[280px] min-h-screen">
+
+<!-- Hero Editorial -->
+<section class="relative min-h-[716px] flex items-center px-8 lg:px-16 py-24 bg-surface overflow-hidden" data-sr>
+  <div class="absolute inset-0 z-0 overflow-hidden">
+    <div class="absolute top-[-10%] right-[-10%] w-[60%] h-[120%] bg-surface-container-low opacity-50 rotate-12 skew-y-3"></div>
+  </div>
+  <div class="relative z-10 grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
+    <div class="space-y-8 aspect-square">
+      <span class="inline-block px-3 py-1 bg-primary-container text-white text-[0.65rem] font-bold tracking-[0.2em] uppercase rounded-sm">Nuestra Historia</span>
+      <h2 class="font-headline text-5xl lg:text-7xl text-primary leading-[1.1] tracking-tight blur-reveal">No solo existas <br/><span class="italic text-secondary">conecta</span> e impacta.</h2>
+      <p class="font-headline text-xl">Tu marca merece ser líder.</p> <span class="text-on-surface-variant text-lg max-w-lg leading-relaxed"  >Transformamos tu presencia digital en una máquina de resultados.</span>
+    </div>
+    <div class="relative group">
+      <div class="aspect-square overflow-hidden rounded-lg shadow-2xl transition-transform duration-700 group-hover:scale-[1.02]">
+        <img alt="Professional office environment" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtZUwOyoZ1OmCkKg8wp-g0iwHQZBhuPAMZC8J6qAhSovA8ll1ADfTHdfWbsrr-YdvTPJiliIK_BEr7DlTJR3xIHLXoGkHa_58v2E6VcRKc5M6O-v6-vcs9yuKia0LAQGDvcfSqWZ5vru_dk3Neo5QWkSl87JP_iTl7ajAUNtNeo2y7estUcbfpXHT9yxXGHLkMZVtA0GxSqqNr29aX7Et86l0PiLyHij3rDXB-lgPMtdyTjYtnU7-q4sREMrAuvT8mecBNAcZATkUr"/>
+      </div>
+      <div class="absolute -bottom-8 -left-8 w-48 h-48 bg-primary p-6 hidden lg:flex flex-col justify-end">
+        <span class="text-on-primary text-4xl font-black">7+</span>
+        <span class="text-on-primary/70 text-xs font-label uppercase tracking-widest">Años de experticia</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mission & Philosophy -->
+<section class="bg-surface-container-low py-24 px-8 lg:px-16">
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-3 gap-12">
+    <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6" data-sr data-sr-delay="0">
+      <span class="material-symbols-outlined text-secondary text-4xl">architecture</span>
+      <h3 class="font-headline text-2xl text-primary">Misión</h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed">Proveer soluciones de marketing integral que trascienden lo convencional, transformando la visión de nuestros clientes en realidades comerciales potentes y sostenibles.</p>
+    </div>
+    <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6 lg:mt-12" data-sr data-sr-delay="0.12">
+      <span class="material-symbols-outlined text-secondary text-4xl">visibility</span>
+      <h3 class="font-headline text-2xl text-primary">Visión</h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed">Ser reconocidos como la agencia boutique líder en estrategia publicitaria en la región, destacando por nuestra excelencia técnica y ética profesional.</p>
+    </div>
+    <div class="bg-surface-container-lowest p-10 rounded-lg shadow-[0_20px_40px_rgba(0,17,58,0.04)] space-y-6 lg:mt-24" data-sr data-sr-delay="0.24">
+      <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
+      <h3 class="font-headline text-2xl text-primary">Valores</h3>
+      <p class="text-on-surface-variant text-sm leading-relaxed">Integridad, innovación disruptiva y compromiso absoluto. Creemos que la transparencia es el cimiento de toda relación profesional exitosa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CEO Spotlight -->
+<section class="py-24 px-8 lg:px-16 bg-surface" data-sr>
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-center">
+    <div class="lg:col-span-5 aspect-[3/4] overflow-hidden rounded-lg bg-surface-container-high">
+      <img alt="CEO Portrait" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="https://i.ibb.co/HDZPPBQM/freepik-professional-portrait-hig-2786784253-compressed.png"/>
+    </div>
+    <div class="lg:col-span-7 space-y-8">
+      <h4 class="text-on-surface-variant font-label text-xs uppercase tracking-[0.3em]">Liderazgo Ejecutivo</h4>
+      <h2 class="font-headline text-4xl text-primary">"Nuestra meta es construir legados, no solo campañas."</h2>
+      <div class="space-y-4">
+        <p class="text-on-surface-variant leading-relaxed">Bajo la dirección de nuestro fundador, ARTIA ha evolucionado de ser un taller creativo a una consultoría de marketing de espectro completo. Con una visión centrada en el cliente y una obsesión por los detalles, lideramos el mercado con integridad.</p>
+        <div class="pt-6 border-t border-outline-variant/20">
+          <p class="font-headline text-xl text-primary">Director General</p>
+          <p class="text-secondary text-sm font-label uppercase tracking-widest">Estrategia &amp; Visión</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-24 px-8 lg:px-16 bg-surface-container-high">
+  <div class="max-w-7xl mx-auto space-y-16">
+    <div class="text-center space-y-4" data-sr>
+      <h2 class="font-headline text-4xl text-primary">Mentes Maestras</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto">Un equipo multidisciplinario dedicado a la precisión y el impacto visual.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300" data-sr data-sr-delay="0">
+        <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB36Dk696MgEPrC98_gnya6fDmNBt-3je8T6N_m0iOoy3RyB61Lehnwf9pUHfon_QKXAmyZsfinGmr8hPJQcgi7SgAX0xo_S6GhKgAJ7Z-8qDLv3Ny0niJcssGmGXdWCrq-SD9LQ0GQ11If_ethDgPOW1wFDft_efsFOciHzkqeTpzGDwMuE_IAKNOJA3nWCg6bwcuKKqqsFU3M7jUr-9Xa_O99I4gk5ZrEWRyHjuzVLXmRfZzlbukCV9xIaP4MrKVLYM7c2XvXsTQG"/></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Creative Lead</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Diseño &amp; Concepto</p></div>
+      </div>
+      <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300 lg:mt-8" data-sr data-sr-delay="0.1">
+        <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBG-3Eq_Gx-iKFU61RSkmtJ4BfxPwEs-l2XdFS6CSBdcdCwrUi8hJqFygDSv84HBJmyikyTHsQ5M6-xXsNLazCtDleauNHXMizHNMuus_Ho53P3dfV4U0XbDQexbdAJ1HG-U_CMHXTul0TAPYqKUSd4rFMD-5BLqYUc_pSgOKq9Fm01h4P3nqXVyTqKQlWk3xTK9gc0z43B5BkJvjhSPzyfVMiILqGrzchh8a5q_OhvROGRSzK-Zr_po2f2wxoT9AV-yjQsMQfT2qVj"/></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Digital Strategist</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Data &amp; Performance</p></div>
+      </div>
+      <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300" data-sr data-sr-delay="0.2">
+        <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWIlv0dZ9VO3ETRyUtfzP6nnqporAHUDdr-G8C8jI6Wfdif9N8GcFHM9uB0Y267Qj0LV8r-XqwW3L8sPgB8fq0kPegJ5wxp6efMzrQB4fFYrzL0mtkm4MunuyjAtaJptHg3kgEhgy4wLHt5wha-kE71yADbaVNjQKI3uAJoUou0H9oA1JPmJa704NZZXB9ggdgxgOuVU76gaUMQ1h2NjuIYKOtc87KFvtAKJAzcOibVPDwMIOjHG39aMVOJdtk4ud5guXN5L88uGbG"/></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Account Manager</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Relaciones &amp; Gestión</p></div>
+      </div>
+      <div class="group bg-surface-container-lowest p-2 rounded-xl transition-all hover:-translate-y-2 duration-300 lg:mt-8" data-sr data-sr-delay="0.3">
+        <div class="aspect-square overflow-hidden rounded-lg mb-6"><img alt="Team Member" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN8R68pD7hAimoxNuVfdaeiBMJwWx8MnAPxAvYY4Ft9hgEnpeNvwZviqTka2buvdD6G8aEICs_RaCxZDVoOFT197TnwiC7VonsNRlD7888jFwbPk7ljcP38v40c4QGM8C4UhzaRFFlMKLJ0AEIbtRt3YLVbVlFje3yUCArH-9PVZ_3BQp00u0byUZbB0vIx0ayD4TVgTO2Ye_1Tu1edlLqy7qcszmQqCphKMLqDGAjN55rHaDvq9pDKUzEr_OUtfltGINkFADksNBY"/></div>
+        <div class="px-4 pb-4"><h5 class="font-headline text-lg text-primary">Production Head</h5><p class="text-on-surface-variant text-xs font-label uppercase tracking-widest">Logística &amp; Ejecución</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+.digit-card {
+  width: 52px;
+  height: 72px;
+  background: #0b3baa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,17,58,0.18), inset 0 1px 0 rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease;
+}
+.digit-card::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(179,197,255,0.12);
+}
+.digit-sep {
+  font-family: 'Manrope', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #b3c5ff;
+  line-height: 1;
+  margin: 0 2px;
+  align-self: center;
+}
+@keyframes flipIn {
+  0%   { transform: rotateX(-90deg) translateY(-10px); opacity: 0; }
+  100% { transform: rotateX(0deg)   translateY(0);     opacity: 1; }
+}
+.digit-card.flip { animation: flipIn .35s cubic-bezier(.4,0,.2,1) forwards; }
+</style>
+<script>
+  // Bloquear click derecho
+  document.addEventListener('contextmenu', event => event.preventDefault());
+
+  // Bloquear atajos de teclado para inspeccionar
+  document.onkeydown = function(e) {
+    if(e.keyCode == 123) return false; // F12
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+  };
+</script>
+<script>
+(function () {
+  const BASE    = 1351;
+  const STORE   = 'artia_visit_count';
+  const VISITED = 'artia_visited';
+
+  // Leer conteo guardado; si no existe, iniciar en BASE
+  let count = parseInt(localStorage.getItem(STORE) || BASE, 10);
+
+  // Solo sumar 1 por sesión de navegador (tab / ventana nueva cuenta)
+  if (!sessionStorage.getItem(VISITED)) {
+    count++;
+    localStorage.setItem(STORE, count);
+    sessionStorage.setItem(VISITED, '1');
+  }
+
+  function renderDigits(value) {
+    const wrap  = document.getElementById('visit-digits');
+    const str   = String(value).padStart(4, '0');
+    wrap.innerHTML = '';
+
+    str.split('').forEach((d, i) => {
+      // Separador de miles
+      if (i === str.length - 3) {
+        const sep = document.createElement('span');
+        sep.className = 'digit-sep';
+        sep.textContent = '.';
+        wrap.appendChild(sep);
+      }
+      const card = document.createElement('div');
+      card.className = 'digit-card flip';
+      card.style.animationDelay = (i * 80) + 'ms';
+      card.textContent = d;
+      wrap.appendChild(card);
+    });
+  }
+
+  // Animación contUp desde BASE hasta count
+  function countUp(target) {
+    const dur = 2600, t0 = performance.now();
+    (function step(now) {
+      const p    = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      renderDigits(Math.floor(BASE + ease * (target - BASE)));
+      if (p < 1) requestAnimationFrame(step);
+      else renderDigits(target);
+    })(t0);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => countUp(count));
+})();
+</script>
+<!-- Footer -->
+<footer class="relative z-30 bg-[#051522] w-full py-5 px-8 lg:px-8 mt-0">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div class="col-span-1 md:col-span-2">
+            <h2 class="text-3xl font-bold text-white mb-6 font-headline">ARTIA</h2>
+            <p class="text-slate-400 max-w-sm mb-8">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</p>
+        </div>
+        <div>
+            <h4 class="text-white font-bold mb-6">Servicios</h4>
+            <ul class="space-y-4 text-slate-400 text-sm">
+                <li>Marketing Digital</li>
+                <li>Fotografía Profesional</li>
+                <li>Diseño de Marca</li>
+            </ul>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto pt-2 mt-2 border-t border-white/10 text-center">
+        <p class="text-slate-500 text-xs">© 2023 Artia Studio. Todos los derechos reservados.</p>
+    </div>
+</footer>
+</main>
+
+<!-- GSAP Menu + ScrollReveal -->
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+  const toggle=document.getElementById('mobile-menu-toggle'),close=document.getElementById('mobile-menu-close'),menu=document.getElementById('mobile-menu'),hdr=document.getElementById('mm-header'),nav=document.getElementById('mm-nav'),cta=document.getElementById('mm-cta');
+  gsap.set(menu,{xPercent:100,autoAlpha:0,display:'none'});
+  function open(){document.body.style.overflow='hidden';gsap.set(menu,{display:'flex'});gsap.timeline().to(menu,{xPercent:0,autoAlpha:1,duration:0.45,ease:'power3.out'}).from(hdr,{y:-20,opacity:0,duration:0.3,ease:'power2.out'},'-=0.2').from(nav.children,{y:24,opacity:0,duration:0.35,stagger:0.07,ease:'power2.out'},'-=0.1').from(cta,{y:16,opacity:0,duration:0.3,ease:'power2.out'},'-=0.1');}
+  function closeMenu(){gsap.to(menu,{xPercent:100,autoAlpha:0,duration:0.35,ease:'power3.in',onComplete:()=>{gsap.set(menu,{display:'none'});document.body.style.overflow='auto';}});}
+  toggle.addEventListener('click',open);close.addEventListener('click',closeMenu);
+  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+  const btn=document.getElementById('btn-toggle-servicios'),sub=document.getElementById('submenu-movil'),ico=document.getElementById('icon-flecha');
+  if(btn&&sub){btn.addEventListener('click',function(e){e.preventDefault();const c=sub.classList.contains('hidden');if(c){sub.classList.remove('hidden');sub.classList.add('flex');gsap.from(sub.children,{y:10,opacity:0,duration:0.25,stagger:0.06,ease:'power2.out'});gsap.to(ico,{rotation:180,duration:0.3});}else{sub.classList.add('hidden');sub.classList.remove('flex');gsap.to(ico,{rotation:0,duration:0.3});}});}
+  document.querySelectorAll('[data-sr]').forEach(function(el){gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%',once:true},y:50,opacity:0,duration:0.8,delay:parseFloat(el.dataset.srDelay||0),ease:'power3.out'});});
+})();
+</script>
+
+<!-- Counter Script -->
+<script>
+async function animateCounter() {
+  const el   = document.getElementById('global-visit-count');
+  const base = 1351;
+  const workspace = 'marlon-morenos-team-3593';
+  const counter   = 'artia-marketing-stats';
+  const key  = 'ut_bDowg5fY18Xom2dlTsml1cgUEd2AE1cYaftS5ftR';
+
+  try {
+    const r = await fetch(
+      `https://api.counterapi.dev/v2/${workspace}/${counter}/up`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + key
+        }
+      }
+    );
+
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+
+    const d = await r.json();
+
+    // ✅ CORRECCIÓN: v2 devuelve { "count": N }, no "value" ni "data.count"
+    const apiCount = d.count ?? d.value ?? d.data?.count ?? 0;
+    countUp(el, base + parseInt(apiCount));
+
+  } catch (e) {
+    console.warn('CounterAPI error:', e);
+    countUp(el, base); // fallback al base si falla
+  }
+}
+
+function countUp(el, target) {
+  const dur = 2800, t0 = performance.now();
+  (function step(now) {
+    const p    = Math.min((now - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.innerText = new Intl.NumberFormat('es-ES').format(Math.floor(ease * target));
+    p < 1 ? requestAnimationFrame(step)
+          : el.innerText = new Intl.NumberFormat('es-ES').format(target);
+  })(t0);
+}
+
+document.addEventListener('DOMContentLoaded', animateCounter);
+</script>
+<!-- Modal Overlay -->
+<div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+    
+    <!-- Cabecera -->
+    <div class="bg-primary p-6 text-white relative">
+      <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-xl font-bold">Solicitar Información</h3>
+      <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="whatsappForm" class="p-8 space-y-4">
+      <input type="hidden" id="selectedPlan">
+      
+      <div>
+        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
+        <input type="text" id="userName" required placeholder="Ej. Carlitos" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
+        Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
+      </button>
+    </form>
+  </div>
+</div>
+<!-- Modal de Reserva de Menú -->
+<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
+    
+    <!-- Header Estilo Agencia -->
+    <div class="bg-blue-600 p-8 text-white relative">
+      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="reservaMenuForm" class="p-8 space-y-6">
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
+        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido" 
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
+        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
+          <option value="" disabled selected>Selecciona una opción...</option>
+          <option value="Páginas Webs">Páginas Webs</option>
+          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
+          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
+          <option value="Branding Corporativo">Branding Corporativo</option>
+          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
+          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
+        </select>
+      </div>
+
+
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Email</label>
+        <input type="email" id="reservaMenuEmail" required placeholder="tu@email.com"
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+function openModal(planName) {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    const displayPlan = document.getElementById('displayPlanName');
+    const hiddenInput = document.getElementById('selectedPlan');
+
+    displayPlan.innerText = planName;
+    hiddenInput.value = planName;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Animación de entrada
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('planModal');
+    const content = document.getElementById('modalContent');
+    
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// Lógica del Formulario
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('userName').value;
+    const plan   = document.getElementById('selectedPlan').value;
+
+    // Guardar lead en Supabase (no bloquea si falla)
+    fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nombre,
+            servicio: 'Plan Social Media — ' + plan,
+            fuente: 'Formulario WhatsApp — Nosotros'
+        })
+    }).catch(() => {});
+
+    const mensajeFinal = `*¡Hola Artia!*
+Mi nombre es *${nombre}*.
+Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
+¿Podríamos agendar una breve reunión para revisar los detalles?
+
+Muchas gracias.`;
+
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    window.open(url, '_blank');
+    if(typeof closeModal === 'function') closeModal();
+});
+</script>
+<script>
+function openReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeReservaMenu() {
+    const modal = document.getElementById('reservaMenuModal');
+    const content = document.getElementById('reservaMenuContent');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {{
+    e.preventDefault();
+    
+    const nombre   = document.getElementById('reservaMenuNombre').value;
+    const email    = document.getElementById('reservaMenuEmail').value;
+    const servicio = document.getElementById('reservaMenuServicio').value;
+
+    // Guardar lead en Supabase (no bloquea si falla)
+    fetch('/api/leads', {{
+        method: 'POST',
+        headers: {{ 'Content-Type': 'application/json' }},
+        body: JSON.stringify({{ nombre, email, servicio, fuente: 'Reserva de Consultoría — Nosotros' }})
+    }}).catch(() => {{}});
+
+    // Abrir WhatsApp como siempre
+    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
+
+*Nombre:* ${{nombre}}
+*Email:* ${{email}}
+*Servicio:* ${{servicio}}
+
+Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
+
+¡Quedo atento/a!`;
+
+    const url = `https://wa.me/593969937265?text=${{encodeURIComponent(mensajeFinal)}}`;
+    window.open(url, '_blank');
+    closeReservaMenu();
+}});
+</script>
+<script type="text/javascript" src="https://counter.websiteout.com/js/35/4/1351/0"></script>
+</body>
+</html>

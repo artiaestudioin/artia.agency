@@ -1,0 +1,1300 @@
+<!--
+@license
+© 2026 Artia Studio. All rights reserved.
+This code is the private property of Artia Studio.
+Reproduction or distribution without permission is strictly prohibited.
+-->
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ARTIA | Fotografía y Audiovisual Profesional</title>
+<script src="https://cloudflare.com"></script>
+<script src="https://cloudflare.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope"],body:["Inter"],label:["Inter"]}}}}
+</script>
+<style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}
+.tonal-layering-no-borders{border:none!important}
+.cinematic-gradient{background:linear-gradient(180deg,rgba(0,17,58,0) 0%,rgba(0,17,58,0.8) 100%)}
+/* Lightbox */
+#lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,0.6);animation:lb-in .25s ease}
+@keyframes lb-in{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+#lb-close{position:absolute;top:20px;right:24px;color:#fff;background:rgba(255,255,255,.12);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#lb-prev,#lb-next{position:absolute;top:50%;transform:translateY(-50%);color:#fff;background:rgba(255,255,255,.12);border:none;border-radius:50%;width:48px;height:48px;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+#lb-prev:hover,#lb-next:hover{background:rgba(255,255,255,.25)}
+#lb-prev{left:16px}#lb-next{right:16px}
+#lb-caption{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:13px;letter-spacing:.05em}
+/* Gallery Modal */
+#gallery-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);align-items:flex-end;justify-content:center}
+#gallery-modal.open{display:flex}
+#gallery-modal-inner{background:#fff;width:100%;max-width:1100px;max-height:92vh;border-radius:20px 20px 0 0;overflow-y:auto;padding:36px 32px 48px;animation:slide-up .3s ease;position:relative}
+@media(min-width:768px){#gallery-modal{align-items:center}#gallery-modal-inner{border-radius:16px;max-height:88vh}}
+@keyframes slide-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:640px){.gallery-grid{grid-template-columns:repeat(3,1fr)}}
+.gallery-thumb{aspect-ratio:4/3;object-fit:cover;border-radius:8px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.gallery-thumb:hover{transform:scale(1.03);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.category-card{cursor:pointer}
+.wa-pulse{animation:waPulse 2s infinite}
+@keyframes waPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}70%{box-shadow:0 0 0 15px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+
+/* ══════════════════════════════════════════════════
+   SECCIÓN DE VIDEOS — estilos propios
+══════════════════════════════════════════════════ */
+#section-videos {
+  padding: 96px 32px 72px;
+  background: #f2f4f6;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Blob decorativo sutil al fondo */
+#section-videos::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -160px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(37,82,202,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sv-header {
+  max-width: 72rem;
+  margin: 0 auto 52px;
+}
+
+.sv-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #2552ca;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.sv-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: #00113a;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.sv-title span {
+  color: #2552ca;
+}
+
+/* Grid de tarjetas */
+.sv-grid {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+@media (max-width: 767px) {
+  .sv-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  #section-videos {
+    padding: 72px 20px 60px;
+  }
+}
+
+/* Tarjeta */
+.sv-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  border: none;
+  box-shadow:
+    0 4px 6px rgba(0,17,58,0.04),
+    0 12px 32px rgba(0,17,58,0.10),
+    0 32px 64px rgba(0,17,58,0.08);
+  transition: transform 0.38s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.38s cubic-bezier(0.23,1,0.32,1);
+  will-change: transform;
+  position: relative;
+}
+
+.sv-card:hover {
+  transform: translateY(-8px) scale(1.012);
+  box-shadow:
+    0 8px 12px rgba(0,17,58,0.06),
+    0 24px 56px rgba(0,17,58,0.16),
+    0 52px 96px rgba(0,17,58,0.12);
+}
+
+/* Área del video */
+.sv-video-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  background: #06101a;
+  overflow: hidden;
+}
+
+.sv-thumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), opacity 0.4s ease;
+}
+
+.sv-card:hover .sv-thumbnail {
+  transform: scale(1.04);
+}
+
+/* Overlay oscuro sobre thumbnail */
+.sv-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,17,58,0.08) 0%, rgba(0,17,58,0.55) 100%);
+  transition: opacity 0.4s ease;
+}
+
+.sv-card:hover .sv-overlay {
+  opacity: 0.7;
+}
+
+/* iframe YouTube oculto por defecto */
+.sv-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+  z-index: 3;
+}
+
+/* Botón Play */
+.sv-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255,255,255,0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.23,1,0.32,1),
+              background 0.25s ease,
+              border-color 0.25s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.sv-play-btn:hover {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.7);
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.sv-play-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: #ffffff;
+  margin-left: 4px; /* centrado óptico del triángulo */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Badge categoría */
+.sv-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 4;
+  background: rgba(0,17,58,0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 100px;
+}
+
+/* Info de la tarjeta */
+.sv-info {
+  padding: 20px 22px 22px;
+  background: #ffffff;
+}
+
+.sv-info-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #00113a;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.sv-info-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  color: #444650;
+  line-height: 1.55;
+}
+
+/* CTA "Ver más videos" */
+#sv-cta-wrap {
+  max-width: 72rem;
+  margin: 48px auto 0;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(24px);
+  pointer-events: none;
+  transition: none; /* GSAP controla esto */
+}
+
+#sv-cta-wrap.visible {
+  pointer-events: auto;
+}
+
+.sv-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 32px;
+  background: #FF0000;
+  color: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px rgba(255,0,0,0.35),
+    0 2px 6px rgba(255,0,0,0.2);
+  transition: transform 0.25s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.25s ease,
+              background 0.2s ease;
+}
+
+.sv-cta-btn:hover {
+  background: #cc0000;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    0 8px 32px rgba(255,0,0,0.4),
+    0 4px 12px rgba(255,0,0,0.25);
+}
+
+.sv-cta-btn:active {
+  transform: scale(0.97);
+}
+
+/* Ícono YouTube SVG inline */
+.sv-yt-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* Botón animado hero */
+.btn-animado {
+  display: inline-flex;
+  align-items: left;
+  gap: 4px;
+  padding: 10px 20px;
+  background-color: #FF0000;
+  color: white;
+  text-decoration: none;
+  font-family: 'Arial', sans-serif;
+  font-weight: 950px;
+  font-size: 15px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  transition: transform 0.2s ease;
+  animation: pulso-atencion 2s infinite;
+}
+
+.btn-animado:hover {
+  background-color: #cc0000;
+  transform: scale(1.05);
+  animation: none;
+}
+
+@keyframes pulso-atencion {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 15px rgba(255,0,0,0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,0,0,0); }
+}
+
+.play-icon { font-size: 15px; }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body">
+
+<!-- Desktop Side Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/80 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50">
+  <div>
+    <a href="inicio.html" class="block w-32 mb-10">
+      <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
+    </a>
+    <nav class="flex flex-col gap-y-6">
+      <a class="font-manrope text-sm font-bold tracking-tight text-[#00113a] border-l-2 border-[#00113a] pl-4 transition-colors duration-300" href="inicio.html">Inicio</a>
+      <div class="group relative">
+        <button class="flex items-center justify-between w-full font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300">
+          <span>Servicios</span><span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+        <div class="hidden group-hover:flex flex-col mt-4 ml-6 gap-3 border-l border-outline-variant/20 pl-4">
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-impresion.html">Medios Impresos</a>
+          <a class="text-xs text-on-surface-variant hover:text-primary" href="servicio-fotografia.html">Fotografía y Audiovisual Profesional</a>
+        </div>
+      </div>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="clientes.html">Clientes</a>
+      <a class="font-manrope text-sm font-semibold tracking-tight text-slate-500 pl-4 hover:text-[#00113a] transition-colors duration-300" href="nosotros.html">Nosotros</a>
+    </nav>
+  </div>
+  <div class="flex flex-col gap-6">
+    <button onclick="openReservaMenu()" class="bg-primary text-white px-6 py-3 rounded-lg text-sm font-bold tracking-tight hover:bg-blue-700 transition-all active:scale-95 duration-200 text-center">
+      RESERVAR
+    </button>
+    <div class="flex items-center gap-3 pl-4 text-slate-500">
+      <span class="material-symbols-outlined text-[18px]">help_outline</span>
+      <span class="text-xs font-medium">Soporte</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/90 backdrop-blur-md lg:hidden flex justify-between items-center px-6 h-16">
+  <div class="w-10"></div>
+  <a href="inicio.html" class="block w-32 mt-1">
+    <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia">
+  </a>
+  <button class="text-primary" id="mobile-menu-toggle"><span class="material-symbols-outlined">menu</span></button>
+</header>
+
+<!-- Mobile Navigation Overlay -->
+<div class="fixed inset-0 z-[60] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center p-10 lg:hidden text-center" id="mobile-menu" style="display:none">
+  <button id="mobile-menu-close" class="absolute top-8 right-8 text-primary p-2">
+    <span class="material-symbols-outlined text-4xl">close</span>
+  </button>
+  <div id="mm-header" class="mb-12 flex justify-center w-full">
+    <a href="inicio.html" class="inline-block w-56 transition-transform active:scale-95">
+      <img src="https://i.ibb.co/SX5N8fSC/logo-artia-azul.png" alt="Logo Artia" class="w-full h-auto object-contain">
+    </a>
+  </div>
+  <nav class="flex flex-col gap-y-8 w-full" id="mm-nav">
+    <a class="font-manrope text-2xl font-bold tracking-tight text-[#00113a]" href="inicio.html">Inicio</a>
+    <div class="relative">
+      <button id="btn-toggle-servicios" class="flex items-center justify-center gap-2 w-full font-manrope text-2xl font-semibold tracking-tight text-slate-500">
+        <span>Servicios</span>
+        <span id="icon-flecha" class="material-symbols-outlined text-2xl transition-transform duration-300">expand_more</span>
+      </button>
+      <div id="submenu-movil" class="hidden flex-col mt-2 gap-2 bg-slate-50/50 py-2 rounded-2xl">
+        <a class="text-base text-slate-600 font-medium" href="servicio-marketing-digital.html">Planes de Marketing Digital</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-impresion.html">Medios Impresos</a>
+        <a class="text-base text-slate-600 font-medium" href="servicio-fotografia.html">Fotografía y Audiovisual</a>
+      </div>
+    </div>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="clientes.html">Clientes</a>
+    <a class="font-manrope text-2xl font-semibold tracking-tight text-slate-500" href="nosotros.html">Nosotros</a>
+  </nav>
+  <div class="mt-12 w-full px-4" id="mm-cta">
+    <button onclick="openReservaMenu()" class="w-full bg-primary text-white px-8 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
+      RESERVAR
+    </button>
+  </div>
+</div>
+
+<script src="fab-artia.js"></script>
+
+<main class="lg:ml-[280px] min-h-screen">
+
+<!-- Hero -->
+<section class="relative h-[819px] flex items-end p-8 md:p-16 overflow-hidden" data-sr>
+  <img class="absolute inset-0 w-full h-full object-cover" src="https://i.ibb.co/Z16VGwfK/IMG-1527-compressed-1.jpg" alt="Estudio fotográfico profesional"/>
+  <div class="absolute inset-0 cinematic-gradient"></div>
+  <div class="relative z-10 max-w-4xl space-y-6">
+    <a class="btn-animado" href="https://www.youtube.com/watch?v=WS67WuAX1Tk">
+      <span class="play-icon">▶</span> ¡VER VIDEOS AHORA!
+    </a>
+    <h2 class="font-headline text-5xl md:text-7xl font-extrabold text-white leading-none tracking-tighter">Capturando la <br/>esencia, <span class="text-secondary-fixed-dim"> impulsando resultados.</span></h2>
+    <p class="font-body text-lg text-white/70 max-w-xl leading-relaxed">Producción cinematográfica y fotografía de alta precisión para marcas que no solo quieren ser vistas, sino recordadas.</p>
+  </div>
+</section>
+
+<!-- Services Bento Grid -->
+<section id="galeria-fotografica" class="px-8 lg:px-16 py-24 bg-[#06101a] overflow-hidden">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-16" data-sr>
+      <span class="text-secondary font-bold tracking-[0.25em] text-xs uppercase block mb-3">Portafolio Visual</span>
+      <h2 class="text-5xl lg:text-6xl font-extrabold text-white leading-tight font-headline">Cada momento,<br><span class="text-slate-500">una obra.</span></h2>
+    </div>
+    <!-- Grid de Categorías -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="cat-grid">
+      <!-- Bodas -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="bodas" data-label="Bodas" style="background:#1a1a2e">
+        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80" alt="Bodas" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Bodas</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Conciertos -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="conciertos" data-label="Conciertos" style="background:#0d1117">
+        <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80" alt="Conciertos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Conciertos</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Carreras -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="carreras" data-label="Carreras" style="background:#0a0f1a">
+        <img src="https://i.ibb.co/Xxt6c7qz/P1010793-compressed.jpg" style="object-position: 50% 55%" alt="Carreras" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Carreras</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Retrato -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="retrato" data-label="Retrato" style="background:#111827">
+        <img src="https://i.ibb.co/kVdBN7Jn/retratro.jpg" style="object-position: 40% 20%" alt="Retrato" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Retrato</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Producto -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="producto" data-label="Producto" style="background:#0c0c14">
+        <img src="https://i.ibb.co/PvD2BDTP/sue-os-de-azucar.jpg" alt="Producto" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Producto</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Aérea -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="aerea" data-label="Aérea" style="background:#060d1a">
+        <img src="https://i.ibb.co/Q3NC33ZG/iglesia-la-liberta.jpg" alt="Aérea" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Aérea</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Bautizos -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="bautizos" data-label="Bautizos" style="background:#16101a">
+        <img src="https://i.ibb.co/Rp7zrN1D/IMG-7118-compressed.jpg" alt="Bautizos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Bautizos</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Eventos -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="eventos" data-label="Eventos" style="background:#0a1020">
+        <img src="https://i.ibb.co/3YB3p0Sm/IMG-2059-compressed.jpg" alt="Eventos" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Eventos</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+      <!-- Inmobiliaria -->
+      <div class="cat-card group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" data-cat="inmobiliaria" data-label="Inmobiliaria" style="background:#10120e">
+        <img src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&q=80" alt="Inmobiliaria" class="cat-img absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+        <div class="cat-overlay absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+        <div class="cat-label absolute bottom-0 left-0 p-5 pointer-events-none">
+          <span class="text-white font-extrabold text-xl font-headline tracking-tight">Inmobiliaria</span>
+          <p class="text-white/60 text-xs mt-0.5 font-medium uppercase tracking-widest">Interiores · Ver galería</p>
+        </div>
+        <div class="cat-shine absolute inset-0 opacity-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      </div>
+    </div><!-- /cat-grid -->
+  </div>
+</section>
+
+<!-- Lightbox de categorías -->
+<div id="cat-lightbox" class="fixed inset-0 z-[200] hidden bg-[#06101a] overflow-hidden" style="display:none">
+  <div class="absolute inset-0 w-full h-full">
+    <img id="billboard-img" src="" class="w-full h-full object-contain object-center pt-[90px] pb-[320px] lg:pt-0 lg:pb-0 lg:object-top" alt="Cartelera principal">
+    <div class="absolute inset-0 bg-gradient-to-t from-[#06101a] via-[#06101a]/40 to-[#06101a]/80"></div>
+  </div>
+  <div id="lb-header" class="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5 bg-white/5 backdrop-blur-md border-b border-white/10">
+    <div class="flex items-center gap-4">
+      <button id="lb-back" class="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-medium group">
+        <span class="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
+        Volver a Categorías
+      </button>
+    </div>
+    <button id="lb-close" class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+  <div class="absolute bottom-0 left-0 w-full z-20 bg-gradient-to-t from-[#06101a] via-[#06101a] to-transparent pt-12">
+    <div class="px-8 lg:px-12 mb-6">
+      <h2 id="lb-cat-name" class="text-3xl md:text-5xl font-extrabold text-white tracking-[0.1em] uppercase font-headline mb-4"></h2>
+      <div class="flex gap-4">
+        <button class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-white/20 transition-all">
+          <span class="material-symbols-outlined text-[18px]">info</span> INFORMACIÓN
+        </button>
+      </div>
+    </div>
+    <h3 class="text-white/40 text-[10px] uppercase font-bold px-8 lg:px-12 mb-3 tracking-[0.2em]">Explorar Galería</h3>
+    <div class="swiper billboardSwiper w-full px-8 lg:px-12 pb-8">
+      <div class="swiper-wrapper" id="lb-thumbnails"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN DE VIDEOS — Nuestro trabajo en movimiento
+══════════════════════════════════════════════════ -->
+<section id="section-videos">
+
+  <!-- Header -->
+  <div class="sv-header" id="sv-header">
+    <span class="sv-label">Producción Audiovisual</span>
+    <h2 class="sv-title">Nuestro trabajo<br><span>en movimiento.</span></h2>
+  </div>
+
+  <!-- Grid de 3 tarjetas -->
+  <div class="sv-grid">
+
+    <!-- ── Tarjeta 1 ── -->
+    <div class="sv-card" id="sv-card-1">
+      <div class="sv-video-wrap">
+        <!-- Thumbnail: reemplaza VIDEO_ID_1 con el ID real de tu video -->
+        <img
+          class="sv-thumbnail"
+          src="https://img.youtube.com/vi/_4GTc2ytk88/maxresdefault.jpg"
+          alt="Video Artia 1"
+          onerror="this.src='https://img.youtube.com/vi/_4GTc2ytk88/hqdefault.jpg'"
+        />
+        <div class="sv-overlay"></div>
+        <!-- iframe oculto hasta que se presione play -->
+        <iframe
+          class="sv-iframe"
+          id="sv-iframe-1"
+          src=""
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+        <!-- Badge -->
+        <span class="sv-badge">Audiovisual</span>
+        <!-- Botón Play -->
+        <button class="sv-play-btn" data-video-id="_4GTc2ytk88" data-iframe="sv-iframe-1" data-card="sv-card-1" aria-label="Reproducir video">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sv-info">
+        <p class="sv-info-title">Producción Corporativa</p>
+        <p class="sv-info-desc">Contenido audiovisual de alto impacto para marcas que quieren diferenciarse.</p>
+      </div>
+    </div>
+
+    <!-- ── Tarjeta 2 ── -->
+    <div class="sv-card" id="sv-card-2">
+      <div class="sv-video-wrap">
+        <!-- Reemplaza VIDEO_ID_2 con el ID real de tu segundo video -->
+        <img
+          class="sv-thumbnail"
+          src="https://img.youtube.com/vi/WS67WuAX1Tk/maxresdefault.jpg"
+          alt="Video Artia 2"
+          onerror="this.src='https://img.youtube.com/vi/WS67WuAX1Tk/hqdefault.jpg'"
+        />
+        <div class="sv-overlay"></div>
+        <iframe
+          class="sv-iframe"
+          id="sv-iframe-2"
+          src=""
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+        <span class="sv-badge">Eventos</span>
+        <button class="sv-play-btn" data-video-id="WS67WuAX1Tk" data-iframe="sv-iframe-2" data-card="sv-card-2" aria-label="Reproducir video">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sv-info">
+        <p class="sv-info-title">Cobertura de Eventos</p>
+        <p class="sv-info-desc">Capturamos cada momento especial con la calidad cinematográfica que merece.</p>
+      </div>
+    </div>
+
+    <!-- ── Tarjeta 3 ── -->
+    <div class="sv-card" id="sv-card-3">
+      <div class="sv-video-wrap">
+        <!-- Reemplaza VIDEO_ID_3 con el ID real de tu tercer video -->
+        <img
+          class="sv-thumbnail"
+          src="https://img.youtube.com/vi/0VYzINrViFQ/maxresdefault.jpg"
+          alt="Video Artia 3"
+          onerror="this.src='https://img.youtube.com/vi/0VYzINrViFQ/hqdefault.jpg'"
+        />
+        <div class="sv-overlay"></div>
+        <iframe
+          class="sv-iframe"
+          id="sv-iframe-3"
+          src=""
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+        <span class="sv-badge">Marca</span>
+        <button class="sv-play-btn" data-video-id="0VYzINrViFQ" data-iframe="sv-iframe-3" data-card="sv-card-3" aria-label="Reproducir video">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sv-info">
+        <p class="sv-info-title">Identidad de Marca</p>
+        <p class="sv-info-desc">Videos que comunican los valores de tu marca de forma auténtica y memorable.</p>
+      </div>
+    </div>
+
+  </div><!-- /sv-grid -->
+
+  <!-- CTA "Ver más videos" — aparece 3s después de presionar play -->
+  <div id="sv-cta-wrap">
+    <a
+      href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="sv-cta-btn"
+    >
+      <!-- Ícono YouTube -->
+      <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      Ver más videos
+    </a>
+  </div>
+
+</section>
+<!-- /SECCIÓN DE VIDEOS -->
+
+<!-- Process -->
+<section class="py-24 px-8 md:px-16 bg-surface-container-low">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+    <div class="md:w-1/2 space-y-8" data-sr>
+      <h3 class="font-headline text-4xl font-extrabold text-primary tracking-tight">Metodología Artia</h3>
+      <div class="space-y-12">
+        <div class="flex gap-6"><span class="text-4xl font-headline font-black text-secondary/20">01</span><div><h5 class="font-headline font-bold text-primary mb-2">Conceptualización</h5><p class="text-on-surface-variant leading-relaxed">Entendemos su marca para definir el estilo visual y el mensaje central del proyecto.</p></div></div>
+        <div class="flex gap-6"><span class="text-4xl font-headline font-black text-secondary/20">02</span><div><h5 class="font-headline font-bold text-primary mb-2">Producción Élite</h5><p class="text-on-surface-variant leading-relaxed">Ejecución técnica con equipo de última generación y dirección artística profesional.</p></div></div>
+        <div class="flex gap-6"><span class="text-4xl font-headline font-black text-secondary/20">03</span><div><h5 class="font-headline font-bold text-primary mb-2">Post-Producción</h5><p class="text-on-surface-variant leading-relaxed">Edición, corrección de color y diseño sonoro para un acabado impecable.</p></div></div>
+      </div>
+    </div>
+    <div class="md:w-1/2 relative" data-sr data-sr-delay="0.15">
+      <div class="bg-surface-container-highest rounded-xl overflow-hidden aspect-[4/5] shadow-xl">
+        <img class="w-full h-full object-cover lightbox-img cursor-zoom-in" src="https://i.ibb.co/gMwcLkcH/pexels-photo-18999210.webp" alt="Cinematógrafo profesional"/>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-24 px-8 md:px-16 text-center" data-sr>
+  <div class="max-w-2xl mx-auto space-y-8">
+    <h3 class="font-headline text-4xl font-bold text-primary tracking-tight">¿Listo para elevar su imagen de marca?</h3>
+    <p class="text-on-surface-variant text-lg">Permítanos transformar su visión en contenido audiovisual de clase mundial.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="openReservaMenu()" class="px-8 py-4 bg-primary text-white rounded-lg font-headline font-bold tracking-wide hover:bg-primary-container transition-colors" href="https://wa.me/593969937265" target="_blank">Solicitar Presupuesto</button>
+    </div>
+  </div>
+</section>
+
+<footer class="relative z-30 bg-[#051522] w-full py-5 px-8 lg:px-8 mt-0">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+    <div class="col-span-1 md:col-span-2">
+      <h2 class="text-3xl font-bold text-white mb-6 font-headline">ARTIA</h2>
+      <p class="text-slate-400 max-w-sm mb-8">Elevamos el estándar visual de tu marca a través de marketing estratégico y producción audiovisual.</p>
+    </div>
+    <div>
+      <h4 class="text-white font-bold mb-6">Servicios</h4>
+      <ul class="space-y-4 text-slate-400 text-sm">
+        <li>Marketing Digital</li>
+        <li>Fotografía Profesional</li>
+        <li>Diseño de Marca</li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto pt-2 mt-2 border-t border-white/10 text-center">
+    <p class="text-slate-500 text-xs">© 2023 Artia Studio. Todos los derechos reservados.</p>
+  </div>
+</footer>
+</main>
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════ -->
+
+<!-- Galería por categorías -->
+<script>
+(function() {
+  const catPhotos = {
+    bodas: [
+      'https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80',
+      'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1400&q=80',
+      'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1400&q=80',
+      'https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=1400&q=80',
+      'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=1400&q=80',
+      'https://i.ibb.co/PZzNkyvq/IMG-3454-compressed.jpg',
+      'https://i.ibb.co/zWj4SFMy/IMG-3462-compressed.jpg',
+    ],
+    conciertos: [
+      'https://i.ibb.co/Xf2SSDhm/IMG-0259-compressed.jpg',
+      'https://i.ibb.co/fG412TTQ/IMG-0279-compressed.jpg',
+      'https://i.ibb.co/HLDWG2cQ/IMG-0281-compressed.jpg',
+      'https://i.ibb.co/N6rHHY5G/IMG-0298-compressed.jpg',
+      'https://i.ibb.co/k2GgVdb9/IMG-0313-compressed.jpg',
+      'https://i.ibb.co/ym09nH64/IMG-0315-compressed.jpg',
+      'https://i.ibb.co/ynzKVqMb/IMG-0327-compressed.jpg',
+      'https://i.ibb.co/vC5y4dgR/IMG-0247-compressed.jpg',
+    ],
+    carreras: [
+      'https://i.ibb.co/Xxt6c7qz/P1010793-compressed.jpg',
+      'https://i.ibb.co/WWHQXv15/P1023119-compressed.jpg',
+      'https://i.ibb.co/N65NjJ2M/P1023091-compressed.jpg',
+      'https://i.ibb.co/5xkLtLNZ/P1011005-compressed.jpg',
+      'https://i.ibb.co/nMwsFmNK/IMG-6494-compressed.jpg',
+      'https://i.ibb.co/dwsq5Mhh/IMG-6264-compressed.jpg',
+      'https://i.ibb.co/hFvHF5zx/IMG-6247-Mejorado-NR-compressed.jpg',
+    ],
+    retrato: [
+      'https://i.ibb.co/KppFmjr4/2-compressed.jpg',
+      'https://i.ibb.co/kVdBN7Jn/retratro.jpg',
+      'https://i.ibb.co/gbVDzvS2/IMG-9032-compressed.jpg',
+      'https://i.ibb.co/gLYRx4LZ/IMG-7207-compressed.jpg',
+      'https://i.ibb.co/7x6XyRWD/IMG-3099-compressed.jpg',
+      'https://i.ibb.co/gZp4JYY0/IMG-1969-compressed.jpg',
+      'https://i.ibb.co/m5jFStG5/IMG-1994-compressed.jpg',
+      'https://i.ibb.co/ynqh0znv/IMG-0268-compressed.jpg',
+      'https://i.ibb.co/Gvyh9wQC/IMG-1987-compressed.jpg',
+      'https://i.ibb.co/4nY1kyP9/IMG-7252-compressed.jpg',
+      'https://i.ibb.co/yFYHhGN9/IMG-9397-compressed.jpg',
+    ],
+    producto: [
+      'https://i.ibb.co/wZtvyMN7/sue-os-de-azucar-2.jpg',
+      'https://i.ibb.co/PvD2BDTP/sue-os-de-azucar.jpg',
+      'https://i.ibb.co/V0ZLxfsL/SOLDADURA-compressed-1.jpg',
+      'https://i.ibb.co/dsWBM32k/DSC-0318-compressed.jpg',
+      'https://i.ibb.co/rGTSqj9x/DSC-0369-compressed.jpg',
+      'https://i.ibb.co/jPDRpn5s/producto3.jpg',
+      'https://i.ibb.co/35GYQBkD/producto1.jpg',
+      'https://i.ibb.co/YF3zn531/BODEGUILLA-28-marzo.jpg',
+      'https://i.ibb.co/DPV81w5Z/bdg-TIEMPO-DE-MOJITO.jpg',
+      'https://i.ibb.co/gM3tLMvy/BODEGUILLA-24-MARZO.jpg',
+      'https://i.ibb.co/wNb73ScW/ssf.png',
+      'https://i.ibb.co/4wQvmWn4/68e6934a98fac.png',
+      'https://i.ibb.co/rGMTLmsN/krea-edit-2.png',
+    ],
+    aerea: [
+      'https://i.ibb.co/Q3NC33ZG/iglesia-la-liberta.jpg',
+      'https://i.ibb.co/twGq2tWh/040426-1.jpg',
+      'https://i.ibb.co/4RGvGrtj/041426-3-compressed-2.jpg',
+      'https://i.ibb.co/fdrMSR88/041426-1-compressed-2.jpg',
+      'https://i.ibb.co/BVQHk9Sp/041426-5-compressed-2.jpg',
+      'https://i.ibb.co/jvSj5Xd7/041426-4-compressed-2.jpg',
+      'https://i.ibb.co/pBSVtjKc/catedral-central.jpg',
+      'https://i.ibb.co/Z1t0NmBR/plaza-roja.jpg',
+      'https://i.ibb.co/k2h7V5hM/iglesia-loma-de-quito.jpg',
+      'https://i.ibb.co/Q7YYQ3QH/Flux2-Klein-00026.png',
+    ],
+    bautizos: [
+      'https://i.ibb.co/99zx8fd8/IMG-7140-Mejorado-NR-compressed.jpg',
+      'https://i.ibb.co/bjGxDbBx/IMG-7180-Mejorado-NR-compressed.jpg',
+      'https://i.ibb.co/s9vR0R7R/IMG-7293-Mejorado-NR-compressed.jpg',
+      'https://i.ibb.co/Rp7zrN1D/IMG-7118-compressed.jpg',
+      'https://i.ibb.co/Kx5qP002/IMG-6679-Mejorado-NR-compressed.jpg',
+      'https://i.ibb.co/5hM4xtNh/IMG-6726-Mejorado-NR-compressed.jpg',
+      'https://i.ibb.co/204nkp8Y/IMG-6706-Mejorado-NR-compressed.jpg',
+    ],
+    eventos: ['https://i.ibb.co/3YB3p0Sm/IMG-2059-compressed.jpg'],
+    inmobiliaria: ['https://i.ibb.co/gLn4861r/IMG-9287-V1-compressed.jpg'],
+  };
+
+  const lightbox    = document.getElementById('cat-lightbox');
+  const lbCatName   = document.getElementById('lb-cat-name');
+  const lbThumbs    = document.getElementById('lb-thumbnails');
+  const billboardImg= document.getElementById('billboard-img');
+  const lbBack      = document.getElementById('lb-back');
+  const lbClose     = document.getElementById('lb-close');
+  let swiperInst    = null;
+
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from('#cat-grid .cat-card', {
+      scrollTrigger: { trigger: '#cat-grid', start: 'top 80%', once: true },
+      y: 60, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out',
+    });
+  }
+
+  function updateBillboard(src) {
+    if (billboardImg.src === src) return;
+    gsap.to(billboardImg, {
+      opacity: 0.4, duration: 0.3,
+      onComplete: () => {
+        billboardImg.src = src;
+        gsap.to(billboardImg, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+      }
+    });
+  }
+
+  document.querySelectorAll('.cat-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const cat   = card.dataset.cat;
+      const label = card.dataset.label;
+      const photos = catPhotos[cat] || [card.querySelector('img').src];
+
+      lbCatName.textContent = label;
+      lbThumbs.innerHTML = '';
+      billboardImg.src = photos[0];
+
+      photos.forEach((src, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'swiper-slide !w-auto h-24 md:h-32 lg:h-40 relative rounded-md overflow-hidden cursor-pointer group border-2 border-transparent hover:border-white transition-all duration-300';
+        slide.innerHTML = `
+          <img src="${src}" alt="Miniatura ${i}" class="block h-full w-auto object-cover transition-transform duration-500 group-hover:scale-110"/>
+          <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-300"></div>
+        `;
+        slide.addEventListener('mouseenter', () => updateBillboard(src));
+        lbThumbs.appendChild(slide);
+      });
+
+      lightbox.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      gsap.fromTo(lightbox, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+
+      if (swiperInst) swiperInst.destroy();
+      swiperInst = new Swiper('.billboardSwiper', {
+        slidesPerView: 'auto',
+        spaceBetween: 15,
+        freeMode: true,
+      });
+      gsap.fromTo('.swiper-slide',
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'back.out(1.2)', delay: 0.2 }
+      );
+    });
+  });
+
+  function closeLightbox() {
+    gsap.to(lightbox, {
+      opacity: 0, duration: 0.4, ease: 'power2.in',
+      onComplete: () => { lightbox.style.display = 'none'; document.body.style.overflow = ''; }
+    });
+  }
+
+  lbBack.addEventListener('click', closeLightbox);
+  lbClose.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lightbox.style.display !== 'none') closeLightbox();
+  });
+})();
+</script>
+
+<!-- Sección de Videos -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── Registro de GSAP plugins ─────────────────────── */
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+
+  /* ── Estado ───────────────────────────────────────── */
+  var ctaShown   = false;
+  var ctaTimeout = null;
+
+  /* ── Referencias DOM ──────────────────────────────── */
+  var ctaWrap   = document.getElementById('sv-cta-wrap');
+  var svHeader  = document.getElementById('sv-header');
+  var svCards   = document.querySelectorAll('.sv-card');
+  var playBtns  = document.querySelectorAll('.sv-play-btn');
+
+  /* ── Animaciones de entrada con ScrollTrigger ─────── */
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+
+    // Header de la sección
+    gsap.from(svHeader, {
+      scrollTrigger: {
+        trigger: svHeader,
+        start: 'top 85%',
+        once: true,
+      },
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+    });
+
+    // Tarjetas en stagger
+    gsap.from(svCards, {
+      scrollTrigger: {
+        trigger: document.querySelector('.sv-grid'),
+        start: 'top 80%',
+        once: true,
+      },
+      y: 60,
+      opacity: 0,
+      duration: 0.75,
+      stagger: 0.14,
+      ease: 'power3.out',
+    });
+
+    // Paralax 3D sutil al mover el mouse sobre cada tarjeta
+    svCards.forEach(function (card) {
+      card.addEventListener('mousemove', function (e) {
+        var rect   = card.getBoundingClientRect();
+        var cx     = rect.left + rect.width  / 2;
+        var cy     = rect.top  + rect.height / 2;
+        var dx     = (e.clientX - cx) / (rect.width  / 2);  // -1 a 1
+        var dy     = (e.clientY - cy) / (rect.height / 2);  // -1 a 1
+        var rotX   = -dy * 5;   // máximo 5°
+        var rotY   =  dx * 5;
+
+        gsap.to(card, {
+          rotateX: rotX,
+          rotateY: rotY,
+          duration: 0.35,
+          ease: 'power2.out',
+          transformPerspective: 900,
+          transformOrigin: 'center center',
+        });
+      });
+
+      card.addEventListener('mouseleave', function () {
+        gsap.to(card, {
+          rotateX: 0,
+          rotateY: 0,
+          duration: 0.55,
+          ease: 'elastic.out(1, 0.5)',
+        });
+      });
+    });
+  }
+
+  /* ── Función: mostrar CTA con animación ───────────── */
+  function showCta() {
+    if (ctaShown) return;
+    ctaShown = true;
+    ctaWrap.classList.add('visible');
+
+    gsap.to(ctaWrap, {
+      opacity: 1,
+      y: 0,
+      duration: 0.7,
+      ease: 'power3.out',
+    });
+  }
+
+  /* ── Lógica de cada botón Play ────────────────────── */
+  playBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+
+      var videoId  = btn.getAttribute('data-video-id');
+      var iframeId = btn.getAttribute('data-iframe');
+      var cardId   = btn.getAttribute('data-card');
+
+      var iframe   = document.getElementById(iframeId);
+      var card     = document.getElementById(cardId);
+      var thumb    = card.querySelector('.sv-thumbnail');
+      var overlay  = card.querySelector('.sv-overlay');
+
+      /* Animación pulse GSAP en la tarjeta */
+      gsap.fromTo(card,
+        { scale: 1 },
+        { scale: 1.03, duration: 0.18, ease: 'power2.out',
+          yoyo: true, repeat: 1, onComplete: function () {
+            gsap.set(card, { scale: 1 });
+          }
+        }
+      );
+
+      /* Ocultar thumbnail y overlay con fade */
+      gsap.to([thumb, overlay, btn], {
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.inOut',
+        onComplete: function () {
+          thumb.style.display   = 'none';
+          overlay.style.display = 'none';
+          btn.style.display     = 'none';
+
+          /* Insertar src del iframe con autoplay */
+          iframe.src = 'https://www.youtube.com/embed/' + videoId
+                     + '?autoplay=1&rel=0&modestbranding=1';
+          iframe.style.display = 'block';
+        }
+      });
+
+      /* A los 3 segundos aparece el CTA */
+      if (!ctaShown) {
+        clearTimeout(ctaTimeout);
+        ctaTimeout = setTimeout(showCta, 3000);
+      }
+    });
+  });
+
+});
+</script>
+
+<!-- Modales y formularios -->
+<form id="whatsappForm" class="p-8 space-y-4">
+  <input type="hidden" id="selectedPlan">
+  <div>
+    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
+    <input type="text" id="userName" required placeholder="Ej. Carlitos"
+           class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
+  </div>
+  <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
+    Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
+  </button>
+</form>
+
+<!-- Modal de Reserva -->
+<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
+    <div class="bg-blue-600 p-8 text-white relative">
+      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
+      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
+    </div>
+    <form id="reservaMenuForm" class="p-8 space-y-6">
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
+        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido"
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
+        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
+          <option value="" disabled selected>Selecciona una opción...</option>
+          <option value="Páginas Webs">Páginas Webs</option>
+          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
+          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
+          <option value="Branding Corporativo">Branding Corporativo</option>
+          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
+          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Email</label>
+        <input type="email" id="reservaMenuEmail" required placeholder="tu@email.com"
+               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+/* Modal genérico (plan) */
+function openModal(planName) {
+  var modal   = document.getElementById('planModal');
+  var content = document.getElementById('modalContent');
+  var displayPlan = document.getElementById('displayPlanName');
+  var hiddenInput = document.getElementById('selectedPlan');
+  if (!modal) return;
+  displayPlan.innerText = planName;
+  hiddenInput.value = planName;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  setTimeout(function () {
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+  }, 10);
+}
+
+function closeModal() {
+  var modal   = document.getElementById('planModal');
+  var content = document.getElementById('modalContent');
+  if (!modal) return;
+  content.classList.add('scale-95', 'opacity-0');
+  setTimeout(function () {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, 300);
+}
+
+/* Formulario WhatsApp */
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('userName').value;
+    const plan   = document.getElementById('selectedPlan').value;
+
+    // Guardar lead en Supabase (no bloquea si falla)
+    fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nombre,
+            servicio: 'Plan Social Media — ' + plan,
+            fuente: 'Formulario WhatsApp — Fotografía'
+        })
+    }).catch(() => {});
+
+    const mensajeFinal = `*¡Hola Artia!*
+Mi nombre es *${nombre}*.
+Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
+¿Podríamos agendar una breve reunión para revisar los detalles?
+
+Muchas gracias.`;
+
+    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
+    window.open(url, '_blank');
+    if(typeof closeModal === 'function') closeModal();
+});
+
+/* Modal reserva */
+function openReservaMenu() {
+  var modal   = document.getElementById('reservaMenuModal');
+  var content = document.getElementById('reservaMenuContent');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  setTimeout(function () {
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+  }, 10);
+}
+
+function closeReservaMenu() {
+  var modal   = document.getElementById('reservaMenuModal');
+  var content = document.getElementById('reservaMenuContent');
+  content.classList.add('scale-95', 'opacity-0');
+  setTimeout(function () {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, 300);
+}
+
+document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {{
+    e.preventDefault();
+    
+    const nombre   = document.getElementById('reservaMenuNombre').value;
+    const email    = document.getElementById('reservaMenuEmail').value;
+    const servicio = document.getElementById('reservaMenuServicio').value;
+
+    // Guardar lead en Supabase (no bloquea si falla)
+    fetch('/api/leads', {{
+        method: 'POST',
+        headers: {{ 'Content-Type': 'application/json' }},
+        body: JSON.stringify({{ nombre, email, servicio, fuente: 'Reserva de Consultoría — Fotografía' }})
+    }}).catch(() => {{}});
+
+    // Abrir WhatsApp como siempre
+    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
+
+*Nombre:* ${{nombre}}
+*Email:* ${{email}}
+*Servicio:* ${{servicio}}
+
+Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
+
+¡Quedo atento/a!`;
+
+    const url = `https://wa.me/593969937265?text=${{encodeURIComponent(mensajeFinal)}}`;
+    window.open(url, '_blank');
+    closeReservaMenu();
+}});
+</script>
+
+<!-- Menú móvil -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  var toggle  = document.getElementById('mobile-menu-toggle');
+  var closeBtn= document.getElementById('mobile-menu-close');
+  var menu    = document.getElementById('mobile-menu');
+
+  if (toggle && closeBtn && menu) {
+    toggle.addEventListener('click', function () {
+      menu.style.display = 'flex';
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(menu, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+      }
+    });
+    closeBtn.addEventListener('click', function () {
+      if (typeof gsap !== 'undefined') {
+        gsap.to(menu, { opacity: 0, duration: 0.3, onComplete: function () { menu.style.display = 'none'; } });
+      } else {
+        menu.style.display = 'none';
+      }
+    });
+  }
+
+  var btnServicios = document.getElementById('btn-toggle-servicios');
+  var submenu      = document.getElementById('submenu-movil');
+  var flecha       = document.getElementById('icon-flecha');
+
+  if (btnServicios && submenu && flecha) {
+    btnServicios.addEventListener('click', function () {
+      submenu.classList.toggle('hidden');
+      submenu.classList.toggle('flex');
+      flecha.classList.toggle('rotate-180');
+    });
+  }
+
+});
+</script>
+
+</body>
+</html>
