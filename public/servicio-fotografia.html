@@ -360,6 +360,20 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 }
 
 .play-icon { font-size: 15px; }
+.sv-video-wrap { position: relative; overflow: hidden; }
+.sv-iframe { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none; }
+
+/* Cuando se presiona play, ocultamos todo menos el iframe */
+.sv-card.is-playing .sv-thumbnail,
+.sv-card.is-playing .sv-overlay,
+.sv-card.is-playing .sv-play-btn,
+.sv-card.is-playing .sv-badge {
+  display: none;
+}
+
+.sv-card.is-playing .sv-iframe {
+  display: block;
+}
 </style>
 </head>
 <body class="bg-background text-on-surface font-body">
@@ -613,9 +627,9 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
         <!-- Thumbnail: reemplaza VIDEO_ID_1 con el ID real de tu video -->
         <img
           class="sv-thumbnail"
-          src="https://img.youtube.com/vi/_4GTc2ytk88/maxresdefault.jpg"
+          src="https://img.youtube.com/vi/4r1VsiOOyag/maxresdefault.jpg"
           alt="Video Artia 1"
-          onerror="this.src='https://img.youtube.com/vi/_4GTc2ytk88/hqdefault.jpg'"
+          onerror="this.src='https://img.youtube.com/vi/4r1VsiOOyag/maxresdefault.jpg'"
         />
         <div class="sv-overlay"></div>
         <!-- iframe oculto hasta que se presione play -->
@@ -629,7 +643,11 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
         <!-- Badge -->
         <span class="sv-badge">Audiovisual</span>
         <!-- Botón Play -->
-        <button class="sv-play-btn" data-video-id="_4GTc2ytk88" data-iframe="sv-iframe-1" data-card="sv-card-1" aria-label="Reproducir video">
+        <button class="sv-play-btn" 
+        data-video-id="4r1VsiOOyag" 
+        data-iframe="sv-iframe-1" 
+        data-card="sv-card-1" 
+        aria-label="Reproducir video">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 5v14l11-7z"/>
           </svg>
@@ -1293,6 +1311,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+});
+</script>
+<script>
+  document.querySelectorAll('.sv-play-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const videoId = this.dataset.videoId;
+    const iframe = document.getElementById(this.dataset.iframe);
+    const card = document.getElementById(this.dataset.card);
+
+    // Inyectamos la URL de inserción oficial
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+    
+    card.classList.add('is-playing');
+  });
 });
 </script>
 
