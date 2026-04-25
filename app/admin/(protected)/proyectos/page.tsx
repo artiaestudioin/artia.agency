@@ -31,6 +31,7 @@ export default async function ProyectosCRMPage() {
 
   const projectsWithCount = (projects ?? []).map(p => ({
     ...p,
+    leads: Array.isArray(p.leads) ? (p.leads[0] ?? null) : p.leads,
     file_count: countMap[p.id] ?? 0,
   }))
 
