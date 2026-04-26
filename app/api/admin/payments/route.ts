@@ -1,49 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const body = await req.json()
-  const { lead_id, amount, method, status, description, fecha } = body
+  const { amount, method, status, description, fecha, comprobante_url } = body
 
-  if (!lead_id || !amount) {
-    return NextResponse.json({ error: 'lead_id y amount son requeridos' }, { status: 400 })
+  const updates: Record<string, any> = {}
+  if (amount !== undefined)          updates.amount          = amount
+  if (method !== undefined)          updates.method          = method
+  if (status !== undefined)          updates.status          = status
+  if (description !== undefined)     updates.description     = description
+  if (fecha !== undefined)           updates.fecha           = fecha
+  if (comprobante_url !== undefined) updates.comprobante_url = comprobante_url
+
+  const { error } = await supabase.from('payments').update(updates).eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Re-calcular payment_status del lead
+  const { data: pay } = await supabase.from('payments').select('lead_id').eq('id', id).single()
+  if (pay?.lead_id) {
+    const { data: allPays } = await supabase.from('payments').select('amount, status').eq('lead_id', pay.lead_id)
+    const { data: lead }    = await supabase.from('leads').select('estimated_value').eq('id', pay.lead_id).single()
+    const pagado    = (allPays ?? []).filter(p => p.status === 'pagado').reduce((s, p) => s + p.amount, 0)
+    const expected  = lead?.estimated_value ?? 0
+    const newStatus = pagado > 0 && expected > 0 && pagado >= expected ? 'pagado' : pagado > 0 ? 'parcial' : 'pendiente'
+    await supabase.from('leads').update({ payment_status: newStatus }).eq('id', pay.lead_id)
   }
 
-  const { data: payment, error } = await supabase
-    .from('payments')
-    .insert([{ lead_id, amount, method, status, description, fecha }])
-    .select()
-    .single()
+  return NextResponse.json({ ok: true })
+}
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { data: pay } = await supabase.from('payments').select('lead_id').eq('id', id).single()
+  const { error }     = await supabase.from('payments').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (pay?.lead_id) {
+    const { data: allPays } = await supabase.from('payments').select('amount, status').eq('lead_id', pay.lead_id)
+    const { data: lead }    = await supabase.from('leads').select('estimated_value').eq('id', pay.lead_id).single()
+    const pagado    = (allPays ?? []).filter(p => p.status === 'pagado').reduce((s, p) => s + p.amount, 0)
+    const expected  = lead?.estimated_value ?? 0
+    const newStatus = pagado > 0 && expected > 0 && pagado >= expected ? 'pagado' : pagado > 0 ? 'parcial' : 'pendiente'
+    await supabase.from('leads').update({ payment_status: newStatus }).eq('id', pay.lead_id)
   }
 
-  // Actualizar payment_status del lead según pagos registrados
-  const { data: allPayments } = await supabase
-    .from('payments')
-    .select('amount, status')
-    .eq('lead_id', lead_id)
-
-  const totalPagado   = (allPayments ?? []).filter(p => p.status === 'pagado').reduce((s, p) => s + p.amount, 0)
-  const totalPendiente= (allPayments ?? []).filter(p => p.status === 'pendiente').reduce((s, p) => s + p.amount, 0)
-
-  const { data: lead } = await supabase.from('leads').select('estimated_value').eq('id', lead_id).single()
-  const expected = lead?.estimated_value ?? 0
-
-  let newPaymentStatus = 'pendiente'
-  if (totalPagado > 0 && expected > 0 && totalPagado >= expected) {
-    newPaymentStatus = 'pagado'
-  } else if (totalPagado > 0) {
-    newPaymentStatus = 'parcial'
-  }
-
-  await supabase.from('leads').update({ payment_status: newPaymentStatus }).eq('id', lead_id)
-
-  return NextResponse.json({ ok: true, payment })
+  return NextResponse.json({ ok: true })
 }

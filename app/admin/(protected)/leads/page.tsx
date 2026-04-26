@@ -4,279 +4,219 @@ import Link from 'next/link'
 
 export const metadata = { title: 'Leads — Artia Admin' }
 
-const COLS = 'id, folio, nombre, email, telefono, servicio, mensaje, estado, created_at'
+const ESTADO_CFG: Record<string, { label: string; color: string; bg: string }> = {
+  nuevo:      { label: 'Nuevo',      color: '#3b82f6', bg: '#eff6ff' },
+  contactado: { label: 'Contactado', color: '#f59e0b', bg: '#fefce8' },
+  en_proceso: { label: 'En proceso', color: '#8b5cf6', bg: '#f5f3ff' },
+  cerrado:    { label: 'Cerrado',    color: '#10b981', bg: '#f0fdf4' },
+  perdido:    { label: 'Perdido',    color: '#ef4444', bg: '#fef2f2' },
+}
 
-type Lead = {
-  id: string; folio: string | null; nombre: string; email: string | null
-  telefono: string | null; servicio: string | null; mensaje: string | null
-  estado: string | null; created_at: string
+function initials(n: string) {
+  return n.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+}
+function avatarColor(n: string) {
+  const p = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444']
+  let h = 0; for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) % p.length
+  return p[h]
+}
+function relTime(d: string) {
+  const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000)
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h`
+  return `${Math.floor(hrs / 24)}d`
 }
 
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ servicio?: string; q?: string; estado?: string }>
+  searchParams: Promise<{ q?: string; estado?: string }>
 }) {
-  const { servicio, q, estado } = await searchParams
+  const { q, estado } = await searchParams
   const supabase = await createClient()
 
-  const filtroServicio = servicio && servicio !== 'todos' ? servicio : null
-  const filtroQ        = q?.trim() || null
-  const filtroEstado   = estado && estado !== 'todos' ? estado : null
-  const hayFiltro      = !!(filtroServicio || filtroQ || filtroEstado)
+  let query = supabase
+    .from('leads')
+    .select('id, folio, nombre, email, telefono, servicio, estado, payment_status, estimated_value, created_at')
+    .order('created_at', { ascending: false })
 
-  async function queryLeads(extraFilter?: (q: any) => any) {
-    let base = supabase.from('leads').select(COLS).order('created_at', { ascending: false })
-    if (filtroServicio) base = base.ilike('servicio', `%${filtroServicio}%`)
-    if (filtroEstado)   base = base.eq('estado', filtroEstado)
-    if (extraFilter)    base = extraFilter(base)
-    const { data, error } = await base
-    if (error) {
-      const { data: d2 } = await supabase
-        .from('leads')
-        .select('id, folio, nombre, email, servicio, mensaje, created_at')
-        .order('created_at', { ascending: false })
-      return d2 ?? []
-    }
-    return data ?? []
-  }
+  if (estado && estado !== 'todos') query = query.eq('estado', estado)
 
-  let leads: Lead[] = []
+  const { data: allLeads } = await query
+  const leads = (allLeads ?? []).filter(l => {
+    if (!q) return true
+    const term = q.toLowerCase()
+    return (
+      l.nombre?.toLowerCase().includes(term) ||
+      l.email?.toLowerCase().includes(term) ||
+      l.folio?.toLowerCase().includes(term) ||
+      l.servicio?.toLowerCase().includes(term)
+    )
+  })
 
-  if (filtroQ) {
-    const [byNombre, byEmail, byFolio] = await Promise.all([
-      queryLeads(q => q.ilike('nombre', `%${filtroQ}%`)),
-      queryLeads(q => q.ilike('email',  `%${filtroQ}%`)),
-      queryLeads(q => q.ilike('folio',  `%${filtroQ}%`)),
-    ])
-    const merged = [
-      ...byNombre,
-      ...byEmail.filter((e: any) => !byNombre.some((n: any) => n.id === e.id)),
-      ...byFolio.filter((e: any) => !byNombre.some((n: any) => n.id === e.id) && !byEmail.some((n: any) => n.id === e.id)),
-    ]
-    leads = merged as Lead[]
-  } else {
-    leads = (await queryLeads()) as Lead[]
-  }
-
-  const { count: total }    = await supabase.from('leads').select('*', { count: 'exact', head: true })
-  const sevenDaysAgo        = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const { count: thisWeek } = await supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo)
-
-  const { data: svcRaw } = await supabase.from('leads').select('servicio')
-  const servicios = [...new Set((svcRaw ?? []).map((r: any) => r.servicio).filter(Boolean))] as string[]
-
-  const ESTADOS = ['nuevo', 'contactado', 'en_proceso', 'cerrado', 'perdido']
+  // Conteos por estado
+  const { data: allForCount } = await supabase.from('leads').select('estado')
+  const counts = (allForCount ?? []).reduce((acc: Record<string, number>, l) => {
+    acc[l.estado ?? 'nuevo'] = (acc[l.estado ?? 'nuevo'] ?? 0) + 1
+    return acc
+  }, {})
+  const total = allForCount?.length ?? 0
 
   return (
-    <div>
+    <div style={{ maxWidth: 1100 }}>
+      <style>{`
+        .lead-row:hover { background: #f8fafc !important; }
+        .filter-btn:hover { opacity: 0.85; }
+      `}</style>
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#00113a', margin: '0 0 4px' }}>Leads</h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
-            Contactos del sitio web y clientes de WhatsApp
-          </p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#00113a', margin: 0 }}>Leads</h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '3px 0 0' }}>{total} leads en total</p>
         </div>
-        {/* Botón para abrir el modal de nuevo lead */}
         <NuevoLeadModal />
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 24 }}>
+      {/* Filtros por estado */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         {[
-          { label: 'Total',       value: total ?? 0,    accent: false },
-          { label: 'Esta semana', value: thisWeek ?? 0, accent: true  },
-          { label: 'Mostrando',   value: leads.length,  accent: false },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: s.accent ? '#00113a' : '#f8fafc',
-            border: `0.5px solid ${s.accent ? 'transparent' : '#e2e8f0'}`,
-            borderRadius: 10, padding: '14px 18px',
-          }}>
-            <p style={{ margin: '0 0 2px', fontSize: 9, fontWeight: 700, color: s.accent ? '#b3c5ff' : '#94a3b8', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              {s.label}
-            </p>
-            <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: s.accent ? '#fff' : '#0f172a' }}>
-              {s.value}
-            </p>
-          </div>
-        ))}
+          { key: 'todos', label: 'Todos', count: total },
+          ...Object.entries(ESTADO_CFG).map(([k, v]) => ({ key: k, label: v.label, count: counts[k] ?? 0 })),
+        ].map(f => {
+          const isActive = (estado ?? 'todos') === f.key
+          const cfg = ESTADO_CFG[f.key]
+          return (
+            <a
+              key={f.key}
+              href={f.key === 'todos' ? '/admin/leads' : `/admin/leads?estado=${f.key}${q ? `&q=${q}` : ''}`}
+              className="filter-btn"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                textDecoration: 'none',
+                background: isActive ? (cfg?.color ?? '#00113a') : '#fff',
+                color: isActive ? '#fff' : '#475569',
+                border: `0.5px solid ${isActive ? (cfg?.color ?? '#00113a') : '#e2e8f0'}`,
+                transition: 'all 0.15s',
+              }}
+            >
+              {f.label}
+              <span style={{
+                background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                color: isActive ? '#fff' : '#64748b',
+                borderRadius: 10, padding: '0 6px', fontSize: 10, fontWeight: 800,
+              }}>
+                {f.count}
+              </span>
+            </a>
+          )
+        })}
       </div>
 
-      {/* Filtros */}
-      <form method="GET" style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input name="q" defaultValue={filtroQ ?? ''} placeholder="Buscar nombre, email o folio…"
-          style={{ flex: '1 1 200px', border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#1e293b', background: '#fff', outline: 'none' }} />
-
-        <select name="servicio" defaultValue={filtroServicio ?? 'todos'}
-          style={{ border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#1e293b', background: '#fff', cursor: 'pointer', maxWidth: 240 }}>
-          <option value="todos">Todos los servicios</option>
-          {servicios.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-
-        <select name="estado" defaultValue={filtroEstado ?? 'todos'}
-          style={{ border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#1e293b', background: '#fff', cursor: 'pointer' }}>
-          <option value="todos">Todos los estados</option>
-          {ESTADOS.map(e => <option key={e} value={e}>{e.replace('_', ' ')}</option>)}
-        </select>
-
-        <button type="submit" style={{ background: '#00113a', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-          Filtrar
-        </button>
-        {hayFiltro && (
-          <a href="/admin/leads" style={{ display: 'flex', alignItems: 'center', padding: '8px 14px', fontSize: 13, color: '#64748b', textDecoration: 'none', border: '1.5px solid #e2e8f0', borderRadius: 8, background: '#fff' }}>
-            ✕ Limpiar
-          </a>
-        )}
+      {/* Buscador */}
+      <form method="GET" action="/admin/leads" style={{ marginBottom: 20 }}>
+        {estado && <input type="hidden" name="estado" value={estado} />}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por nombre, email, folio o servicio…"
+            style={{
+              flex: 1, padding: '10px 14px', border: '0.5px solid #e2e8f0', borderRadius: 8,
+              fontSize: 13, outline: 'none', background: '#fff', maxWidth: 400,
+            }}
+          />
+          <button type="submit" style={{ background: '#00113a', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            Buscar
+          </button>
+          {(q || estado) && (
+            <a href="/admin/leads" style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, padding: '10px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              Limpiar ×
+            </a>
+          )}
+        </div>
       </form>
 
       {/* Tabla */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '0.5px solid #e2e8f0', overflow: 'auto' }}>
-        {leads.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
+      <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
+        {leads.length === 0 ? (
+          <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>No se encontraron leads</div>
+            {(q || estado) && (
+              <a href="/admin/leads" style={{ display: 'inline-block', marginTop: 12, color: '#2552ca', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
+                Ver todos los leads →
+              </a>
+            )}
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                {['Folio', 'Nombre', 'Contacto', 'Servicio', 'Estado', 'Mensaje', 'Fecha', 'Acciones'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', borderBottom: '0.5px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+              <tr style={{ background: '#f8fafc', borderBottom: '0.5px solid #e2e8f0' }}>
+                {['Cliente', 'Servicio', 'Estado', 'Valor', 'Pago', 'Hace'].map(h => (
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead, i) => (
-                <tr key={lead.id} style={{ background: i % 2 === 0 ? '#fff' : '#fafbfc' }}>
-                  {/* Folio */}
-                  <td style={{ padding: '11px 14px', borderBottom: '0.5px solid #f1f5f9' }}>
-                    {lead.folio ? (
-                      <span style={{ background: '#dbeafe', color: '#1d4ed8', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999 }}>
-                        {lead.folio}
+              {leads.map((lead, i) => {
+                const cfg = ESTADO_CFG[lead.estado ?? 'nuevo'] ?? ESTADO_CFG['nuevo']
+                return (
+                  <tr key={lead.id} className="lead-row" style={{ borderBottom: i < leads.length - 1 ? '0.5px solid #f1f5f9' : 'none' }}>
+                    <td style={{ padding: '12px 16px' }}>
+                      <Link href={`/admin/cliente/${lead.folio ?? lead.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 9, background: avatarColor(lead.nombre), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                          {initials(lead.nombre)}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
+                            {lead.nombre}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>
+                            {lead.folio ?? lead.email ?? '—'}
+                          </div>
+                        </div>
+                      </Link>
+                    </td>
+                    <td style={{ padding: '12px 16px', maxWidth: 180 }}>
+                      <div style={{ fontSize: 12, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {lead.servicio ?? '—'}
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, background: cfg.bg, color: cfg.color, padding: '3px 10px', borderRadius: 20 }}>
+                        {cfg.label}
                       </span>
-                    ) : (
-                      <span style={{ color: '#cbd5e1', fontSize: 12 }}>—</span>
-                    )}
-                  </td>
-
-                  {/* Nombre */}
-                  <td style={{ padding: '11px 14px', fontWeight: 600, color: '#0f172a', borderBottom: '0.5px solid #f1f5f9', whiteSpace: 'nowrap' }}>
-                    {lead.nombre}
-                  </td>
-
-                  {/* Email + Teléfono */}
-                  <td style={{ padding: '11px 14px', borderBottom: '0.5px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {lead.email ? (
-                        <a href={`mailto:${lead.email}`} style={{ color: '#2552ca', textDecoration: 'none', fontSize: 12 }}>
-                          {lead.email}
-                        </a>
-                      ) : null}
-                      {lead.telefono ? (
-                        <a href={`https://wa.me/${lead.telefono.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                          style={{ color: '#16a34a', textDecoration: 'none', fontSize: 12 }}>
-                          📱 {lead.telefono}
-                        </a>
-                      ) : null}
-                      {!lead.email && !lead.telefono && (
-                        <span style={{ color: '#cbd5e1', fontSize: 12 }}>—</span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Servicio */}
-                  <td style={{ padding: '11px 14px', borderBottom: '0.5px solid #f1f5f9' }}>
-                    <ServicioBadge servicio={lead.servicio} />
-                  </td>
-
-                  {/* Estado */}
-                  <td style={{ padding: '11px 14px', borderBottom: '0.5px solid #f1f5f9' }}>
-                    <EstadoBadge estado={lead.estado} />
-                  </td>
-
-                  {/* Mensaje */}
-                  <td style={{ padding: '11px 14px', color: '#64748b', borderBottom: '0.5px solid #f1f5f9', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {lead.mensaje ?? <span style={{ color: '#cbd5e1' }}>—</span>}
-                  </td>
-
-                  {/* Fecha */}
-                  <td style={{ padding: '11px 14px', color: '#94a3b8', borderBottom: '0.5px solid #f1f5f9', whiteSpace: 'nowrap', fontSize: 12 }}>
-                    {new Date(lead.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </td>
-
-                  {/* Acciones */}
-                  <td style={{ padding: '11px 14px', borderBottom: '0.5px solid #f1f5f9', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {lead.folio && (
-                        <>
-                          {/* Ver / editar en el admin */}
-                          <Link
-                            href={`/admin/cliente/${lead.folio}`}
-                            style={{
-                              fontSize: 11, fontWeight: 700, padding: '5px 10px',
-                              borderRadius: 6, background: '#00113a', color: '#fff',
-                              textDecoration: 'none',
-                            }}
-                          >
-                            Gestionar
-                          </Link>
-                          {/* Link público para copiar y enviar al cliente */}
-                          <a
-                            href={`/seguimiento/${lead.folio}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: 11, fontWeight: 700, padding: '5px 10px',
-                              borderRadius: 6, background: '#f0fdf4', color: '#16a34a',
-                              border: '0.5px solid #bbf7d0', textDecoration: 'none',
-                            }}
-                            title="Abrir página pública del cliente"
-                          >
-                            🔗
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      {lead.estimated_value ? (
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#10b981' }}>
+                          ${lead.estimated_value.toLocaleString('es-EC')}
+                        </span>
+                      ) : <span style={{ color: '#cbd5e1', fontSize: 12 }}>—</span>}
+                    </td>
+                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                        background: lead.payment_status === 'pagado' ? '#f0fdf4' : lead.payment_status === 'parcial' ? '#fff7ed' : '#fef9ec',
+                        color: lead.payment_status === 'pagado' ? '#10b981' : lead.payment_status === 'parcial' ? '#f97316' : '#d97706',
+                      }}>
+                        {(lead.payment_status ?? 'pendiente').toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                      {relTime(lead.created_at)}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
-        ) : (
-          <div style={{ padding: '60px 32px', textAlign: 'center' }}>
-            <p style={{ fontSize: 32, margin: '0 0 10px' }}>📭</p>
-            <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
-              {hayFiltro ? 'Sin resultados para ese filtro' : 'Aún no hay leads'}
-            </p>
-            <p style={{ margin: 0, fontSize: 13, color: '#94a3b8' }}>
-              {hayFiltro ? 'Prueba con otro término o limpia los filtros.' : 'Los contactos del sitio web aparecerán aquí.'}
-            </p>
-          </div>
         )}
       </div>
     </div>
   )
-}
-
-function ServicioBadge({ servicio }: { servicio: string | null }) {
-  if (!servicio) return <span style={{ color: '#cbd5e1' }}>—</span>
-  const s = servicio.toLowerCase()
-  let bg = '#f1f5f9', color = '#475569'
-  if (s.includes('market') || s.includes('redes'))       { bg = '#f0fdf4'; color = '#16a34a' }
-  else if (s.includes('impres') || s.includes('sublim')) { bg = '#fef3c7'; color = '#d97706' }
-  else if (s.includes('foto') || s.includes('drone'))    { bg = '#fdf4ff'; color = '#9333ea' }
-  else if (s.includes('chat') || s.includes('ia'))       { bg = '#eff6ff'; color = '#2563eb' }
-  else if (s.includes('brand') || s.includes('web'))     { bg = '#fff1f2'; color = '#e11d48' }
-  return <span style={{ background: bg, color, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, whiteSpace: 'nowrap' }}>{servicio}</span>
-}
-
-function EstadoBadge({ estado }: { estado: string | null }) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    nuevo:      { bg: '#eff6ff', color: '#2563eb', label: 'Nuevo' },
-    contactado: { bg: '#fefce8', color: '#ca8a04', label: 'Contactado' },
-    en_proceso: { bg: '#f0fdf4', color: '#16a34a', label: 'En proceso' },
-    cerrado:    { bg: '#f0fdf4', color: '#15803d', label: 'Cerrado ✓' },
-    perdido:    { bg: '#fef2f2', color: '#dc2626', label: 'Perdido' },
-  }
-  const e = map[estado ?? 'nuevo'] ?? map.nuevo
-  return <span style={{ background: e.bg, color: e.color, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999 }}>{e.label}</span>
 }

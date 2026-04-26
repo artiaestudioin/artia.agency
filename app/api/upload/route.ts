@@ -1,72 +1,93 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-const BUCKET = 'email-assets'
-const MAX_SIZE_MB = 5
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
+  try {
+    const supabase  = getAdminClient()
+    const formData  = await req.formData()
+    const file      = formData.get('file') as File | null
+    const projectId = formData.get('projectId') as string | null
 
-  // Solo admin autenticado puede subir
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!file)      return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
+    if (!projectId) return NextResponse.json({ error: 'projectId requerido' }, { status: 400 })
+
+    // Verificar tamaño máximo 50MB
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Archivo demasiado grande (máx 50MB)' }, { status: 400 })
+    }
+
+    // Limpiar nombre de archivo
+    const ext      = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
+    const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
+    const fileName = `${baseName}_${Date.now()}.${ext}`
+    const path     = `project-${projectId}/${fileName}`
+
+    const buffer = Buffer.from(await file.arrayBuffer())
+
+    // Intentar subir
+    const { error: uploadError } = await supabase.storage
+      .from('projects')
+      .upload(path, buffer, { contentType: file.type || 'application/octet-stream', upsert: false })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('bucket')) {
+        return NextResponse.json({
+          error: 'El bucket "projects" no existe en Supabase Storage. Ve a Storage → New bucket → "projects" → Public.',
+        }, { status: 500 })
+      }
+      return NextResponse.json({ error: `Error de storage: ${uploadError.message}` }, { status: 500 })
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('projects').getPublicUrl(path)
+
+    const { data: fileRecord, error: dbError } = await supabase
+      .from('project_files')
+      .insert([{
+        project_id: projectId,
+        file_url:   publicUrl,
+        file_name:  file.name,
+        file_type:  file.type,
+        file_size:  file.size,
+      }])
+      .select().single()
+
+    if (dbError) {
+      return NextResponse.json({ error: `Error en DB: ${dbError.message}` }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, file: fileRecord })
+
+  } catch (err: any) {
+    console.error('project-files POST error:', err)
+    return NextResponse.json({ error: err.message ?? 'Error interno' }, { status: 500 })
   }
+}
 
-  // Leer el archivo del form-data
-  const formData = await req.formData()
-  const file = formData.get('file') as File | null
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = getAdminClient()
+    const { fileId, projectId } = await req.json()
+    if (!fileId || !projectId) return NextResponse.json({ error: 'fileId y projectId requeridos' }, { status: 400 })
 
-  if (!file) {
-    return NextResponse.json({ error: 'No se recibió ningún archivo' }, { status: 400 })
+    const { data: fileRecord } = await supabase
+      .from('project_files').select('file_url, file_name').eq('id', fileId).single()
+
+    if (fileRecord?.file_name) {
+      const path = `project-${projectId}/${fileRecord.file_name}`
+      await supabase.storage.from('projects').remove([path])
+    }
+
+    await supabase.from('project_files').delete().eq('id', fileId)
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
-
-  // Validar tipo
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({
-      error: `Tipo no permitido. Solo: JPG, PNG, WEBP, GIF, SVG`
-    }, { status: 400 })
-  }
-
-  // Validar tamaño
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    return NextResponse.json({
-      error: `El archivo supera los ${MAX_SIZE_MB}MB`
-    }, { status: 400 })
-  }
-
-  // Nombre único: timestamp + nombre original sanitizado
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-  const safeName = file.name
-    .replace(/\.[^.]+$/, '')           // quitar extensión
-    .replace(/[^a-zA-Z0-9_-]/g, '-')  // solo caracteres seguros
-    .slice(0, 50)
-  const fileName = `${Date.now()}-${safeName}.${ext}`
-  const filePath = `uploads/${fileName}`
-
-  // Convertir File a ArrayBuffer para Supabase
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = new Uint8Array(arrayBuffer)
-
-  // Subir al bucket
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(filePath, buffer, {
-      contentType: file.type,
-      cacheControl: '31536000', // 1 año de caché
-      upsert: false,
-    })
-
-  if (uploadError) {
-    console.error('Upload error:', uploadError)
-    return NextResponse.json({ error: uploadError.message }, { status: 500 })
-  }
-
-  // Obtener URL pública
-  const { data: { publicUrl } } = supabase.storage
-    .from(BUCKET)
-    .getPublicUrl(filePath)
-
-  return NextResponse.json({ ok: true, url: publicUrl, path: filePath })
 }

@@ -3,91 +3,59 @@ import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
   return createClient(
-    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 }
 
-const SYSTEM_PROMPT = `Eres un asistente de CRM para Artia Studio. Tu función es traducir consultas en lenguaje natural a queries de la base de datos y devolver respuestas útiles.
+const SYSTEM_PROMPT = `Eres el asistente de CRM de Artia Studio. Conviertes preguntas en lenguaje natural en consultas a la base de datos.
 
-ESQUEMA DE LA BASE DE DATOS:
-- leads: id, nombre, email, telefono, servicio, estado (nuevo|contactado|en_proceso|cerrado|perdido), notes, estimated_value, final_value, payment_status (pendiente|parcial|pagado), created_at
-- payments: id, lead_id, amount, status (pagado|pendiente|cancelado), method, description, fecha, created_at  
-- projects: id, lead_id, name, access_code, status (activo|entregado|archivado), event_date, created_at
-- project_files: id, project_id, file_url, file_name, file_type, file_size, created_at
+TABLAS DISPONIBLES:
+- leads: id, folio, nombre, email, telefono, servicio, estado, notes, estimated_value, final_value, payment_status, created_at
+  estados: nuevo, contactado, en_proceso, cerrado, perdido
+  payment_status: pendiente, parcial, pagado
+- payments: id, lead_id, amount, status, method, description, fecha
+  status: pagado, pendiente, cancelado
+- projects: id, lead_id, name, access_code, status, event_date, created_at
+  status: activo, entregado, archivado
 
-REGLAS:
-1. Analiza la consulta del usuario
-2. Determina qué datos de Supabase necesitas
-3. Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta:
+IMPORTANTE: Supabase JS no soporta sum() en select. Para calcular totales debes traer todos los registros y sumarlos en código.
+
+Responde SOLO con un JSON sin backticks, sin texto extra. Formato exacto:
 {
-  "table": "leads",
-  "select": "id, nombre, email, servicio, estado, payment_status, estimated_value",
-  "filters": [{"column": "estado", "operator": "eq", "value": "cerrado"}],
+  "intent": "list" | "count" | "sum_amount",
+  "table": "leads" | "payments" | "projects",
+  "select": "id, nombre, email, estado, payment_status, estimated_value",
+  "filters": [
+    {"column": "estado", "operator": "eq", "value": "cerrado"},
+    {"column": "payment_status", "operator": "neq", "value": "pagado"}
+  ],
   "order": {"column": "created_at", "ascending": false},
   "limit": 50,
-  "answer_template": "Encontré {count} leads cerrados. {summary}"
+  "sum_field": "amount",
+  "answer_prefix": "Encontré"
 }
 
-OPERADORES disponibles: eq, neq, gt, gte, lt, lte, like, ilike, in, is
-Para "no han pagado": payment_status neq pagado + estado eq cerrado
-Para "este mes": fecha gte primer día del mes actual (usa ISO format)
-Para sumar amounts: select "sum(amount)" 
-
-Responde SOLO el JSON sin backticks ni explicaciones adicionales.`
-
-// ── Ejecutar query de Supabase basado en intención de la IA ───
-async function executeQuery(supabase: any, queryPlan: any) {
-  const { table, select, filters = [], order, limit = 50 } = queryPlan
-
-  let query = supabase.from(table).select(select ?? '*')
-
-  for (const f of filters) {
-    const { column, operator, value } = f
-    switch (operator) {
-      case 'eq':    query = query.eq(column, value); break
-      case 'neq':   query = query.neq(column, value); break
-      case 'gt':    query = query.gt(column, value); break
-      case 'gte':   query = query.gte(column, value); break
-      case 'lt':    query = query.lt(column, value); break
-      case 'lte':   query = query.lte(column, value); break
-      case 'like':  query = query.like(column, value); break
-      case 'ilike': query = query.ilike(column, value); break
-      case 'in':    query = query.in(column, value); break
-      case 'is':    query = query.is(column, value); break
-      case 'neq_null': query = query.not(column, 'is', null); break
-    }
-  }
-
-  if (order) {
-    query = query.order(order.column, { ascending: order.ascending ?? false })
-  }
-
-  if (limit) query = query.limit(limit)
-
-  return query
-}
+Ejemplos:
+- "clientes que no han pagado" → leads cerrados con payment_status != pagado
+- "cuánto hemos facturado" → intent: sum_amount, table: payments, filters: [{status eq pagado}]
+- "leads cerrados este mes" → leads estado cerrado + created_at >= primer día del mes
+- "proyectos activos" → projects status = activo`
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase()
   const { query } = await req.json()
-
-  if (!query?.trim()) {
-    return NextResponse.json({ error: 'query requerida' }, { status: 400 })
-  }
+  if (!query?.trim()) return NextResponse.json({ error: 'query requerida' }, { status: 400 })
 
   if (!process.env.GROQ_API_KEY) {
-    return NextResponse.json({ error: 'GROQ_API_KEY no configurada' }, { status: 500 })
+    return NextResponse.json({ answer: 'IA no configurada (GROQ_API_KEY faltante).', rows: [] })
   }
 
   try {
-    // 1. Groq analiza la consulta y devuelve el plan
+    // 1. Groq genera el plan
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: process.env.GROQ_MODEL || 'llama3-8b-8192',
         messages: [
@@ -95,64 +63,71 @@ export async function POST(req: NextRequest) {
           { role: 'user', content: query },
         ],
         temperature: 0.1,
-        max_tokens: 800,
+        max_tokens: 600,
       }),
     })
 
-    if (!groqRes.ok) {
-      throw new Error('Error conectando con Groq')
-    }
-
+    if (!groqRes.ok) throw new Error(`Groq error: ${groqRes.status}`)
     const groqData   = await groqRes.json()
     const rawContent = groqData.choices?.[0]?.message?.content ?? ''
 
-    // 2. Parsear el plan JSON
-    let queryPlan: any
+    let plan: any
     try {
-      const clean = rawContent.replace(/```json|```/g, '').trim()
-      queryPlan   = JSON.parse(clean)
+      plan = JSON.parse(rawContent.replace(/```json|```/g, '').trim())
     } catch {
-      // Si no se puede parsear, devolver respuesta genérica
-      return NextResponse.json({
-        answer: 'No pude interpretar esa consulta. Intenta ser más específico, por ejemplo: "leads cerrados que no han pagado" o "total facturado este mes".',
-        rows: [],
-      })
+      return NextResponse.json({ answer: 'No pude interpretar esa consulta. Intenta ser más específico, como: "leads cerrados" o "pagos de este mes".', rows: [] })
     }
 
-    // 3. Ejecutar query en Supabase
-    const { data: rows, error, count } = await executeQuery(supabase, queryPlan)
+    // 2. Ejecutar query
+    const { table, select, filters = [], order, limit = 100 } = plan
+
+    let q = supabase.from(table).select(select ?? '*')
+
+    for (const f of filters) {
+      switch (f.operator) {
+        case 'eq':    q = q.eq(f.column, f.value); break
+        case 'neq':   q = q.neq(f.column, f.value); break
+        case 'gt':    q = q.gt(f.column, f.value); break
+        case 'gte':   q = q.gte(f.column, f.value); break
+        case 'lt':    q = q.lt(f.column, f.value); break
+        case 'lte':   q = q.lte(f.column, f.value); break
+        case 'ilike': q = q.ilike(f.column, `%${f.value}%`); break
+        case 'in':    q = q.in(f.column, f.value); break
+        case 'is':    q = q.is(f.column, f.value); break
+      }
+    }
+
+    if (order) q = q.order(order.column, { ascending: order.ascending ?? false })
+    q = q.limit(limit)
+
+    const { data: rows, error } = await q
 
     if (error) {
-      console.error('Supabase query error:', error)
-      return NextResponse.json({
-        answer: `Error consultando la base de datos: ${error.message}`,
-        rows: [],
-      })
+      console.error('Supabase IA query error:', error)
+      return NextResponse.json({ answer: `Error en la base de datos: ${error.message}`, rows: [] })
     }
 
-    // 4. Formatear respuesta
-    const resultCount = Array.isArray(rows) ? rows.length : 0
+    const resultRows = rows ?? []
 
-    // Si es una consulta de suma/agregado
+    // 3. Calcular respuesta según intent
     let answer: string
-    if (queryPlan.select?.includes('sum(') || queryPlan.select?.includes('count(')) {
-      answer = `Resultado de tu consulta: ${JSON.stringify(rows?.[0] ?? {})}`
-    } else if (resultCount === 0) {
-      answer = 'No encontré resultados para esa consulta.'
+
+    if (plan.intent === 'sum_amount' && plan.sum_field) {
+      const total = resultRows.reduce((s: number, r: any) => s + (r[plan.sum_field] ?? 0), 0)
+      const fmt   = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(total)
+      answer = `El total es **${fmt}** (${resultRows.length} registros).`
+    } else if (plan.intent === 'count') {
+      answer = `Hay **${resultRows.length}** ${table} que cumplen esa condición.`
     } else {
-      const template = queryPlan.answer_template ?? 'Encontré {count} resultado(s).'
-      answer = template
-        .replace('{count}', String(resultCount))
-        .replace('{summary}', resultCount > 0 ? `Mostrando los primeros ${Math.min(resultCount, 20)}.` : '')
+      const prefix = plan.answer_prefix ?? 'Resultados'
+      answer = `${prefix}: **${resultRows.length}** registro${resultRows.length !== 1 ? 's' : ''}.`
+      if (resultRows.length === 0) answer = 'No encontré resultados para esa consulta.'
     }
 
-    return NextResponse.json({ answer, rows: rows ?? [], count: resultCount })
+    return NextResponse.json({ answer, rows: resultRows, count: resultRows.length })
 
   } catch (err: any) {
     console.error('IA CRM error:', err)
-    return NextResponse.json({
-      answer: 'Error procesando tu consulta. Verifica la configuración de GROQ_API_KEY.',
-      rows: [],
-    }, { status: 500 })
+    return NextResponse.json({ answer: `Error: ${err.message}`, rows: [] }, { status: 500 })
   }
 }
