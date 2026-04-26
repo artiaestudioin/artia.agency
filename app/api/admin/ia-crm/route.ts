@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     // 2. Ejecutar query
     const { table, select, filters = [], order, limit = 100 } = plan
 
-    let q = supabase.from(table).select(select ?? '*')
+    let q: any = supabase.from(table).select(select ?? '*')
 
     for (const f of filters) {
       switch (f.operator) {
