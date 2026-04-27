@@ -9,19 +9,41 @@ export async function GET() {
     return NextResponse.json({ error: 'missing_env', token: !!token, org: !!org, proj: !!proj })
   }
 
+  // ✅ Diagnóstico: mostrar qué valores estamos usando (sin exponer el token)
+  console.log('Sentry config:', { org, proj, tokenPrefix: token.slice(0, 10) + '...' })
+
   try {
-    const res = await fetch(
-      `https://sentry.io/api/0/projects/${org}/${proj}/issues/?limit=10&query=is:unresolved`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 300 },
-      }
-    )
+    // ✅ Endpoint correcto: slugs obligatorios (no nombres)
+    const url = `https://sentry.io/api/0/projects/${org}/${proj}/issues/?limit=10&query=is:unresolved`
+    
+    console.log('Sentry URL:', url)
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      next: { revalidate: 300 },
+    })
 
     if (!res.ok) {
       const text = await res.text()
-      console.error('Sentry API error:', res.status, text.slice(0, 200))
-      return NextResponse.json({ error: `sentry_${res.status}` })
+      console.error('Sentry API error:', res.status, text.slice(0, 500))
+      
+      // Diagnóstico específico para 404
+      let hint = ''
+      if (res.status === 404) {
+        hint = `Verifica que SENTRY_ORG="${org}" y SENTRY_PROJECT="${proj}" sean los slugs exactos. 
+                Org slug = subdominio de sentry.io (ej: artia-d2). 
+                Project slug = último segmento de la URL del proyecto (ej: artia-agency).`
+      }
+      if (res.status === 401 || res.status === 403) {
+        hint = 'Token inválido o sin scope event:read. Verifica en Settings > Account > API > Auth Tokens.'
+      }
+      
+      return NextResponse.json({ 
+        error: `sentry_${res.status}`, 
+        detail: text.slice(0, 200),
+        hint,
+        debug: { org, proj } // para verificar en el cliente
+      })
     }
 
     const issues = await res.json()
