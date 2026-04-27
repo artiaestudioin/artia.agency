@@ -8,7 +8,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const body = await req.json()
-  const { amount, method, status, description, fecha, comprobante_url } = body
+  const {
+    amount, method, status, description, fecha, comprobante_url,
+    payment_month, payment_number, due_date,
+  } = body
 
   const updates: Record<string, any> = {}
   if (amount !== undefined)          updates.amount          = amount
@@ -17,6 +20,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (description !== undefined)     updates.description     = description
   if (fecha !== undefined)           updates.fecha           = fecha
   if (comprobante_url !== undefined) updates.comprobante_url = comprobante_url
+  if (payment_month !== undefined)   updates.payment_month   = payment_month
+  if (payment_number !== undefined)  updates.payment_number  = payment_number ? parseInt(payment_number) : null
+  if (due_date !== undefined)        updates.due_date        = due_date || null
 
   const { error } = await supabase.from('payments').update(updates).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

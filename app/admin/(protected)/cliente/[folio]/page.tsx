@@ -16,7 +16,7 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
 
   const { data: lead } = await supabase
     .from('leads')
-    .select('id, folio, nombre, email, telefono, servicio, mensaje, estado, notes, estimated_value, final_value, payment_status, created_at')
+    .select('id, folio, nombre, email, telefono, servicio, mensaje, estado, notes, estimated_value, final_value, contract_value, payment_status, created_at')
     .eq(isUuid ? 'id' : 'folio', folio)
     .single()
 
@@ -35,7 +35,7 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
     { data: payments },
     { data: project },
   ] = await Promise.all([
-    supabase.from('payments').select('id, amount, status, method, description, fecha').eq('lead_id', lead.id).order('fecha', { ascending: false }),
+    supabase.from('payments').select('id, amount, status, method, description, fecha, comprobante_url, payment_month, payment_number, due_date').eq('lead_id', lead.id).order('created_at', { ascending: false }),
     supabase.from('projects').select('id, name, access_code, status, event_date, created_at').eq('lead_id', lead.id).maybeSingle(),
   ])
 

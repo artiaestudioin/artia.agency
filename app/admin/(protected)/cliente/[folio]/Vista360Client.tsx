@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -8,9 +8,13 @@ type Lead = {
   id: string; folio: string | null; nombre: string; email: string | null; telefono: string | null
   servicio: string | null; mensaje: string | null; estado: string | null
   notes: string | null; estimated_value: number | null; final_value: number | null
-  payment_status: string | null; created_at: string
+  contract_value?: number | null; payment_status: string | null; created_at: string
 }
-type Payment = { id: string; amount: number; status: string; method: string; description: string | null; fecha: string }
+type Payment = {
+  id: string; amount: number; status: string; method: string
+  description: string | null; fecha: string; comprobante_url?: string | null
+  payment_month?: string | null; due_date?: string | null; payment_number?: number | null
+}
 type Project = { id: string; name: string; access_code: string; status: string; event_date: string | null; created_at: string } | null
 type ProjectFile = { id: string; file_url: string; file_name: string | null; file_type: string | null }
 
@@ -24,6 +28,11 @@ const ESTADO_CFG: Record<string, { label: string; color: string; bg: string }> =
 }
 const METHOD_LABELS: Record<string, string> = {
   transferencia: 'Transferencia', efectivo: 'Efectivo', tarjeta: 'Tarjeta', cheque: 'Cheque', otro: 'Otro',
+}
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+function currentMesLabel() {
+  const d = new Date()
+  return MESES[d.getMonth()] + ' ' + d.getFullYear()
 }
 
 function fmtMoney(n: number | null) {
@@ -53,9 +62,19 @@ export default function Vista360Client({ lead: initLead, payments: initPayments,
   const [savingNotes, setSavingNotes] = useState(false)
   const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null)
   const [showPayForm, setShowPayForm] = useState(false)
-  const [payForm, setPayForm]     = useState({ amount: '', method: 'transferencia', description: '', fecha: new Date().toISOString().slice(0, 10), status: 'pagado' })
+  const [editPay, setEditPay]     = useState<Payment | null>(null)
   const [savingPay, setSavingPay] = useState(false)
+  const [uploadingComp, setUploadingComp] = useState(false)
   const [creatingProject, setCreatingProject] = useState(false)
+  const compInputRef = useRef<HTMLInputElement>(null)
+
+  const emptyPayForm = {
+    amount: '', method: 'transferencia', description: '',
+    fecha: new Date().toISOString().slice(0, 10), status: 'pagado',
+    comprobante_url: '', payment_month: currentMesLabel(),
+    due_date: '', payment_number: '',
+  }
+  const [payForm, setPayForm] = useState(emptyPayForm)
 
   // Email directo
   const [showEmailForm, setShowEmailForm] = useState(false)
@@ -88,24 +107,68 @@ export default function Vista360Client({ lead: initLead, payments: initPayments,
     else showMsg('Error actualizando estado', false)
   }
 
+  async function uploadComprobante(file: File) {
+    setUploadingComp(true)
+    try {
+      const fd = new FormData(); fd.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (res.ok && data.url) { setPayForm(p => ({ ...p, comprobante_url: data.url })); showMsg('Comprobante adjuntado ✓') }
+      else showMsg('Error subiendo comprobante', false)
+    } finally { setUploadingComp(false) }
+  }
+
+  function openEditPay(p: Payment) {
+    setEditPay(p)
+    setPayForm({
+      amount: String(p.amount), method: p.method, description: p.description ?? '',
+      fecha: p.fecha.slice(0, 10), status: p.status,
+      comprobante_url: p.comprobante_url ?? '', payment_month: p.payment_month ?? currentMesLabel(),
+      due_date: p.due_date?.slice(0, 10) ?? '', payment_number: String(p.payment_number ?? ''),
+    })
+    setShowPayForm(true)
+  }
+
+  function openNewPay() { setEditPay(null); setPayForm(emptyPayForm); setShowPayForm(true) }
+
   async function savePay(e: React.FormEvent) {
     e.preventDefault()
     if (!payForm.amount) return
     setSavingPay(true)
     try {
-      const res = await fetch('/api/admin/payments', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payForm, lead_id: lead.id, amount: parseFloat(payForm.amount) }),
-      })
-      const data = await res.json()
-      if (res.ok && data.payment) {
-        setPayments(prev => [data.payment, ...prev])
-        setShowPayForm(false)
-        setPayForm({ amount: '', method: 'transferencia', description: '', fecha: new Date().toISOString().slice(0, 10), status: 'pagado' })
-        showMsg('Pago registrado')
-        router.refresh()
-      } else showMsg(data.error ?? 'Error', false)
+      const body = {
+        ...payForm,
+        lead_id: lead.id,
+        amount: parseFloat(payForm.amount),
+        payment_number: payForm.payment_number ? parseInt(payForm.payment_number) : null,
+        due_date: payForm.due_date || null,
+        comprobante_url: payForm.comprobante_url || null,
+      }
+      if (editPay) {
+        const res  = await fetch(`/api/admin/payments/${editPay.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const data = await res.json()
+        if (res.ok) {
+          setPayments(prev => prev.map(p => p.id === editPay.id ? { ...p, ...body, amount: parseFloat(payForm.amount) } : p))
+          showMsg('Pago actualizado ✓')
+        } else showMsg(data.error ?? 'Error', false)
+      } else {
+        const res  = await fetch('/api/admin/payments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const data = await res.json()
+        if (res.ok && data.payment) {
+          setPayments(prev => [data.payment, ...prev])
+          showMsg('Pago registrado ✓')
+          router.refresh()
+        } else showMsg(data.error ?? 'Error', false)
+      }
+      setShowPayForm(false); setEditPay(null); setPayForm(emptyPayForm)
     } finally { setSavingPay(false) }
+  }
+
+  async function deletePay(id: string) {
+    if (!confirm('¿Eliminar este pago?')) return
+    const res = await fetch(`/api/admin/payments/${id}`, { method: 'DELETE' })
+    if (res.ok) { setPayments(prev => prev.filter(p => p.id !== id)); showMsg('Pago eliminado') }
+    else showMsg('Error eliminando', false)
   }
 
   async function createProjectForLead() {
@@ -246,56 +309,160 @@ export default function Vista360Client({ lead: initLead, payments: initPayments,
           <div style={card}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ fontWeight: 800, fontSize: 13, color: '#00113a' }}>💰 Pagos</div>
-              <button onClick={() => setShowPayForm(!showPayForm)} style={{ fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: '#f1f5f9', color: '#475569' }}>
+              <button onClick={openNewPay} style={{ fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', background: '#00113a', color: '#fff' }}>
                 + Registrar pago
               </button>
             </div>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-              <div style={{ flex: 1, background: '#f0fdf4', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Pagado</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#10b981' }}>{fmtMoney(totalPagado)}</div>
-              </div>
-              {totalPendiente > 0 && (
-                <div style={{ flex: 1, background: '#fef9ec', borderRadius: 8, padding: '10px 14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Pendiente</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#d97706' }}>{fmtMoney(totalPendiente)}</div>
+
+            {/* Resumen financiero */}
+            {(lead.estimated_value || lead.final_value) && (() => {
+              const contractVal = lead.final_value ?? lead.estimated_value ?? 0
+              const pct = contractVal > 0 ? Math.min((totalPagado / contractVal) * 100, 100) : 0
+              return (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                    <div style={{ flex: 1, background: '#f0fdf4', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Cobrado</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#10b981' }}>{fmtMoney(totalPagado)}</div>
+                    </div>
+                    {totalPendiente > 0 && (
+                      <div style={{ flex: 1, background: '#fef9ec', borderRadius: 8, padding: '10px 14px' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Pendiente</div>
+                        <div style={{ fontSize: 16, fontWeight: 900, color: '#d97706' }}>{fmtMoney(totalPendiente)}</div>
+                      </div>
+                    )}
+                    <div style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Acordado</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>{fmtMoney(contractVal)}</div>
+                    </div>
+                  </div>
+                  {contractVal > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>
+                        <span>Progreso del contrato</span><span>{Math.round(pct)}%</span>
+                      </div>
+                      <div style={{ height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: pct >= 100 ? '#10b981' : '#2552ca', borderRadius: 4, transition: 'width 0.5s' }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              )
+            })()}
+
+            {/* Formulario completo de pago (nuevo / editar) */}
             {showPayForm && (
-              <form onSubmit={savePay} style={{ background: '#f8fafc', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                  <div><label style={sLabel}>Monto *</label><input type="number" step="0.01" min="0" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: e.target.value }))} style={inp} required /></div>
-                  <div><label style={sLabel}>Estado</label><select value={payForm.status} onChange={e => setPayForm(p => ({ ...p, status: e.target.value }))} style={inp}><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option></select></div>
-                  <div><label style={sLabel}>Método</label><select value={payForm.method} onChange={e => setPayForm(p => ({ ...p, method: e.target.value }))} style={inp}>{Object.entries(METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
-                  <div><label style={sLabel}>Fecha</label><input type="date" value={payForm.fecha} onChange={e => setPayForm(p => ({ ...p, fecha: e.target.value }))} style={inp} /></div>
+              <div style={{ background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontWeight: 800, fontSize: 13, color: '#00113a' }}>{editPay ? '✏️ Editar pago' : '➕ Nuevo pago'}</span>
+                  <button onClick={() => { setShowPayForm(false); setEditPay(null); setPayForm(emptyPayForm) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>×</button>
                 </div>
-                <input type="text" value={payForm.description} onChange={e => setPayForm(p => ({ ...p, description: e.target.value }))} placeholder="Descripción (ej: Anticipo 50%)" style={{ ...inp, marginBottom: 10 }} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="submit" disabled={savingPay} style={{ background: '#00113a', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                    {savingPay ? 'Guardando…' : 'Registrar'}
-                  </button>
-                  <button type="button" onClick={() => setShowPayForm(false)} style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 7, padding: '8px 14px', fontSize: 12, cursor: 'pointer', color: '#64748b' }}>Cancelar</button>
-                </div>
-              </form>
+                <form onSubmit={savePay}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div>
+                      <label style={sLabel}>Monto (USD) *</label>
+                      <input type="number" step="0.01" min="0" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: e.target.value }))} style={inp} required placeholder="0.00" />
+                    </div>
+                    <div>
+                      <label style={sLabel}>Estado</label>
+                      <select value={payForm.status} onChange={e => setPayForm(p => ({ ...p, status: e.target.value }))} style={inp}>
+                        <option value="pagado">✓ Pagado</option>
+                        <option value="pendiente">⏳ Pendiente</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={sLabel}>Método</label>
+                      <select value={payForm.method} onChange={e => setPayForm(p => ({ ...p, method: e.target.value }))} style={inp}>
+                        {Object.entries(METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={sLabel}>Fecha de pago</label>
+                      <input type="date" value={payForm.fecha} onChange={e => setPayForm(p => ({ ...p, fecha: e.target.value }))} style={inp} />
+                    </div>
+                    <div>
+                      <label style={sLabel}>Nº de cuota / pago</label>
+                      <input type="number" min="1" value={payForm.payment_number} onChange={e => setPayForm(p => ({ ...p, payment_number: e.target.value }))} style={inp} placeholder="1=Anticipo, 2, 3…" />
+                    </div>
+                    <div>
+                      <label style={sLabel}>Fecha límite de pago</label>
+                      <input type="date" value={payForm.due_date} onChange={e => setPayForm(p => ({ ...p, due_date: e.target.value }))} style={inp} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={sLabel}>Mes del pago</label>
+                    <input type="text" value={payForm.payment_month} onChange={e => setPayForm(p => ({ ...p, payment_month: e.target.value }))} style={inp} placeholder={currentMesLabel()} />
+                    <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                      {MESES.map(m => (
+                        <button key={m} type="button" onClick={() => setPayForm(p => ({ ...p, payment_month: `${m} ${new Date().getFullYear()}` }))}
+                          style={{ fontSize: 9, padding: '2px 7px', borderRadius: 8, border: '0.5px solid #e2e8f0', background: payForm.payment_month?.startsWith(m) ? '#00113a' : '#fff', color: payForm.payment_month?.startsWith(m) ? '#fff' : '#64748b', cursor: 'pointer' }}>
+                          {m.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={sLabel}>Descripción / Notas del pago</label>
+                    <input type="text" value={payForm.description} onChange={e => setPayForm(p => ({ ...p, description: e.target.value }))} placeholder="ej: Anticipo 50% · $275 de $550" style={inp} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={sLabel}>Comprobante</label>
+                    {payForm.comprobante_url ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <a href={payForm.comprobante_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#2552ca', textDecoration: 'none', fontWeight: 600 }}>Ver comprobante ↗</a>
+                        <button type="button" onClick={() => setPayForm(p => ({ ...p, comprobante_url: '' }))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 13 }}>× Quitar</button>
+                      </div>
+                    ) : (
+                      <div onClick={() => compInputRef.current?.click()} style={{ border: '1.5px dashed #e2e8f0', borderRadius: 8, padding: '10px', textAlign: 'center', cursor: 'pointer', background: '#fff', fontSize: 12, color: '#64748b' }}>
+                        {uploadingComp ? 'Subiendo…' : '📎 Adjuntar comprobante'}
+                      </div>
+                    )}
+                    <input ref={compInputRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadComprobante(f) }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="submit" disabled={savingPay} style={{ background: '#00113a', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      {savingPay ? 'Guardando…' : editPay ? 'Actualizar pago' : 'Registrar pago'}
+                    </button>
+                    <button type="button" onClick={() => { setShowPayForm(false); setEditPay(null); setPayForm(emptyPayForm) }} style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 8, padding: '9px 14px', fontSize: 12, cursor: 'pointer', color: '#64748b', fontWeight: 700 }}>Cancelar</button>
+                  </div>
+                </form>
+              </div>
             )}
+
+            {/* Lista de pagos */}
             {payments.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Sin pagos registrados</p>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, fontStyle: 'italic' }}>Sin pagos registrados aún.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {payments.map(p => (
-                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: p.status === 'pagado' ? '#f0fdf4' : '#fef9ec', borderRadius: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.status === 'pagado' ? '#10b981' : '#d97706', flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: p.status === 'pagado' ? '#10b981' : '#d97706' }}>{fmtMoney(p.amount)}</span>
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{METHOD_LABELS[p.method] ?? p.method}</span>
+                {payments
+                  .slice()
+                  .sort((a, b) => (a.payment_number ?? 99) - (b.payment_number ?? 99))
+                  .map(p => {
+                    const vencido = p.due_date && new Date(p.due_date) < new Date() && p.status !== 'pagado'
+                    return (
+                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: p.status === 'pagado' ? '#f0fdf4' : '#fef9ec', borderRadius: 10, border: `0.5px solid ${p.status === 'pagado' ? '#bbf7d0' : '#fde68a'}` }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.status === 'pagado' ? '#10b981' : '#d97706', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            {p.payment_number && <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>#{p.payment_number}</span>}
+                            <span style={{ fontSize: 15, fontWeight: 900, color: p.status === 'pagado' ? '#10b981' : '#d97706' }}>{fmtMoney(p.amount)}</span>
+                            {p.payment_month && <span style={{ fontSize: 10, color: '#64748b', background: '#fff', padding: '2px 7px', borderRadius: 8, border: '0.5px solid #e2e8f0' }}>{p.payment_month}</span>}
+                            <span style={{ fontSize: 10, color: '#94a3b8' }}>{METHOD_LABELS[p.method] ?? p.method}</span>
+                          </div>
+                          {p.description && <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{p.description}</div>}
+                          <div style={{ display: 'flex', gap: 10, marginTop: 2, fontSize: 10, color: '#94a3b8' }}>
+                            <span>Pagó: {fmtDate(p.fecha)}</span>
+                            {p.due_date && <span style={{ color: vencido ? '#ef4444' : '#94a3b8', fontWeight: vencido ? 700 : 400 }}>Límite: {fmtDate(p.due_date)}{vencido ? ' ⚠️' : ''}</span>}
+                            {p.comprobante_url && <a href={p.comprobante_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2552ca', textDecoration: 'none', fontWeight: 600 }}>Ver comprobante ↗</a>}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 5 }}>
+                          <button onClick={() => openEditPay(p)} style={{ fontSize: 11, color: '#2552ca', background: '#eff6ff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}>Editar</button>
+                          <button onClick={() => deletePay(p.id)} style={{ fontSize: 11, color: '#ef4444', background: '#fef2f2', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontWeight: 700 }}>×</button>
+                        </div>
                       </div>
-                      {p.description && <div style={{ fontSize: 11, color: '#64748b' }}>{p.description}</div>}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>{fmtDate(p.fecha)}</div>
-                  </div>
-                ))}
+                    )
+                  })}
               </div>
             )}
           </div>
