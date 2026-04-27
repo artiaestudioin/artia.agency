@@ -9,71 +9,86 @@ export async function GET() {
   }
 
   try {
-    // PostHog Personal API Key → usa endpoint GET /insights/ con query params
-    // o el nuevo endpoint /query/ para trends
-    const url = `https://us.posthog.com/api/projects/${project}/query/`
+    const base = `https://us.posthog.com/api/projects/${project}`
 
-    const body = {
-      query: {
-        kind: "InsightVizNode",
-        source: {
-          kind: "TrendsQuery",
-          series: [{ kind: "EventsNode", event: "$pageview", name: "$pageview" }],
-          dateRange: { date_from: "-7d" }
-        }
-      }
-    }
-
-    const res = await fetch(url, {
+    // 1. Pageviews (ya funciona)
+    const trendsRes = await fetch(`${base}/query/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        query: {
+          kind: 'InsightVizNode',
+          source: {
+            kind: 'TrendsQuery',
+            series: [{ kind: 'EventsNode', event: '$pageview', name: '$pageview' }],
+            dateRange: { date_from: '-7d' }
+          }
+        }
+      }),
     })
+    const trendsData = await trendsRes.json()
 
-    if (!res.ok) {
-      const text = await res.text()
-      console.error('PostHog API error:', res.status, text.slice(0, 500))
-      return NextResponse.json({ 
-        error: `posthog_${res.status}`, 
-        detail: text.slice(0, 200),
-        url: url.replace(key, '***')
-      })
-    }
+    // 2. Dashboards list
+    const dashboardsRes = await fetch(`${base}/dashboards/`, {
+      headers: { Authorization: `Bearer ${key}` }
+    })
+    const dashboardsData = dashboardsRes.ok ? await dashboardsRes.json() : null
 
-    const data = await res.json()
+    // 3. Insights list
+    const insightsRes = await fetch(`${base}/insights/?limit=5`, {
+      headers: { Authorization: `Bearer ${key}` }
+    })
+    const insightsData = insightsRes.ok ? await insightsRes.json() : null
 
-    // El nuevo endpoint devuelve resultado diferente
-    const result = data.result || data
+    // 4. Activity log (últimas 10 acciones)
+    const activityRes = await fetch(`${base}/activity_log/?limit=10`, {
+      headers: { Authorization: `Bearer ${key}` }
+    })
+    const activityData = activityRes.ok ? await activityRes.json() : null
+
+    // 5. Project info (usuarios, eventos totales)
+    const projectRes = await fetch(`${base}/`, {
+      headers: { Authorization: `Bearer ${key}` }
+    })
+    const projectData = projectRes.ok ? await projectRes.json() : null
+
+    // Procesar trends
+    const result = trendsData.result || trendsData
     const counts = Array.isArray(result) ? result : (result?.data ?? [])
     const labels = result?.labels ?? []
-
-    // Si no hay datos estructurados, intentar extraer de la respuesta
-    let daily = []
-    let total = 0
-
-    if (Array.isArray(counts) && counts.length > 0) {
-      total = counts.reduce((a: number, b: number) => a + b, 0)
-      daily = labels.map((label: string, i: number) => ({ 
-        label, 
-        value: counts[i] ?? 0 
-      })).slice(-7)
-    } else if (data.results) {
-      // Formato alternativo
-      total = data.results.reduce((s: number, r: any) => s + (r.count || 0), 0)
-      daily = (data.results || []).slice(-7).map((r: any) => ({
-        label: r.label || r.date || '?',
-        value: r.count || 0
-      }))
-    }
+    const total = Array.isArray(counts) ? counts.reduce((a: number, b: number) => a + b, 0) : 0
+    const daily = labels.map((label: string, i: number) => ({
+      label,
+      value: counts[i] ?? 0
+    })).slice(-7)
 
     return NextResponse.json({
       ok: true,
       pageviews: total,
       daily,
-      raw_preview: JSON.stringify(data).slice(0, 200) // para debug
+      dashboards: dashboardsData?.results?.slice(0, 3).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        description: d.description,
+      })) ?? [],
+      insights: insightsData?.results?.slice(0, 3).map((i: any) => ({
+        id: i.id,
+        name: i.name,
+        type: i.query?.kind || 'Insight',
+      })) ?? [],
+      activity: activityData?.results?.slice(0, 5).map((a: any) => ({
+        user: a.user?.first_name || 'Sistema',
+        action: a.activity,
+        created_at: a.created_at,
+      })) ?? [],
+      project: projectData ? {
+        name: projectData.name,
+        event_count: projectData.event_count,
+        user_count: projectData.user_count,
+      } : null,
     })
   } catch (err: any) {
     console.error('PostHog fetch error:', err)
