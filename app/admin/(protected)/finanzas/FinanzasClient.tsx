@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 type Payment = {
   id: string; lead_id: string; amount: number; status: string; method: string
@@ -24,10 +24,6 @@ function fmtDate(d: string|null|undefined) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric'})
 }
-function currentMesLabel() {
-  const d = new Date()
-  return MESES[d.getMonth()] + ' ' + d.getFullYear()
-}
 
 export default function FinanzasClient({ payments: initPayments, leads }: { payments: Payment[]; leads: Lead[] }) {
   const [payments, setPayments] = useState(initPayments)
@@ -39,29 +35,57 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
   const [toast, setToast]       = useState<string|null>(null)
   const compInputRef = useRef<HTMLInputElement>(null)
 
-  const emptyForm = {
+  // Hydration fix: all Date-dependent values live here, set after mount
+  const [mounted, setMounted] = useState(false)
+  const [hoy, setHoy] = useState({ fecha: '', mes: '', mesKey: '0000-00', anio: 0 })
+
+  useEffect(() => {
+    const d   = new Date()
+    const mes = MESES[d.getMonth()] + ' ' + d.getFullYear()
+    const mk  = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    setHoy({ fecha: d.toISOString().slice(0, 10), mes, mesKey: mk, anio: d.getFullYear() })
+    setMounted(true)
+  }, [])
+
+  const [form, setForm] = useState({
     lead_id:'', amount:'', method:'transferencia', description:'',
-    fecha: new Date().toISOString().slice(0,10), status:'pagado',
-    comprobante_url:'', payment_month: currentMesLabel(),
+    fecha: '', status:'pagado',
+    comprobante_url:'', payment_month: '',
     due_date:'', payment_number:'',
-  }
-  const [form, setForm] = useState(emptyForm)
+  })
+
+  // Once mounted, fill in the date fields if form is empty
+  useEffect(() => {
+    if (mounted) {
+      setForm(f => ({
+        ...f,
+        fecha: f.fecha || hoy.fecha,
+        payment_month: f.payment_month || hoy.mes,
+      }))
+    }
+  }, [mounted]) // eslint-disable-line
 
   function showMsg(msg: string) { setToast(msg); setTimeout(()=>setToast(null),3000) }
 
   const ingresoTotal   = payments.filter(p=>p.status==='pagado').reduce((s,p)=>s+p.amount,0)
-  const ahora          = new Date()
-  const mesKey         = ahora.getFullYear()+'-'+String(ahora.getMonth()+1).padStart(2,'0')
-  const ingresoMes     = payments.filter(p=>p.status==='pagado'&&p.fecha.startsWith(mesKey)).reduce((s,p)=>s+p.amount,0)
+  const ingresoMes     = mounted
+    ? payments.filter(p=>p.status==='pagado'&&p.fecha.startsWith(hoy.mesKey)).reduce((s,p)=>s+p.amount,0)
+    : 0
   const pendienteTotal = payments.filter(p=>p.status==='pendiente').reduce((s,p)=>s+p.amount,0)
 
+  // Monthly chart — computed only client-side
   const meses: Record<string,number> = {}
-  for (let i=5;i>=0;i--) {
-    const d = new Date(ahora.getFullYear(), ahora.getMonth()-i, 1)
-    meses[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')] = 0
+  if (mounted) {
+    const base = new Date(hoy.anio, new Date().getMonth(), 1)
+    for (let i = 5; i >= 0; i--) {
+      const dd = new Date(base.getFullYear(), base.getMonth() - i, 1)
+      meses[dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')] = 0
+    }
+    payments.filter(p=>p.status==='pagado').forEach(p=>{
+      const k = p.fecha.slice(0,7); if(k in meses) meses[k] += p.amount
+    })
   }
-  payments.filter(p=>p.status==='pagado').forEach(p=>{ const k=p.fecha.slice(0,7); if(k in meses) meses[k]+=p.amount })
-  const maxMes = Math.max(...Object.values(meses),1)
+  const maxMes = Math.max(...Object.values(meses), 1)
 
   const byLead: Record<string,{ nombre:string; folio:string|null; pagado:number; pendiente:number; contractValue:number|null; payments:Payment[] }> = {}
   payments.forEach(p=>{
@@ -94,12 +118,16 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
     setForm({
       lead_id:p.lead_id, amount:String(p.amount), method:p.method,
       description:p.description??'', fecha:p.fecha.slice(0,10), status:p.status,
-      comprobante_url:p.comprobante_url??'', payment_month:p.payment_month??currentMesLabel(),
+      comprobante_url:p.comprobante_url??'', payment_month:p.payment_month??hoy.mes,
       due_date:p.due_date?.slice(0,10)??'', payment_number:String(p.payment_number??''),
     })
     setShowForm(true)
   }
-  function openNew() { setEditPay(null); setForm(emptyForm); setShowForm(true) }
+  function openNew() {
+    setEditPay(null)
+    setForm({ lead_id:'', amount:'', method:'transferencia', description:'', fecha:hoy.fecha, status:'pagado', comprobante_url:'', payment_month:hoy.mes, due_date:'', payment_number:'' })
+    setShowForm(true)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -126,7 +154,8 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
           showMsg('Registrado ✓')
         } else showMsg(data.error??'Error')
       }
-      setShowForm(false); setEditPay(null); setForm(emptyForm)
+      setShowForm(false); setEditPay(null)
+      setForm({ lead_id:'', amount:'', method:'transferencia', description:'', fecha:hoy.fecha, status:'pagado', comprobante_url:'', payment_month:hoy.mes, due_date:'', payment_number:'' })
     } finally { setSaving(false) }
   }
 
@@ -158,7 +187,7 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
         </div>
         <div style={{background:'#fff',border:'0.5px solid #e2e8f0',borderRadius:14,padding:'22px 24px'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>Este mes</div>
-          <div style={{fontSize:28,fontWeight:900,color:'#10b981',letterSpacing:'-1px'}}>{fmtMoney(ingresoMes)}</div>
+          <div style={{fontSize:28,fontWeight:900,color:'#10b981',letterSpacing:'-1px'}}>{mounted ? fmtMoney(ingresoMes) : '—'}</div>
         </div>
         <div style={{background:pendienteTotal>0?'#fef9ec':'#fff',border:`0.5px solid ${pendienteTotal>0?'#fcd34d':'#e2e8f0'}`,borderRadius:14,padding:'22px 24px'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>Por cobrar</div>
@@ -168,21 +197,27 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
 
       <div style={{background:'#fff',border:'0.5px solid #e2e8f0',borderRadius:14,padding:24,marginBottom:20}}>
         <div style={{fontWeight:800,fontSize:14,color:'#00113a',marginBottom:20}}>Flujo mensual</div>
-        <div style={{display:'flex',alignItems:'flex-end',gap:10,height:90}}>
-          {Object.entries(meses).map(([mes,val])=>{
-            const pct=(val/maxMes)*100
-            const label=new Date(mes+'-01').toLocaleDateString('es-EC',{month:'short'})
-            return (
-              <div key={mes} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,height:'100%'}}>
-                {val>0 && <div style={{fontSize:9,color:'#64748b',fontWeight:700}}>${Math.round(val)}</div>}
-                <div style={{flex:1,width:'100%',display:'flex',alignItems:'flex-end'}}>
-                  <div style={{width:'100%',background:val>0?'#2552ca':'#e2e8f0',borderRadius:'4px 4px 0 0',height:`${Math.max(pct,3)}%`}} />
+        {mounted ? (
+          <div style={{display:'flex',alignItems:'flex-end',gap:10,height:90}}>
+            {Object.entries(meses).map(([mes,val])=>{
+              const pct=(val/maxMes)*100
+              const label=new Date(mes+'-02').toLocaleDateString('es-EC',{month:'short'})
+              return (
+                <div key={mes} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,height:'100%'}}>
+                  {val>0 && <div style={{fontSize:9,color:'#64748b',fontWeight:700}}>${Math.round(val)}</div>}
+                  <div style={{flex:1,width:'100%',display:'flex',alignItems:'flex-end'}}>
+                    <div style={{width:'100%',background:val>0?'#2552ca':'#e2e8f0',borderRadius:'4px 4px 0 0',height:`${Math.max(pct,3)}%`}} />
+                  </div>
+                  <div style={{fontSize:9,color:'#94a3b8',fontWeight:700,textTransform:'uppercase'}}>{label}</div>
                 </div>
-                <div style={{fontSize:9,color:'#94a3b8',fontWeight:700,textTransform:'uppercase'}}>{label}</div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div style={{height:90,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <span style={{fontSize:12,color:'#94a3b8'}}>Cargando…</span>
+          </div>
+        )}
       </div>
 
       {Object.keys(byLead).length>0 && (
@@ -252,9 +287,9 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:14}}>
               <div>
                 <label style={lbl}>Mes del pago</label>
-                <input type="text" value={form.payment_month} onChange={e=>setForm(p=>({...p,payment_month:e.target.value}))} style={inp} placeholder={currentMesLabel()} />
+                <input type="text" value={form.payment_month} onChange={e=>setForm(p=>({...p,payment_month:e.target.value}))} style={inp} placeholder={hoy.mes||'Ej: Abril 2026'} />
                 <div style={{display:'flex',gap:3,marginTop:5,flexWrap:'wrap'}}>
-                  {MESES.map(m=><button key={m} type="button" onClick={()=>setForm(p=>({...p,payment_month:`${m} ${new Date().getFullYear()}`}))} style={{fontSize:9,padding:'2px 6px',borderRadius:8,border:'0.5px solid #e2e8f0',background:form.payment_month?.startsWith(m)?'#00113a':'#f8fafc',color:form.payment_month?.startsWith(m)?'#fff':'#64748b',cursor:'pointer'}}>{m.slice(0,3)}</button>)}
+                  {MESES.map(m=><button key={m} type="button" onClick={()=>setForm(p=>({...p,payment_month:`${m} ${hoy.anio||new Date().getFullYear()}`}))} style={{fontSize:9,padding:'2px 6px',borderRadius:8,border:'0.5px solid #e2e8f0',background:form.payment_month?.startsWith(m)?'#00113a':'#f8fafc',color:form.payment_month?.startsWith(m)?'#fff':'#64748b',cursor:'pointer'}}>{m.slice(0,3)}</button>)}
                 </div>
               </div>
               <div>
@@ -331,7 +366,8 @@ export default function FinanzasClient({ payments: initPayments, leads }: { paym
             </thead>
             <tbody>
               {filtered.map(p=>{
-                const vencido=p.due_date&&new Date(p.due_date)<new Date()&&p.status!=='pagado'
+                // Date comparison only in client to avoid hydration mismatch
+                const vencido = mounted && p.due_date && new Date(p.due_date) < new Date() && p.status!=='pagado'
                 return (
                   <tr key={p.id} style={{borderBottom:'0.5px solid #f1f5f9'}}>
                     <td style={{padding:'10px 12px',fontSize:11,color:'#94a3b8',fontWeight:700}}>{p.payment_number?`#${p.payment_number}`:'—'}</td>
