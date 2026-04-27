@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
+import Link from 'next/link'
 
 type Message = { role: 'user' | 'assistant'; content: string; data?: any[] }
 
@@ -125,12 +126,53 @@ export default function IACRMPanel() {
                     </thead>
                     <tbody>
                       {m.data.slice(0, 20).map((row, ri) => (
-                        <tr key={ri} style={{ borderBottom: '0.5px solid #f1f5f9' }}>
-                          {Object.values(row).map((val, vi) => (
-                            <td key={vi} style={{ padding: '8px 12px', color: '#475569', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {val === null || val === undefined ? '—' : String(val)}
-                            </td>
-                          ))}
+                        <tr key={ri} style={{ borderBottom: '0.5px solid #f1f5f9', cursor: row.folio ? 'pointer' : 'default' }}>
+                          {Object.values(row).map((val, vi) => {
+                            const colName = Object.keys(row)[vi]
+                            const displayVal = val === null || val === undefined ? '—' : String(val)
+                            // Make folio and nombre clickable
+                            if (colName === 'folio' && val) {
+                              return (
+                                <td key={vi} style={{ padding: '8px 12px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <Link href={`/admin/cliente/${val}`} style={{ color: '#2552ca', fontWeight: 700, textDecoration: 'none', fontFamily: 'monospace', fontSize: 11 }}>
+                                    {displayVal} →
+                                  </Link>
+                                </td>
+                              )
+                            }
+                            if (colName === 'access_code' && val) {
+                              return (
+                                <td key={vi} style={{ padding: '8px 12px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <Link href={`/client/${val}`} target="_blank" style={{ color: '#8b5cf6', fontWeight: 700, textDecoration: 'none', fontFamily: 'monospace', fontSize: 11 }}>
+                                    {displayVal} ↗
+                                  </Link>
+                                </td>
+                              )
+                            }
+                            if (colName === 'nombre' && row.folio) {
+                              return (
+                                <td key={vi} style={{ padding: '8px 12px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <Link href={`/admin/cliente/${row.folio}`} style={{ color: '#0f172a', fontWeight: 600, textDecoration: 'none' }}>
+                                    {displayVal}
+                                  </Link>
+                                </td>
+                              )
+                            }
+                            if (colName === 'lead_id' && val) {
+                              return (
+                                <td key={vi} style={{ padding: '8px 12px', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <Link href={`/admin/finanzas`} style={{ color: '#10b981', fontWeight: 700, textDecoration: 'none', fontSize: 10, fontFamily: 'monospace' }}>
+                                    Ver finanzas →
+                                  </Link>
+                                </td>
+                              )
+                            }
+                            return (
+                              <td key={vi} style={{ padding: '8px 12px', color: '#475569', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {displayVal}
+                              </td>
+                            )
+                          })}
                         </tr>
                       ))}
                     </tbody>

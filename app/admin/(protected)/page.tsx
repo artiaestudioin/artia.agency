@@ -1,37 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { PostHogWidget, SentryWidget } from './AnalyticsWidgets'
 
-async function fetchPostHogStats() {
-  const key     = process.env.POSTHOG_PERSONAL_API_KEY
-  const project = process.env.POSTHOG_PROJECT_ID
-  if (!key || !project) return null
-  try {
-    const res = await fetch(
-      `https://app.posthog.com/api/projects/${project}/insights/trend/?events=[{"id":"$pageview"}]&date_from=-7d`,
-      { headers: { Authorization: `Bearer ${key}` }, next: { revalidate: 300 } }
-    )
-    if (!res.ok) return null
-    const data  = await res.json()
-    const total = (data.result?.[0]?.data ?? []).reduce((a: number, b: number) => a + b, 0)
-    return { pageviews: total }
-  } catch { return null }
-}
 
-async function fetchSentryStats() {
-  const token = process.env.SENTRY_AUTH_TOKEN
-  const org   = process.env.SENTRY_ORG
-  const proj  = process.env.SENTRY_PROJECT
-  if (!token || !org || !proj) return null
-  try {
-    const res = await fetch(
-      `https://sentry.io/api/0/projects/${org}/${proj}/issues/?limit=5&query=is:unresolved`,
-      { headers: { Authorization: `Bearer ${token}` }, next: { revalidate: 300 } }
-    )
-    if (!res.ok) return null
-    const issues = await res.json()
-    return { unresolvedCount: Array.isArray(issues) ? issues.length : 0, issues: (issues as any[]).slice(0, 3) }
-  } catch { return null }
-}
+
+
 
 const ESTADO_COLORS: Record<string, { bg: string; text: string; dot: string; label: string }> = {
   nuevo:      { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6', label: 'Nuevo'      },
@@ -69,8 +42,6 @@ export default async function AdminDashboard() {
     { count: totalEmails },
     { data: estadoData },
     { data: payments },
-    phStats,
-    sentryStats,
   ] = await Promise.all([
     supabase.from('leads').select('*', { count: 'exact', head: true }),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioDia.toISOString()),
@@ -83,8 +54,6 @@ export default async function AdminDashboard() {
     supabase.from('leads').select('estado'),
     // Pagos del mes actual para widget financiero
     supabase.from('payments').select('amount, status').gte('fecha', new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString()),
-    fetchPostHogStats(),
-    fetchSentryStats(),
   ])
 
   // Pipeline
@@ -300,72 +269,9 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* PostHog */}
-          <div className="crm-card" style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '16px 18px 14px', background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', borderBottom: '1px solid #fed7aa' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 18, background: 'rgba(249,115,22,.12)', borderRadius: 8, padding: '5px 7px' }}>🦔</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#92400e' }}>PostHog Analytics</div>
-                  <div style={{ fontSize: 10, color: '#b45309', fontFamily: 'monospace', letterSpacing: 1 }}>ÚLTIMOS 7 DÍAS</div>
-                </div>
-              </div>
-            </div>
-            <div style={{ padding: '18px' }}>
-              {phStats ? (
-                <>
-                  <div style={{ fontSize: 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-1px', marginBottom: 2 }}>{phStats.pageviews.toLocaleString()}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>Pageviews totales</div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>Agrega POSTHOG_PERSONAL_API_KEY y POSTHOG_PROJECT_ID en Vercel para ver estadísticas aquí.</div>
-                </>
-              )}
-              <a href="https://app.posthog.com" target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#d97706', textDecoration: 'none' }}>
-                Ver dashboard completo →
-              </a>
-            </div>
-          </div>
+          <PostHogWidget />
 
-          {/* Sentry */}
-          <div className="crm-card" style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '16px 18px 14px', background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', borderBottom: '1px solid #ddd6fe' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 18, background: 'rgba(124,58,237,.1)', borderRadius: 8, padding: '5px 7px' }}>🛡️</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#5b21b6' }}>Sentry Monitoring</div>
-                  <div style={{ fontSize: 10, color: '#7c3aed', fontFamily: 'monospace', letterSpacing: 1 }}>ISSUES SIN RESOLVER</div>
-                </div>
-              </div>
-            </div>
-            <div style={{ padding: '18px' }}>
-              {sentryStats ? (
-                <>
-                  <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-1px', marginBottom: 2, color: sentryStats.unresolvedCount > 0 ? '#dc2626' : '#16a34a' }}>
-                    {sentryStats.unresolvedCount}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginBottom: sentryStats.issues.length > 0 ? 10 : 14 }}>
-                    {sentryStats.unresolvedCount === 0 ? '✓ Sin errores activos' : 'Errores sin resolver'}
-                  </div>
-                  {sentryStats.issues.map((i: any) => (
-                    <div key={i.id} style={{ fontSize: 11, color: '#64748b', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 9px', borderRadius: 6, marginBottom: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
-                      · {i.title}
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>
-                  Agrega SENTRY_AUTH_TOKEN, SENTRY_ORG y SENTRY_PROJECT en Vercel para ver errores aquí.
-                </div>
-              )}
-              <a href="https://sentry.io" target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
-                Ver en Sentry →
-              </a>
-            </div>
-          </div>
+          <SentryWidget />
         </div>
       </div>
     </div>
