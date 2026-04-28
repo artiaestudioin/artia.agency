@@ -9,6 +9,7 @@ type Installment = {
   amount: string
   payment_date: string
   status: 'pagado' | 'pendiente' | 'vencido'
+  payment_method?: string        // ← RESTAURADO
   receipt_url?: string | null
   payment_number: number
 }
@@ -46,7 +47,7 @@ type Lead = {
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
 ]
 
 const METHOD_LABELS: Record<string, string> = {
@@ -58,9 +59,9 @@ const METHOD_LABELS: Record<string, string> = {
 }
 
 const ESTADO_COLORS: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  pagado:     { bg: '#dcfce7', text: '#166534', dot: '#22c55e', label: '✓ Pagado' },
-  pendiente:  { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b', label: '⏳ Pendiente' },
-  vencido:    { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444', label: '❌ Vencido' },
+  pagado:    { bg: '#dcfce7', text: '#166534', dot: '#22c55e', label: '✓ Pagado' },
+  pendiente: { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b', label: '⏳ Pendiente' },
+  vencido:   { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444', label: '❌ Vencido' },
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -68,19 +69,21 @@ const ESTADO_COLORS: Record<string, { bg: string; text: string; dot: string; lab
 function fmtMoney(n: number | null | undefined) {
   if (!n && n !== 0) return '—'
   return new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
+    style: 'currency', currency: 'USD', minimumFractionDigits: 2,
   }).format(n)
 }
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  // Avoid timezone offset issues by parsing date-only strings explicitly
+  const [y, m, day] = d.split('T')[0].split('-').map(Number)
+  return new Date(y, m - 1, day).toLocaleDateString('es-EC', {
+    day: '2-digit', month: 'short', year: 'numeric',
   })
+}
+
+function makeDefaultInstallment(date: string, num: number): Installment {
+  return { amount: '', payment_date: date, status: 'pendiente', payment_method: 'transferencia', payment_number: num }
 }
 
 // ─── Component ─────────────────────────────────────────────────────
@@ -93,30 +96,30 @@ export default function FinanzasClient({
   leads: Lead[]
 }) {
   const [payments, setPayments] = useState<PaymentParent[]>(initPayments)
-  const [showForm, setShowForm] = useState(false)
-  const [editPay, setEditPay] = useState<PaymentParent | null>(null)
   const [filterStatus, setFilterStatus] = useState('todos')
   const [filterSearch, setFilterSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
+  const [editPay, setEditPay] = useState<PaymentParent | null>(null)
+  const [showForm, setShowForm] = useState(false)
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  // ── FIX HIDRATACIÓN #418: toda la lógica de fecha vive solo en el cliente ──
   const [mounted, setMounted] = useState(false)
-  const [hoy, setHoy] = useState({ fecha: '', mes: '', mesKey: '0000-00', anio: 2026 })
+  const [hoy, setHoy] = useState({ fecha: '', mes: '', anio: 0 })
 
   useEffect(() => {
     const d = new Date()
     setHoy({
       fecha: d.toISOString().slice(0, 10),
       mes: MESES[d.getMonth()] + ' ' + d.getFullYear(),
-      mesKey: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
       anio: d.getFullYear(),
     })
     setMounted(true)
   }, [])
 
-  // Form state
+  // ── Form state ────────────────────────────────────────────────────
   const [form, setForm] = useState({
     lead_id: '',
     contract_value: '',
@@ -126,44 +129,40 @@ export default function FinanzasClient({
     installments: [] as Installment[],
   })
 
+  // Populate default installments only after mount (avoids hydration mismatch)
   useEffect(() => {
-    if (mounted && !editPay) {
-      setForm((f) => ({
-        ...f,
-        installments: f.installments.length > 0 ? f.installments : [
-          { amount: '', payment_date: hoy.fecha, status: 'pendiente', payment_number: 1 },
-          { amount: '', payment_date: hoy.fecha, status: 'pendiente', payment_number: 2 },
-        ]
-      }))
-    }
-  }, [mounted, hoy.fecha, editPay])
+    if (!mounted || editPay) return
+    setForm((f) =>
+      f.installments.length === 0
+        ? { ...f, installments: [makeDefaultInstallment(hoy.fecha, 1), makeDefaultInstallment(hoy.fecha, 2)] }
+        : f,
+    )
+  }, [mounted, editPay, hoy.fecha])
 
   // ─── Computed ──────────────────────────────────────────────────
 
   const stats = useMemo(() => {
     const totalContratos = payments.reduce((s, p) => s + (p.contract_value || 0), 0)
-    const totalPagado = payments.reduce((s, p) => {
-      return s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0)
-    }, 0)
-    const totalPendiente = payments.reduce((s, p) => {
-      return s + p.installments.filter(i => i.status === 'pendiente').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0)
-    }, 0)
+    const totalPagado = payments.reduce((s, p) =>
+      s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0), 0)
+    const totalPendiente = payments.reduce((s, p) =>
+      s + p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0), 0)
     const clientesActivos = new Set(payments.map(p => p.lead_id)).size
-
     return { totalContratos, totalPagado, totalPendiente, clientesActivos }
   }, [payments])
 
   const filteredPayments = useMemo(() => {
     return payments.filter((p) => {
-      const matchStatus = filterStatus === 'todos' || 
-        (filterStatus === 'pagado' && p.installments.some(i => i.status === 'pagado')) ||
-        (filterStatus === 'pendiente' && p.installments.some(i => i.status === 'pendiente'))
-      
+      const matchStatus =
+        filterStatus === 'todos' ||
+        (filterStatus === 'pagado' && p.installments.every(i => i.status === 'pagado')) ||
+        (filterStatus === 'pendiente' && p.installments.some(i => i.status !== 'pagado'))
       const search = filterSearch.toLowerCase()
-      const matchSearch = !search ||
+      const matchSearch =
+        !search ||
         (p.lead?.nombre ?? '').toLowerCase().includes(search) ||
-        (p.lead?.folio ?? '').toLowerCase().includes(search)
-      
+        (p.lead?.folio ?? '').toLowerCase().includes(search) ||
+        (p.description ?? '').toLowerCase().includes(search)
       return matchStatus && matchSearch
     })
   }, [payments, filterStatus, filterSearch])
@@ -180,30 +179,26 @@ export default function FinanzasClient({
       ...prev,
       installments: [
         ...prev.installments,
-        {
-          amount: '',
-          payment_date: hoy.fecha,
-          status: 'pendiente',
-          payment_number: prev.installments.length + 1,
-        }
-      ]
+        makeDefaultInstallment(hoy.fecha, prev.installments.length + 1),
+      ],
     }))
   }
 
   function removeInstallment(index: number) {
     setForm(prev => ({
       ...prev,
-      installments: prev.installments.filter((_, i) => i !== index)
-        .map((inst, i) => ({ ...inst, payment_number: i + 1 }))
+      installments: prev.installments
+        .filter((_, i) => i !== index)
+        .map((inst, i) => ({ ...inst, payment_number: i + 1 })),
     }))
   }
 
   function updateInstallment(index: number, field: keyof Installment, value: any) {
     setForm(prev => ({
       ...prev,
-      installments: prev.installments.map((inst, i) => 
-        i === index ? { ...inst, [field]: value } : inst
-      )
+      installments: prev.installments.map((inst, i) =>
+        i === index ? { ...inst, [field]: value } : inst,
+      ),
     }))
   }
 
@@ -213,16 +208,12 @@ export default function FinanzasClient({
       const fd = new FormData()
       fd.append('file', file)
       fd.append('payment_id', editPay?.id || 'new')
-      
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      
       if (res.ok && data.url) {
         updateInstallment(index, 'receipt_url', data.url)
         showMsg('Comprobante adjuntado ✓')
-      } else {
-        showMsg('Error subiendo comprobante', false)
-      }
+      } else showMsg('Error subiendo comprobante', false)
     } finally {
       setUploadingIndex(null)
     }
@@ -239,9 +230,11 @@ export default function FinanzasClient({
       installments: p.installments.map(inst => ({
         ...inst,
         amount: String(inst.amount),
+        payment_method: inst.payment_method ?? 'transferencia',
       })),
     })
     setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function openNew() {
@@ -252,10 +245,7 @@ export default function FinanzasClient({
       description: '',
       payment_month: hoy.mes,
       status: 'activo',
-      installments: [
-        { amount: '', payment_date: hoy.fecha, status: 'pendiente', payment_number: 1 },
-        { amount: '', payment_date: hoy.fecha, status: 'pendiente', payment_number: 2 },
-      ],
+      installments: [makeDefaultInstallment(hoy.fecha, 1), makeDefaultInstallment(hoy.fecha, 2)],
     })
     setShowForm(true)
   }
@@ -263,7 +253,6 @@ export default function FinanzasClient({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.lead_id || !form.contract_value || form.installments.length === 0) return
-
     setSaving(true)
     try {
       const body = {
@@ -275,43 +264,33 @@ export default function FinanzasClient({
         installments: form.installments.map(inst => ({
           ...inst,
           amount: parseFloat(inst.amount),
-          id: inst.id, // Incluir ID si existe para edición
+          id: inst.id,
         })),
       }
 
       if (editPay) {
         const res = await fetch(`/api/admin/payments/${editPay.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         })
         const data = await res.json()
-        
         if (res.ok) {
-          // Refrescar datos
           const refreshRes = await fetch('/api/admin/payments')
           const refreshData = await refreshRes.json()
           setPayments(refreshData.payments || [])
           showMsg('Contrato actualizado ✓')
           setShowForm(false)
-        } else {
-          showMsg(data.error ?? 'Error', false)
-        }
+          setEditPay(null)
+        } else showMsg(data.error ?? 'Error', false)
       } else {
         const res = await fetch('/api/admin/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         })
         const data = await res.json()
-        
         if (res.ok && data.parent) {
           setPayments(prev => [data.parent, ...prev])
           showMsg('Contrato registrado ✓')
           setShowForm(false)
-        } else {
-          showMsg(data.error ?? 'Error', false)
-        }
+        } else showMsg(data.error ?? 'Error', false)
       }
     } finally {
       setSaving(false)
@@ -324,186 +303,218 @@ export default function FinanzasClient({
     if (res.ok) {
       setPayments(prev => prev.filter(p => p.id !== id))
       showMsg('Contrato eliminado')
-    } else {
-      showMsg('Error eliminando', false)
-    }
+    } else showMsg('Error eliminando', false)
   }
 
-  // ─── Export ────────────────────────────────────────────────────
+  // ─── Export CSV ────────────────────────────────────────────────
 
   function exportarCSV() {
-    if (payments.length === 0) {
-      showMsg('No hay registros para exportar', false)
-      return
-    }
-    
+    if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
+
+    // Columnas ordenadas y consistentes
     const headers = [
-      'Cliente', 'Folio', 'Valor Contrato', 'Cuota #', 'Monto Cuota',
-      'Fecha Cuota', 'Estado Cuota', 'Comprobante', 'Descripción', 'Mes'
+      'Folio',
+      'Cliente',
+      'Servicio',
+      'Valor Contrato (USD)',
+      'Descripción',
+      'Mes Referencia',
+      'Cuota #',
+      'Monto Cuota (USD)',
+      'Fecha Cuota',
+      'Estado Cuota',
+      'Tipo de Pago',
+      'Comprobante URL',
     ]
-    
-    const rows: any[] = []
+
+    const rows: string[][] = []
     payments.forEach(p => {
-      p.installments.forEach(inst => {
+      const insts = [...p.installments].sort((a, b) => a.payment_number - b.payment_number)
+      if (insts.length === 0) {
         rows.push([
-          p.lead?.nombre ?? '—',
           p.lead?.folio ?? '',
-          p.contract_value,
-          inst.payment_number,
-          inst.amount,
-          inst.payment_date,
-          inst.status,
-          inst.receipt_url ?? '',
+          p.lead?.nombre ?? '',
+          p.lead?.servicio ?? '',
+          String(p.contract_value),
           p.description ?? '',
           p.payment_month ?? '',
+          '', '', '', '', '', '',
         ])
-      })
+      } else {
+        insts.forEach(inst => {
+          rows.push([
+            p.lead?.folio ?? '',
+            p.lead?.nombre ?? '',
+            p.lead?.servicio ?? '',
+            String(p.contract_value),
+            p.description ?? '',
+            p.payment_month ?? '',
+            String(inst.payment_number),
+            String(inst.amount),
+            inst.payment_date ?? '',
+            inst.status,
+            inst.payment_method ? (METHOD_LABELS[inst.payment_method] ?? inst.payment_method) : '',
+            inst.receipt_url ?? '',
+          ])
+        })
+      }
     })
 
     let csv = '\ufeff' + headers.join(',') + '\n'
     rows.forEach(row => {
-      csv += row.map((c: any) => `"${c}"`).join(',') + '\n'
+      csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n'
     })
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `finanzas_${hoy.mes.replace(' ', '_')}.csv`
+    link.download = `finanzas_${(hoy.mes || 'export').replace(/\s+/g, '_')}.csv`
     link.click()
     showMsg('CSV descargado ✓')
   }
 
   // ─── Styles ────────────────────────────────────────────────────
 
-  const cardHeader = {
-    padding: '20px 24px',
+  const cardHeader: React.CSSProperties = {
+    padding: '18px 24px',
     background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
     color: 'white',
-  } as React.CSSProperties
+  }
 
-  const cardBody = { padding: '24px' } as React.CSSProperties
+  const cardBody: React.CSSProperties = { padding: '20px 24px' }
 
-  const inp = {
+  const inp: React.CSSProperties = {
     width: '100%',
     padding: '10px 14px',
     border: '1.5px solid #e2e8f0',
-    borderRadius: '10px',
+    borderRadius: 10,
     fontSize: '0.9rem',
     fontFamily: 'inherit',
     outline: 'none',
     background: '#f8fafc',
+    boxSizing: 'border-box',
     transition: 'all 0.2s',
-  } as React.CSSProperties
+  }
 
-  const lbl = {
-    fontSize: '0.7rem',
+  const lbl: React.CSSProperties = {
+    fontSize: '0.65rem',
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: '1.2px',
     color: '#64748b',
     display: 'block',
-    marginBottom: '6px',
-  } as React.CSSProperties
+    marginBottom: 5,
+  }
 
   // ─── Render ────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 16px', boxSizing: 'border-box' }}>
+
       {/* Toast */}
       {toast && (
         <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 9999,
+          position: 'fixed', top: 20, right: 20, zIndex: 9999,
           background: toast.ok ? '#f0fdf4' : '#fef2f2',
           border: `1px solid ${toast.ok ? '#bbf7d0' : '#fecaca'}`,
           color: toast.ok ? '#15803d' : '#dc2626',
-          padding: '14px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+          padding: '12px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700,
           boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
-          display: 'flex', alignItems: 'center', gap: 10,
+          display: 'flex', alignItems: 'center', gap: 8,
+          maxWidth: 'calc(100vw - 40px)',
         }}>
           {toast.ok ? '✅' : '❌'} {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: '#00113a', margin: 0 }}>
-          💰 Sistema Contable
-        </h1>
-        <p style={{ fontSize: 14, color: '#64748b', margin: '6px 0 0' }}>
-          Gestión de contratos y cuotas en tiempo real
-        </p>
-        <div style={{
-          display: 'inline-block', marginTop: 10, padding: '6px 16px',
-          background: 'linear-gradient(135deg, #667eea20, #764ba220)',
-          border: '1px solid #667eea40', borderRadius: 50,
-          fontSize: 12, fontWeight: 700, color: '#5b21b6',
-        }}>
-          📅 {hoy.mes}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: '#00113a', margin: 0 }}>
+              💰 Sistema Contable
+            </h1>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>
+              Gestión de contratos y cuotas en tiempo real
+            </p>
+          </div>
+          {/* Mes — solo se muestra después del mount para evitar hidratación */}
+          {mounted && (
+            <div style={{
+              padding: '6px 16px',
+              background: 'linear-gradient(135deg, #667eea20, #764ba220)',
+              border: '1px solid #667eea40', borderRadius: 50,
+              fontSize: 12, fontWeight: 700, color: '#5b21b6',
+            }}>
+              📅 {hoy.mes}
+            </div>
+          )}
         </div>
       </div>
 
       {/* KPI Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 16, marginBottom: 24,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: 14, marginBottom: 22,
       }}>
         {[
-          { icon: '💵', label: 'Monto Total Contratos', value: fmtMoney(stats.totalContratos), color: '#5b21b6' },
+          { icon: '💵', label: 'Total Contratos', value: fmtMoney(stats.totalContratos), color: '#5b21b6' },
           { icon: '✅', label: 'Total Pagado', value: fmtMoney(stats.totalPagado), color: '#059669' },
           { icon: '⏳', label: 'Por Cobrar', value: fmtMoney(stats.totalPendiente), color: '#d97706' },
           { icon: '👥', label: 'Clientes Activos', value: String(stats.clientesActivos), color: '#2563eb' },
         ].map((kpi, i) => (
           <div key={i} style={{
-            background: 'white', borderRadius: 16, padding: '22px 24px',
+            background: 'white', borderRadius: 16, padding: '18px 20px',
             border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
           }}>
             <div style={{
-              width: 44, height: 44, borderRadius: 12,
+              width: 40, height: 40, borderRadius: 10,
               background: `${kpi.color}18`, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.4rem', marginBottom: 12,
+              fontSize: '1.3rem', marginBottom: 10,
             }}>
               {kpi.icon}
             </div>
-            <div style={{
-              fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '1px', color: '#94a3b8', marginBottom: 6,
-            }}>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: 4 }}>
               {kpi.label}
             </div>
-            <div style={{
-              fontSize: '1.6rem', fontWeight: 900, color: kpi.color, letterSpacing: '-0.5px',
-            }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: kpi.color, letterSpacing: '-0.5px' }}>
               {kpi.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', gap: 24 }}>
-        
-        {/* Form Panel */}
+      {/* Main Grid: responsive — stack en móvil */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'clamp(300px, 380px, 420px) 1fr',
+        gap: 20,
+      }}
+        className="finanzas-grid"
+      >
+        {/* ── Form Panel ─────────────────────────────────────── */}
         <div style={{
           background: 'white', borderRadius: 20,
           boxShadow: '0 8px 40px rgba(0,0,0,0.08)',
-          overflow: 'hidden', border: '1px solid #e2e8f0',
-          height: 'fit-content',
+          border: '1px solid #e2e8f0', height: 'fit-content',
+          overflow: 'hidden',
         }}>
           <div style={cardHeader}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
               📝 {editPay ? 'Editar Contrato' : 'Nuevo Contrato'}
             </h2>
-            <p style={{ fontSize: '0.85rem', opacity: 0.8, margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.8rem', opacity: 0.8, margin: '3px 0 0' }}>
               {editPay ? 'Modifica los datos del contrato' : 'Registra un contrato con sus cuotas'}
             </p>
           </div>
-          <div style={{ ...cardBody, maxHeight: '80vh', overflowY: 'auto' }}>
+
+          <div style={{ ...cardBody, maxHeight: '82vh', overflowY: 'auto' }}>
             <form onSubmit={handleSubmit}>
-              
+
               {/* Cliente */}
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>👤 Cliente *</label>
                 <select
                   value={form.lead_id}
@@ -515,79 +526,75 @@ export default function FinanzasClient({
                   <option value="">Seleccionar cliente…</option>
                   {leads.map(l => (
                     <option key={l.id} value={l.id}>
-                      {l.nombre} {l.folio ? `(${l.folio})` : ''}
+                      {l.nombre}{l.folio ? ` (${l.folio})` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
               {/* Valor Contrato */}
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>💰 Valor Total del Contrato (USD) *</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="number" step="0.01" min="0"
                   value={form.contract_value}
                   onChange={(e) => setForm(p => ({ ...p, contract_value: e.target.value }))}
-                  style={inp}
-                  required
-                  placeholder="0.00"
+                  style={inp} required placeholder="0.00"
                 />
               </div>
 
-              {/* Mes del Pago */}
-              <div style={{ marginBottom: 16 }}>
+              {/* Mes de Referencia */}
+              <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>📆 Mes de Referencia</label>
                 <input
                   type="text"
                   value={form.payment_month}
                   onChange={(e) => setForm(p => ({ ...p, payment_month: e.target.value }))}
                   style={inp}
-                  placeholder={hoy.mes}
+                  placeholder={mounted ? hoy.mes : ''}
                 />
-                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-                  {MESES.map(m => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setForm(p => ({ ...p, payment_month: `${m} ${hoy.anio}` }))}
-                      style={{
-                        fontSize: 10, padding: '3px 8px', borderRadius: 8,
-                        border: '1px solid #e2e8f0',
-                        background: form.payment_month?.startsWith(m) ? '#00113a' : '#f8fafc',
-                        color: form.payment_month?.startsWith(m) ? '#fff' : '#64748b',
-                        cursor: 'pointer', fontWeight: 700,
-                      }}
-                    >
-                      {m.slice(0, 3)}
-                    </button>
-                  ))}
-                </div>
+                {mounted && (
+                  <div style={{ display: 'flex', gap: 3, marginTop: 6, flexWrap: 'wrap' }}>
+                    {MESES.map(m => (
+                      <button
+                        key={m} type="button"
+                        onClick={() => setForm(p => ({ ...p, payment_month: `${m} ${hoy.anio}` }))}
+                        style={{
+                          fontSize: 9, padding: '3px 7px', borderRadius: 7,
+                          border: '1px solid #e2e8f0',
+                          background: form.payment_month?.startsWith(m) ? '#00113a' : '#f8fafc',
+                          color: form.payment_month?.startsWith(m) ? '#fff' : '#64748b',
+                          cursor: 'pointer', fontWeight: 700,
+                        }}
+                      >
+                        {m.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Descripción */}
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 18 }}>
                 <label style={lbl}>📝 Descripción</label>
                 <input
                   type="text"
                   value={form.description}
                   onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
-                  placeholder="Ej: Proyecto web - 50% anticipo"
+                  placeholder="Ej: Proyecto web — 50% anticipo"
                   style={inp}
                 />
               </div>
 
               {/* Cuotas Dinámicas */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <label style={{ ...lbl, marginBottom: 0 }}>📋 Cuotas del Contrato</label>
                   <button
-                    type="button"
-                    onClick={addInstallment}
+                    type="button" onClick={addInstallment}
                     style={{
-                      padding: '6px 12px', background: '#00113a', color: 'white',
-                      border: 'none', borderRadius: 8, fontSize: '0.8rem',
+                      padding: '5px 11px', background: '#00113a', color: 'white',
+                      border: 'none', borderRadius: 7, fontSize: '0.75rem',
                       fontWeight: 700, cursor: 'pointer',
                     }}
                   >
@@ -597,44 +604,38 @@ export default function FinanzasClient({
 
                 {form.installments.map((inst, index) => (
                   <div key={index} style={{
-                    background: '#f8fafc', borderRadius: 12,
-                    border: '1px solid #e2e8f0', padding: '14px',
-                    marginBottom: 10,
+                    background: '#f8fafc', borderRadius: 10,
+                    border: '1px solid #e2e8f0', padding: '12px',
+                    marginBottom: 8,
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#00113a' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#00113a' }}>
                         Cuota #{inst.payment_number}
                       </span>
                       {form.installments.length > 1 && (
                         <button
-                          type="button"
-                          onClick={() => removeInstallment(index)}
-                          style={{
-                            background: 'none', border: 'none', color: '#ef4444',
-                            cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700,
-                          }}
+                          type="button" onClick={() => removeInstallment(index)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
                         >
                           🗑️ Eliminar
                         </button>
                       )}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                    {/* Monto + Fecha */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                       <div>
-                        <label style={{ ...lbl, fontSize: '0.6rem' }}>Monto (USD) *</label>
+                        <label style={lbl}>Monto (USD) *</label>
                         <input
-                          type="number"
-                          step="0.01"
-                          min="0"
+                          type="number" step="0.01" min="0"
                           value={inst.amount}
                           onChange={(e) => updateInstallment(index, 'amount', e.target.value)}
                           style={{ ...inp, padding: '8px 10px' }}
-                          required
-                          placeholder="0.00"
+                          required placeholder="0.00"
                         />
                       </div>
                       <div>
-                        <label style={{ ...lbl, fontSize: '0.6rem' }}>Fecha de Pago *</label>
+                        <label style={lbl}>Fecha de Pago *</label>
                         <input
                           type="date"
                           value={inst.payment_date}
@@ -645,9 +646,10 @@ export default function FinanzasClient({
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                    {/* Estado + TIPO DE PAGO (RESTAURADO) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                       <div>
-                        <label style={{ ...lbl, fontSize: '0.6rem' }}>Estado</label>
+                        <label style={lbl}>Estado</label>
                         <select
                           value={inst.status}
                           onChange={(e) => updateInstallment(index, 'status', e.target.value)}
@@ -659,49 +661,60 @@ export default function FinanzasClient({
                         </select>
                       </div>
                       <div>
-                        <label style={{ ...lbl, fontSize: '0.6rem' }}>Comprobante</label>
-                        {inst.receipt_url ? (
-                          <div style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '8px 10px', background: '#eff6ff',
-                            borderRadius: 8, border: '1px solid #bfdbfe',
-                          }}>
-                            <a href={inst.receipt_url} target="_blank" rel="noopener noreferrer"
-                              style={{ fontSize: '0.75rem', color: '#2552ca', fontWeight: 700 }}>
-                              Ver ↗
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => updateInstallment(index, 'receipt_url', null)}
-                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            onClick={() => fileInputRefs.current[index]?.click()}
-                            style={{
-                              border: '2px dashed #e2e8f0', borderRadius: 8,
-                              padding: '10px', textAlign: 'center', cursor: 'pointer',
-                              background: '#f8fafc', fontSize: '0.75rem',
-                              color: '#64748b', fontWeight: 600,
-                            }}
-                          >
-                            {uploadingIndex === index ? '⏳ Subiendo…' : '📎 Adjuntar'}
-                          </div>
-                        )}
-                        <input
-                          ref={el => { fileInputRefs.current[index] = el }}
-                          type="file"
-                          accept="image/*,application/pdf"
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0]
-                            if (f) uploadComprobante(f, index)
-                          }}
-                        />
+                        <label style={lbl}>Tipo de Pago</label>
+                        <select
+                          value={inst.payment_method ?? 'transferencia'}
+                          onChange={(e) => updateInstallment(index, 'payment_method', e.target.value)}
+                          style={{ ...inp, padding: '8px 10px' }}
+                        >
+                          {Object.entries(METHOD_LABELS).map(([v, l]) => (
+                            <option key={v} value={v}>{l}</option>
+                          ))}
+                        </select>
                       </div>
+                    </div>
+
+                    {/* Comprobante */}
+                    <div>
+                      <label style={lbl}>Comprobante</label>
+                      {inst.receipt_url ? (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '7px 10px', background: '#eff6ff',
+                          borderRadius: 7, border: '1px solid #bfdbfe',
+                        }}>
+                          <a href={inst.receipt_url} target="_blank" rel="noopener noreferrer"
+                            style={{ fontSize: '0.72rem', color: '#2552ca', fontWeight: 700 }}>
+                            Ver ↗
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => updateInstallment(index, 'receipt_url', null)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
+                          >×</button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => fileInputRefs.current[index]?.click()}
+                          style={{
+                            border: '2px dashed #e2e8f0', borderRadius: 7,
+                            padding: '9px', textAlign: 'center', cursor: 'pointer',
+                            background: '#f8fafc', fontSize: '0.72rem',
+                            color: '#64748b', fontWeight: 600,
+                          }}
+                        >
+                          {uploadingIndex === index ? '⏳ Subiendo…' : '📎 Adjuntar'}
+                        </div>
+                      )}
+                      <input
+                        ref={el => { fileInputRefs.current[index] = el }}
+                        type="file" accept="image/*,application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (f) uploadComprobante(f, index)
+                        }}
+                      />
                     </div>
                   </div>
                 ))}
@@ -709,16 +722,16 @@ export default function FinanzasClient({
 
               {/* Submit */}
               <button
-                type="submit"
-                disabled={saving}
+                type="submit" disabled={saving}
                 style={{
-                  width: '100%', padding: '14px',
+                  width: '100%', padding: '13px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white', border: 'none', borderRadius: 12,
-                  fontSize: '0.95rem', fontWeight: 800,
+                  color: 'white', border: 'none', borderRadius: 11,
+                  fontSize: '0.9rem', fontWeight: 800,
                   cursor: saving ? 'not-allowed' : 'pointer',
                   opacity: saving ? 0.7 : 1,
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                  boxShadow: '0 4px 15px rgba(102,126,234,0.4)',
+                  boxSizing: 'border-box',
                 }}
               >
                 {saving ? '⏳ Guardando…' : editPay ? '💾 Actualizar Contrato' : '💾 Guardar Contrato'}
@@ -727,12 +740,13 @@ export default function FinanzasClient({
               {editPay && (
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setEditPay(null); }}
+                  onClick={() => { setShowForm(false); setEditPay(null) }}
                   style={{
-                    width: '100%', marginTop: 10, padding: '12px',
+                    width: '100%', marginTop: 8, padding: '11px',
                     background: '#f1f5f9', color: '#64748b',
-                    border: '1.5px solid #e2e8f0', borderRadius: 12,
-                    fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer',
+                    border: '1.5px solid #e2e8f0', borderRadius: 11,
+                    fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                    boxSizing: 'border-box',
                   }}
                 >
                   Cancelar edición
@@ -742,43 +756,44 @@ export default function FinanzasClient({
           </div>
         </div>
 
-        {/* Table Panel */}
+        {/* ── Table Panel ────────────────────────────────────── */}
         <div style={{
           background: 'white', borderRadius: 20,
           boxShadow: '0 8px 40px rgba(0,0,0,0.08)',
-          overflow: 'hidden', border: '1px solid #e2e8f0',
+          border: '1px solid #e2e8f0', overflow: 'hidden',
+          minWidth: 0, // permite que la tabla no desborde el grid
         }}>
           <div style={cardHeader}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
               📋 Historial de Contratos
             </h2>
-            <p style={{ fontSize: '0.85rem', opacity: 0.8, margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.8rem', opacity: 0.8, margin: '3px 0 0' }}>
               {filteredPayments.length} contrato{filteredPayments.length !== 1 ? 's' : ''} encontrado{filteredPayments.length !== 1 ? 's' : ''}
             </p>
           </div>
+
           <div style={cardBody}>
-            
             {/* Filters */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
               <input
                 type="text"
                 value={filterSearch}
                 onChange={(e) => setFilterSearch(e.target.value)}
-                placeholder="🔍 Buscar cliente..."
-                style={{ ...inp, minWidth: 220, paddingLeft: 40 }}
+                placeholder="🔍 Buscar cliente, folio, descripción…"
+                style={{ ...inp, flex: '1 1 200px', minWidth: 160 }}
               />
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                 {['todos', 'pagado', 'pendiente'].map(s => (
                   <button
-                    key={s}
-                    onClick={() => setFilterStatus(s)}
+                    key={s} onClick={() => setFilterStatus(s)}
                     style={{
-                      padding: '8px 16px', borderRadius: 50,
-                      fontSize: '0.8rem', fontWeight: 700, border: '2px solid',
+                      padding: '7px 13px', borderRadius: 50,
+                      fontSize: '0.75rem', fontWeight: 700, border: '2px solid',
                       cursor: 'pointer',
                       background: filterStatus === s ? '#00113a' : 'white',
                       color: filterStatus === s ? 'white' : '#64748b',
                       borderColor: filterStatus === s ? '#00113a' : '#e2e8f0',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -788,9 +803,11 @@ export default function FinanzasClient({
               <button
                 onClick={exportarCSV}
                 style={{
-                  padding: '10px 18px', background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white', border: 'none', borderRadius: 10,
-                  fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                  padding: '9px 16px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white', border: 'none', borderRadius: 9,
+                  fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+                  whiteSpace: 'nowrap', flexShrink: 0,
                 }}
               >
                 📄 Exportar CSV
@@ -798,18 +815,16 @@ export default function FinanzasClient({
             </div>
 
             {/* Table */}
-            <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid #e2e8f0' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: 700 }}>
                 <thead>
-                  <tr style={{
-                    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
-                    color: 'white',
-                  }}>
-                    {['Cliente', 'Contrato', 'Progreso', 'Cuotas', 'Estado', 'Acciones'].map(h => (
+                  <tr style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)', color: 'white' }}>
+                    {['Cliente', 'Descripción', 'Contrato', 'Progreso', 'Cuotas', 'Estado', 'Acciones'].map(h => (
                       <th key={h} style={{
-                        padding: '14px 12px', textAlign: 'left',
-                        fontSize: '0.7rem', fontWeight: 800,
-                        textTransform: 'uppercase', letterSpacing: '1px',
+                        padding: '12px 10px', textAlign: 'left',
+                        fontSize: '0.65rem', fontWeight: 800,
+                        textTransform: 'uppercase', letterSpacing: '0.8px',
+                        whiteSpace: 'nowrap',
                       }}>
                         {h}
                       </th>
@@ -819,10 +834,10 @@ export default function FinanzasClient({
                 <tbody>
                   {filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={6}>
-                        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-                          <div style={{ fontSize: '3.5rem', marginBottom: 16, opacity: 0.4 }}>📭</div>
-                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#64748b', marginBottom: 8 }}>
+                      <td colSpan={7}>
+                        <div style={{ textAlign: 'center', padding: '50px 20px', color: '#94a3b8' }}>
+                          <div style={{ fontSize: '3rem', marginBottom: 12, opacity: 0.4 }}>📭</div>
+                          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
                             Sin registros
                           </h3>
                         </div>
@@ -834,116 +849,141 @@ export default function FinanzasClient({
                         .filter(i => i.status === 'pagado')
                         .reduce((s, i) => s + (parseFloat(i.amount as any) || 0), 0)
                       const pct = p.contract_value > 0 ? Math.min((pagado / p.contract_value) * 100, 100) : 0
-                      const todasPagadas = p.installments.every(i => i.status === 'pagado')
-                      const algunaVencida = p.installments.some(i => 
-                        i.status === 'pendiente' && i.payment_date && new Date(i.payment_date) < new Date()
+                      const todasPagadas = p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')
+                      const algunaVencida = p.installments.some(
+                        i => i.status === 'pendiente' && i.payment_date && new Date(i.payment_date.split('T')[0]) < new Date(new Date().toDateString()),
                       )
 
                       return (
-                        <tr key={p.id} style={{
-                          borderBottom: '1px solid #f1f5f9',
-                          transition: 'background 0.15s',
-                        }}>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
+                        <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          {/* Cliente */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
                               {p.lead?.nombre ?? '—'}
                             </div>
                             {p.lead?.folio && (
-                              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                              <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontFamily: 'monospace' }}>
                                 {p.lead.folio}
                               </div>
                             )}
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
-                              {p.payment_month}
+                            {p.payment_month && (
+                              <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 2 }}>
+                                {p.payment_month}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Descripción — columna restaurada */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top', maxWidth: 160 }}>
+                            <div style={{
+                              fontSize: '0.78rem', color: '#475569',
+                              overflow: 'hidden', textOverflow: 'ellipsis',
+                              display: '-webkit-box', WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                            }}>
+                              {p.description || <span style={{ color: '#cbd5e1', fontStyle: 'italic' }}>—</span>}
                             </div>
                           </td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ fontSize: '1rem', fontWeight: 900, color: '#00113a' }}>
+
+                          {/* Contrato */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top' }}>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#00113a', whiteSpace: 'nowrap' }}>
                               {fmtMoney(p.contract_value)}
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
                               {p.installments.length} cuota(s)
                             </div>
                           </td>
-                          <td style={{ padding: '12px', minWidth: 120 }}>
-                            <div style={{
-                              height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden',
-                            }}>
+
+                          {/* Progreso */}
+                          <td style={{ padding: '11px 10px', minWidth: 110, verticalAlign: 'top' }}>
+                            <div style={{ height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
                               <div style={{
                                 height: '100%', width: `${pct}%`,
-                                background: pct >= 100 
-                                  ? 'linear-gradient(90deg, #10b981, #059669)' 
+                                background: pct >= 100
+                                  ? 'linear-gradient(90deg, #10b981, #059669)'
                                   : 'linear-gradient(90deg, #667eea, #764ba2)',
                                 borderRadius: 4, transition: 'width 0.5s',
                               }} />
                             </div>
-                            <div style={{
-                              fontSize: '0.7rem', fontWeight: 700,
-                              color: '#94a3b8', marginTop: 4,
-                            }}>
-                              {Math.round(pct)}% · {fmtMoney(pagado)} pagado
+                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', marginTop: 3, whiteSpace: 'nowrap' }}>
+                              {Math.round(pct)}% · {fmtMoney(pagado)}
                             </div>
                           </td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              {p.installments.sort((a, b) => a.payment_number - b.payment_number).map(inst => {
-                                const ec = ESTADO_COLORS[inst.status] ?? ESTADO_COLORS.pendiente
-                                const vencida = inst.status === 'pendiente' && inst.payment_date && new Date(inst.payment_date) < new Date()
-                                
-                                return (
-                                  <div key={inst.id || inst.payment_number} style={{
-                                    display: 'flex', alignItems: 'center', gap: 6,
-                                    padding: '4px 8px', borderRadius: 6,
-                                    background: ec.bg, fontSize: '0.75rem',
-                                  }}>
-                                    <span style={{
-                                      width: 6, height: 6, borderRadius: '50%', background: ec.dot,
-                                    }} />
-                                    <span style={{ fontWeight: 700, color: ec.text }}>
-                                      #{inst.payment_number}: {fmtMoney(parseFloat(inst.amount as any))}
-                                    </span>
-                                    <span style={{ color: '#64748b' }}>
-                                      {fmtDate(inst.payment_date)}
-                                    </span>
-                                    {vencida && (
-                                      <span style={{ color: '#ef4444', fontWeight: 800, fontSize: '0.65rem' }}>
-                                        ⚠️ VENCIDO
+
+                          {/* Cuotas */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              {[...p.installments]
+                                .sort((a, b) => a.payment_number - b.payment_number)
+                                .map(inst => {
+                                  const ec = ESTADO_COLORS[inst.status] ?? ESTADO_COLORS.pendiente
+                                  const vencida =
+                                    inst.status === 'pendiente' &&
+                                    inst.payment_date &&
+                                    new Date(inst.payment_date.split('T')[0]) < new Date(new Date().toDateString())
+
+                                  return (
+                                    <div key={inst.id ?? inst.payment_number} style={{
+                                      display: 'flex', alignItems: 'center', gap: 5,
+                                      padding: '3px 7px', borderRadius: 5,
+                                      background: ec.bg, fontSize: '0.7rem',
+                                      flexWrap: 'wrap',
+                                    }}>
+                                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: ec.dot, flexShrink: 0 }} />
+                                      <span style={{ fontWeight: 700, color: ec.text, whiteSpace: 'nowrap' }}>
+                                        #{inst.payment_number}: {fmtMoney(parseFloat(inst.amount as any))}
                                       </span>
-                                    )}
-                                    {inst.receipt_url && (
-                                      <a href={inst.receipt_url} target="_blank" rel="noopener noreferrer"
-                                        style={{ color: '#2563eb', fontWeight: 700, fontSize: '0.7rem' }}>
-                                        📎
-                                      </a>
-                                    )}
-                                  </div>
-                                )
-                              })}
+                                      <span style={{ color: '#64748b', whiteSpace: 'nowrap' }}>
+                                        {fmtDate(inst.payment_date)}
+                                      </span>
+                                      {inst.payment_method && (
+                                        <span style={{ color: '#94a3b8', fontSize: '0.62rem', whiteSpace: 'nowrap' }}>
+                                          {METHOD_LABELS[inst.payment_method] ?? inst.payment_method}
+                                        </span>
+                                      )}
+                                      {vencida && (
+                                        <span style={{ color: '#ef4444', fontWeight: 800, fontSize: '0.6rem' }}>⚠️</span>
+                                      )}
+                                      {inst.receipt_url && (
+                                        <a href={inst.receipt_url} target="_blank" rel="noopener noreferrer"
+                                          style={{ color: '#2563eb', fontWeight: 700, fontSize: '0.65rem' }}>
+                                          📎
+                                        </a>
+                                      )}
+                                    </div>
+                                  )
+                                })}
                             </div>
                           </td>
-                          <td style={{ padding: '12px' }}>
+
+                          {/* Estado */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top' }}>
                             <span style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              padding: '4px 12px', borderRadius: 50,
-                              fontSize: '0.7rem', fontWeight: 800,
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                              padding: '4px 10px', borderRadius: 50,
+                              fontSize: '0.65rem', fontWeight: 800,
                               background: todasPagadas ? '#dcfce7' : algunaVencida ? '#fee2e2' : '#fef3c7',
                               color: todasPagadas ? '#166534' : algunaVencida ? '#991b1b' : '#92400e',
+                              whiteSpace: 'nowrap',
                             }}>
                               <span style={{
-                                width: 6, height: 6, borderRadius: '50%',
+                                width: 5, height: 5, borderRadius: '50%',
                                 background: todasPagadas ? '#22c55e' : algunaVencida ? '#ef4444' : '#f59e0b',
                               }} />
                               {todasPagadas ? 'Completado' : algunaVencida ? 'Con vencidas' : 'En progreso'}
                             </span>
                           </td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ display: 'flex', gap: 6 }}>
+
+                          {/* Acciones */}
+                          <td style={{ padding: '11px 10px', verticalAlign: 'top' }}>
+                            <div style={{ display: 'flex', gap: 5 }}>
                               <button
                                 onClick={() => openEdit(p)}
                                 style={{
-                                  padding: '6px 12px', fontSize: '0.75rem', fontWeight: 800,
+                                  padding: '5px 10px', fontSize: '0.72rem', fontWeight: 800,
                                   color: '#2563eb', background: '#eff6ff', border: 'none',
-                                  borderRadius: 8, cursor: 'pointer',
+                                  borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap',
                                 }}
                               >
                                 ✏️ Editar
@@ -951,9 +991,9 @@ export default function FinanzasClient({
                               <button
                                 onClick={() => deletePay(p.id)}
                                 style={{
-                                  padding: '6px 10px', fontSize: '0.75rem', fontWeight: 800,
+                                  padding: '5px 9px', fontSize: '0.72rem', fontWeight: 800,
                                   color: '#dc2626', background: '#fef2f2', border: 'none',
-                                  borderRadius: 8, cursor: 'pointer',
+                                  borderRadius: 7, cursor: 'pointer',
                                 }}
                               >
                                 🗑️
@@ -970,6 +1010,15 @@ export default function FinanzasClient({
           </div>
         </div>
       </div>
+
+      {/* Responsive CSS — stack a una sola columna en pantallas pequeñas */}
+      <style>{`
+        @media (max-width: 900px) {
+          .finanzas-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
