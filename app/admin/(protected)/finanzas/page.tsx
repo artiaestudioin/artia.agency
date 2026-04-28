@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import FinanzasClient from './FinanzasClient'
+import FinanzasV2Client from './FinanzasV2Client'
 
-export const metadata = { title: 'Finanzas — Artia Admin' }
+export const metadata = { title: 'Finanzas — Sistema Contable' }
 
 export default async function FinanzasPage() {
   const supabase = await createClient()
@@ -9,26 +9,39 @@ export default async function FinanzasPage() {
   const [{ data: payments }, { data: leads }] = await Promise.all([
     supabase
       .from('payments')
-      .select('id, lead_id, amount, status, method, description, fecha, comprobante_url')
-      .order('fecha', { ascending: false }),
+      .select(`
+        id, lead_id, amount, status, method, description, fecha,
+        comprobante_url, payment_month, payment_number, due_date,
+        leads:lead_id ( nombre, folio, servicio, estimated_value, contract_value )
+      `)
+      .order('created_at', { ascending: false }),
     supabase
       .from('leads')
-      .select('id, nombre, folio, servicio, email, payment_status, estimated_value, final_value, estado')
-      .order('nombre', { ascending: true }),
+      .select('id, nombre, folio, servicio, estimated_value, contract_value, payment_status, estado')
+      .order('created_at', { ascending: false }),
   ])
 
-  // Unir datos del lead a cada pago
-  const leadsMap = Object.fromEntries((leads ?? []).map(l => [l.id, l]))
-
-  const paymentsWithLead = (payments ?? []).map(p => ({
-    ...p,
-    lead: leadsMap[p.lead_id] ? {
-      nombre:          leadsMap[p.lead_id].nombre,
-      folio:           leadsMap[p.lead_id].folio,
-      servicio:        leadsMap[p.lead_id].servicio,
-      estimated_value: leadsMap[p.lead_id].estimated_value,
+  // Normalizar datos para el cliente
+  const normalizedPayments = (payments || []).map((p: any) => ({
+    id: p.id,
+    lead_id: p.lead_id,
+    amount: p.amount,
+    status: p.status,
+    method: p.method,
+    description: p.description,
+    fecha: p.fecha,
+    comprobante_url: p.comprobante_url,
+    payment_month: p.payment_month,
+    payment_number: p.payment_number,
+    due_date: p.due_date,
+    lead: p.leads ? {
+      nombre: p.leads.nombre,
+      folio: p.leads.folio,
+      servicio: p.leads.servicio,
+      estimated_value: p.leads.estimated_value,
+      contract_value: p.leads.contract_value,
     } : null,
   }))
 
-  return <FinanzasClient payments={paymentsWithLead} leads={leads ?? []} />
+  return <FinanzasV2Client payments={normalizedPayments} leads={leads || []} />
 }
