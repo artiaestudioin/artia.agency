@@ -8,55 +8,76 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const {
-    lead_id, amount, method = 'transferencia', status = 'pagado',
-    description, fecha, comprobante_url,
-    payment_month, payment_number, due_date,
+    lead_id,
+    contract_value,
+    description,
+    payment_month,
+    installments, // Array de cuotas: [{ amount, payment_date, status, payment_number }]
   } = body
 
-  if (!lead_id || amount === undefined) {
-    return NextResponse.json({ error: 'lead_id y amount son requeridos' }, { status: 400 })
+  if (!lead_id || !contract_value || !installments?.length) {
+    return NextResponse.json({ error: 'lead_id, contract_value y cuotas son requeridos' }, { status: 400 })
   }
 
-  const insertData: Record<string, any> = {
-    lead_id,
-    amount: parseFloat(amount),
-    method,
-    status,
-    description: description || null,
-    fecha: fecha || new Date().toISOString(),
-    comprobante_url: comprobante_url || null,
-    payment_month: payment_month || null,
-    payment_number: payment_number ? parseInt(payment_number) : null,
-    due_date: due_date || null,
-  }
-
-  const { data: payment, error } = await supabase
-    .from('payments')
-    .insert(insertData)
+  // 1. Crear payment_parent
+  const { data: parent, error: parentError } = await supabase
+    .from('payment_parents')
+    .insert({
+      lead_id,
+      contract_value: parseFloat(contract_value),
+      description: description || null,
+      payment_month: payment_month || null,
+    })
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (parentError) return NextResponse.json({ error: parentError.message }, { status: 500 })
 
-  // Recalcular payment_status del lead
-  const { data: allPays } = await supabase
-    .from('payments')
-    .select('amount, status')
-    .eq('lead_id', lead_id)
+  // 2. Crear cuotas
+  const installmentsData = installments.map((inst: any) => ({
+    payment_id: parent.id,
+    amount: parseFloat(inst.amount),
+    payment_date: inst.payment_date,
+    status: inst.status || 'pendiente',
+    payment_number: inst.payment_number,
+    receipt_url: inst.receipt_url || null,
+  }))
 
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('estimated_value, contract_value')
-    .eq('id', lead_id)
-    .single()
+  const { data: createdInstallments, error: instError } = await supabase
+    .from('payment_installments')
+    .insert(installmentsData)
+    .select()
 
-  const pagado   = (allPays ?? []).filter(p => p.status === 'pagado').reduce((s, p) => s + p.amount, 0)
-  const expected = lead?.contract_value ?? lead?.estimated_value ?? 0
-  const newStatus = pagado > 0 && expected > 0 && pagado >= expected
-    ? 'pagado'
-    : pagado > 0 ? 'parcial' : 'pendiente'
+  if (instError) return NextResponse.json({ error: instError.message }, { status: 500 })
 
+  // 3. Actualizar estado del lead
+  const pagado = installmentsData
+    .filter((i: any) => i.status === 'pagado')
+    .reduce((s: number, i: any) => s + i.amount, 0)
+  
+  const newStatus = pagado >= parseFloat(contract_value) ? 'pagado' : pagado > 0 ? 'parcial' : 'pendiente'
   await supabase.from('leads').update({ payment_status: newStatus }).eq('id', lead_id)
 
-  return NextResponse.json({ payment }, { status: 201 })
+  return NextResponse.json({ 
+    parent: { ...parent, installments: createdInstallments } 
+  }, { status: 201 })
+}
+
+export async function GET(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { data: parents, error } = await supabase
+    .from('payment_parents')
+    .select(`
+      *,
+      installments:payment_installments(*),
+      lead:lead_id(nombre, folio, servicio, estimated_value, contract_value)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ payments: parents || [] })
 }
