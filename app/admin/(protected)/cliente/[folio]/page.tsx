@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import ClienteActions from './ClienteActions'
 import Vista360Client from './Vista360Client'
 
 export async function generateMetadata({ params }: { params: Promise<{ folio: string }> }) {
@@ -30,23 +29,38 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
     )
   }
 
-  // Datos relacionados en paralelo
+  // Datos relacionados en paralelo — ahora usa payment_parents + installments
   const [
-    { data: payments },
+    { data: paymentParents },
     { data: project },
   ] = await Promise.all([
-    supabase.from('payments').select('id, amount, status, method, description, fecha, comprobante_url, payment_month, payment_number, due_date').eq('lead_id', lead.id).order('created_at', { ascending: false }),
-    supabase.from('projects').select('id, name, access_code, status, event_date, created_at').eq('lead_id', lead.id).maybeSingle(),
+    supabase
+      .from('payment_parents')
+      .select(`
+        *,
+        installments:payment_installments(*)
+      `)
+      .eq('lead_id', lead.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('projects')
+      .select('id, name, access_code, status, event_date, created_at')
+      .eq('lead_id', lead.id)
+      .maybeSingle(),
   ])
 
   const { data: projectFiles } = project
-    ? await supabase.from('project_files').select('id, file_url, file_name, file_type').eq('project_id', project.id).limit(6)
+    ? await supabase
+        .from('project_files')
+        .select('id, file_url, file_name, file_type')
+        .eq('project_id', project.id)
+        .limit(6)
     : { data: [] }
 
   return (
     <Vista360Client
       lead={lead}
-      payments={payments ?? []}
+      paymentParents={paymentParents ?? []}
       project={project}
       projectFiles={projectFiles ?? []}
     />
