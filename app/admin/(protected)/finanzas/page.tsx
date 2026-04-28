@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import FinanzasV2Client from './FinanzasV2Client'
+import FinanzasClient from './FinanzasClient'
 
 export const metadata = { title: 'Finanzas — Sistema Contable' }
 
@@ -43,5 +43,5 @@ export default async function FinanzasPage() {
     } : null,
   }))
 
-  return <FinanzasV2Client payments={normalizedPayments} leads={leads || []} />
+  return <FinanzasClient payments={normalizedPayments} leads={leads || []} />
 }

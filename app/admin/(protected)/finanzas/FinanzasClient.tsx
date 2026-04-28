@@ -85,7 +85,7 @@ function currentMesLabel() {
 
 // ─── Component ─────────────────────────────────────────────────────
 
-export default function FinanzasV2Client({
+export default function FinanzasClient({
   payments: initPayments,
   leads,
 }: {
