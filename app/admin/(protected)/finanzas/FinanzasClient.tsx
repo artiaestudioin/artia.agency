@@ -99,6 +99,7 @@ export default function FinanzasClient({
   const [filterStatus, setFilterStatus] = useState('todos')
   const [filterSearch, setFilterSearch] = useState('')
   const [saving, setSaving] = useState(false)
+  const [loadingExport, setLoadingExport] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const [editPay, setEditPay] = useState<PaymentParent | null>(null)
@@ -309,23 +310,20 @@ export default function FinanzasClient({
 
   // ─── Export Excel (.xlsx) ──────────────────────────────────────
 
-// ─── Export Excel ────────────────────────────────────────────────
-
 async function exportarExcel() {
   if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
 
-  setLoading(true) // necesitas agregar este estado
+  setLoadingExport(true)
   showMsg('Generando Excel…')
 
   try {
-    // Carga dinámica — solo se descarga cuando se usa
     const XLSX = await import('xlsx')
 
     // Hoja 1: Resumen
     const resumenHeaders = [
       'Folio', 'Cliente', 'Servicio', 'Valor Contrato (USD)',
       'Total Pagado (USD)', 'Pendiente (USD)', 'Progreso %',
-      'Descripción', 'Mes Referencia', 'Estado', 'Cuotas'
+      'Descripción', 'Mes Referencia', 'Estado', 'Cuotas',
     ]
 
     const resumenRows = payments.map(p => {
@@ -336,7 +334,7 @@ async function exportarExcel() {
       const pct = p.contract_value > 0 ? Math.round((pagado / p.contract_value) * 100) : 0
       const todasPagadas = p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')
       const algunaVencida = p.installments.some(
-        i => i.status === 'pendiente' && i.payment_date && new Date(i.payment_date.split('T')[0]) < new Date(new Date().toDateString())
+        i => i.status === 'pendiente' && i.payment_date && new Date(i.payment_date.split('T')[0]) < new Date(new Date().toDateString()),
       )
 
       return [
@@ -350,17 +348,16 @@ async function exportarExcel() {
         p.description ?? '',
         p.payment_month ?? '',
         todasPagadas ? 'Completado' : algunaVencida ? 'Con vencidas' : 'En progreso',
-        p.installments.length
+        p.installments.length,
       ]
     })
 
     const wsResumen = XLSX.utils.aoa_to_sheet([resumenHeaders, ...resumenRows])
 
-    // Estilos header
     const headerStyle = {
       font: { bold: true, color: { rgb: 'FFFFFF' } },
       fill: { fgColor: { rgb: '1E3A5F' } },
-      alignment: { horizontal: 'center' }
+      alignment: { horizontal: 'center' },
     }
 
     const range = XLSX.utils.decode_range(wsResumen['!ref'] || 'A1')
@@ -369,11 +366,10 @@ async function exportarExcel() {
       if (cell) cell.s = headerStyle
     }
 
-    // Anchos columna
     wsResumen['!cols'] = [
       { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 18 },
       { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 30 },
-      { wch: 16 }, { wch: 14 }, { wch: 10 }
+      { wch: 16 }, { wch: 14 }, { wch: 10 },
     ]
 
     // Hoja 2: Detalle Cuotas
@@ -381,7 +377,7 @@ async function exportarExcel() {
       'Folio', 'Cliente', 'Servicio', 'Valor Contrato (USD)',
       'Descripción', 'Mes Referencia',
       'Cuota #', 'Monto Cuota (USD)', 'Fecha Cuota',
-      'Estado Cuota', 'Tipo de Pago', 'Comprobante URL'
+      'Estado Cuota', 'Tipo de Pago', 'Comprobante URL',
     ]
 
     const detalleRows: any[][] = []
@@ -391,7 +387,7 @@ async function exportarExcel() {
         detalleRows.push([
           p.lead?.folio ?? '', p.lead?.nombre ?? '', p.lead?.servicio ?? '',
           p.contract_value, p.description ?? '', p.payment_month ?? '',
-          '', '', '', '', '', ''
+          '', '', '', '', '', '',
         ])
       } else {
         insts.forEach(inst => {
@@ -407,7 +403,7 @@ async function exportarExcel() {
             inst.payment_date ?? '',
             inst.status,
             inst.payment_method ? (METHOD_LABELS[inst.payment_method] ?? inst.payment_method) : '',
-            inst.receipt_url ?? ''
+            inst.receipt_url ?? '',
           ])
         })
       }
@@ -424,10 +420,9 @@ async function exportarExcel() {
     wsDetalle['!cols'] = [
       { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 18 },
       { wch: 30 }, { wch: 16 }, { wch: 10 }, { wch: 18 },
-      { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 40 }
+      { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 40 },
     ]
 
-    // Crear workbook y descargar
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen Contratos')
     XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle Cuotas')
@@ -438,9 +433,9 @@ async function exportarExcel() {
     showMsg('Excel descargado ✓')
   } catch (err) {
     console.error('Error exportando Excel:', err)
-    showMsg('Error al generar Excel. Intenta de nuevo.', false)
+    showMsg('Error al generar Excel. ¿Instalaste xlsx? (npm install xlsx)', false)
   } finally {
-    setLoading(false)
+    setLoadingExport(false)
   }
 }
 
@@ -873,14 +868,16 @@ async function exportarExcel() {
               </div>
               <button
   onClick={exportarExcel}
-  disabled={loadingExport} // nuevo estado
+  disabled={loadingExport}
   style={{
     padding: '9px 16px',
     background: loadingExport ? '#94a3b8' : 'linear-gradient(135deg, #10b981, #059669)',
     color: 'white', border: 'none', borderRadius: 9,
-    fontSize: '0.8rem', fontWeight: 700, cursor: loadingExport ? 'not-allowed' : 'pointer',
+    fontSize: '0.8rem', fontWeight: 700,
+    cursor: loadingExport ? 'not-allowed' : 'pointer',
     whiteSpace: 'nowrap', flexShrink: 0,
     opacity: loadingExport ? 0.7 : 1,
+    transition: 'all 0.2s',
   }}
 >
   {loadingExport ? '⏳ Generando…' : '📊 Exportar Excel'}
