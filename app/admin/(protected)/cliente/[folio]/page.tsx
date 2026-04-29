@@ -100,20 +100,16 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
         </a>
       </div>
 
-      {/* Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 28 }}>
-
-        {/* Panel admin */}
-        <div>
-          <ClienteActions
-            folio={folio}
-            estadoActual={lead.estado ?? 'nuevo'}
-            tieneEmail={!!lead.email}
-            notasActuales={lead.notes ?? ''}
-          />
-        </div>
-
-        {/* Preview */}
+      {/* Vista 360 */}
+      <div style={{ marginTop: 40 }}>
+        <Vista360Client
+          lead={lead}
+          paymentParents={paymentParents}
+          project={project}
+          projectFiles={projectFiles}
+        />
+      </div>
+      {/* Preview */}
         <div style={{ position: 'sticky', top: 24 }}>
           <div style={{
             borderRadius: 16,
@@ -124,18 +120,6 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
             <SeguimientoClient lead={lead} folio={folio} />
           </div>
         </div>
-
-      </div>
-
-      {/* Vista 360 */}
-      <div style={{ marginTop: 40 }}>
-        <Vista360Client
-          lead={lead}
-          paymentParents={paymentParents}
-          project={project}
-          projectFiles={projectFiles}
-        />
-      </div>
 
     </div>
   )
