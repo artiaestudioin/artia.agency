@@ -10,9 +10,8 @@ export async function generateMetadata({ params }: { params: Promise<{ folio: st
 
 export default async function AdminClienteFolioPage({ params }: { params: Promise<{ folio: string }> }) {
   const { folio } = await params
-  const supabase  = await createClient()
+  const supabase = await createClient()
 
-  // Buscar lead por folio O por id (soporte ambos)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(folio)
 
   const { data: lead } = await supabase
@@ -30,7 +29,44 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
       </div>
     )
   }
-return (
+
+  // ✅ AHORA SÍ: consultas después de validar lead
+  let paymentParents: any[] = []
+  let project: any = null
+  let projectFiles: any[] = []
+
+  const results = await Promise.all([
+    supabase
+      .from('payment_parents')
+      .select(`
+        *,
+        installments:payment_installments(*)
+      `)
+      .eq('lead_id', lead.id)
+      .order('created_at', { ascending: false }),
+
+    supabase
+      .from('projects')
+      .select('id, name, access_code, status, event_date, created_at')
+      .eq('lead_id', lead.id)
+      .maybeSingle()
+  ])
+
+  paymentParents = results[0].data ?? []
+  project = results[1].data
+
+  if (project) {
+    const { data } = await supabase
+      .from('project_files')
+      .select('id, file_url, file_name, file_type')
+      .eq('project_id', project.id)
+      .limit(6)
+
+    projectFiles = data ?? []
+  }
+
+  // ✅ SOLO UN RETURN FINAL
+  return (
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
 
       {/* Header */}
@@ -40,7 +76,7 @@ return (
             <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, color: '#6366f1', background: 'rgba(99,102,241,.08)', border: '1px solid rgba(99,102,241,.2)', padding: '2px 10px', borderRadius: 6 }}>
               FOLIO
             </span>
-            <h1 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontSize: 15, fontWeight: 900, color: '#0f172a', margin: 0 }}>
               {folio}
             </h1>
           </div>
@@ -48,6 +84,7 @@ return (
             {lead.nombre}{lead.email ? ` · ${lead.email}` : ''}
           </p>
         </div>
+
         <a
           href={`/seguimiento/${folio}`}
           target="_blank"
@@ -59,19 +96,14 @@ return (
             padding: '8px 16px', borderRadius: 8, textDecoration: 'none',
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15,3 21,3 21,9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
           Ver como cliente
         </a>
       </div>
 
-      {/* Layout: panel admin + preview */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 28, alignItems: 'start' }}>
-// se corrigio notas a notes
-        {/* Panel de control */}
+      {/* Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 28 }}>
+
+        {/* Panel admin */}
         <div>
           <ClienteActions
             folio={folio}
@@ -81,62 +113,30 @@ return (
           />
         </div>
 
-        {/* Preview — vista cliente */}
+        {/* Preview */}
         <div style={{ position: 'sticky', top: 24 }}>
-          <p style={{
-            fontSize: 10, fontWeight: 700, color: '#94a3b8',
-            letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10,
-          }}>
-            Vista del cliente
-          </p>
           <div style={{
-            borderRadius: 16, overflow: 'hidden',
-            boxShadow: '0 8px 40px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)',
+            borderRadius: 16,
+            overflow: 'hidden',
             transform: 'scale(0.82)',
             transformOrigin: 'top center',
-            marginBottom: -100,
           }}>
             <SeguimientoClient lead={lead} folio={folio} />
           </div>
         </div>
 
       </div>
+
+      {/* Vista 360 */}
+      <div style={{ marginTop: 40 }}>
+        <Vista360Client
+          lead={lead}
+          paymentParents={paymentParents}
+          project={project}
+          projectFiles={projectFiles}
+        />
+      </div>
+
     </div>
-  )
-  // Datos relacionados en paralelo — ahora usa payment_parents + installments
-  const [
-    { data: paymentParents },
-    { data: project },
-  ] = await Promise.all([
-    supabase
-      .from('payment_parents')
-      .select(`
-        *,
-        installments:payment_installments(*)
-      `)
-      .eq('lead_id', lead.id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('projects')
-      .select('id, name, access_code, status, event_date, created_at')
-      .eq('lead_id', lead.id)
-      .maybeSingle(),
-  ])
-
-  const { data: projectFiles } = project
-    ? await supabase
-        .from('project_files')
-        .select('id, file_url, file_name, file_type')
-        .eq('project_id', project.id)
-        .limit(6)
-    : { data: [] }
-
-  return (
-    <Vista360Client
-      lead={lead}
-      paymentParents={paymentParents ?? []}
-      project={project}
-      projectFiles={projectFiles ?? []}
-    />
   )
 }
