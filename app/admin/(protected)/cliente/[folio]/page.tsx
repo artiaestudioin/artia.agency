@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Vista360Client from './Vista360Client'
 import SeguimientoClient from './SeguimientoClient'
+import ClienteActions from './ClienteActions'
 
 export async function generateMetadata({ params }: { params: Promise<{ folio: string }> }) {
   const { folio } = await params
