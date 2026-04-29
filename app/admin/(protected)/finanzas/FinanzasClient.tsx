@@ -306,72 +306,143 @@ export default function FinanzasClient({
     } else showMsg('Error eliminando', false)
   }
 
-  // ─── Export CSV ────────────────────────────────────────────────
 
-  function exportarCSV() {
-    if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
+  // ─── Export Excel (.xlsx) ──────────────────────────────────────
 
-    // Columnas ordenadas y consistentes
-    const headers = [
-      'Folio',
-      'Cliente',
-      'Servicio',
-      'Valor Contrato (USD)',
-      'Descripción',
-      'Mes Referencia',
-      'Cuota #',
-      'Monto Cuota (USD)',
-      'Fecha Cuota',
-      'Estado Cuota',
-      'Tipo de Pago',
-      'Comprobante URL',
+// ─── Export Excel ────────────────────────────────────────────────
+
+async function exportarExcel() {
+  if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
+
+  setLoading(true) // necesitas agregar este estado
+  showMsg('Generando Excel…')
+
+  try {
+    // Carga dinámica — solo se descarga cuando se usa
+    const XLSX = await import('xlsx')
+
+    // Hoja 1: Resumen
+    const resumenHeaders = [
+      'Folio', 'Cliente', 'Servicio', 'Valor Contrato (USD)',
+      'Total Pagado (USD)', 'Pendiente (USD)', 'Progreso %',
+      'Descripción', 'Mes Referencia', 'Estado', 'Cuotas'
     ]
 
-    const rows: string[][] = []
+    const resumenRows = payments.map(p => {
+      const pagado = p.installments
+        .filter(i => i.status === 'pagado')
+        .reduce((s, i) => s + (parseFloat(i.amount as any) || 0), 0)
+      const pendiente = (p.contract_value || 0) - pagado
+      const pct = p.contract_value > 0 ? Math.round((pagado / p.contract_value) * 100) : 0
+      const todasPagadas = p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')
+      const algunaVencida = p.installments.some(
+        i => i.status === 'pendiente' && i.payment_date && new Date(i.payment_date.split('T')[0]) < new Date(new Date().toDateString())
+      )
+
+      return [
+        p.lead?.folio ?? '',
+        p.lead?.nombre ?? '',
+        p.lead?.servicio ?? '',
+        p.contract_value,
+        pagado,
+        pendiente,
+        `${pct}%`,
+        p.description ?? '',
+        p.payment_month ?? '',
+        todasPagadas ? 'Completado' : algunaVencida ? 'Con vencidas' : 'En progreso',
+        p.installments.length
+      ]
+    })
+
+    const wsResumen = XLSX.utils.aoa_to_sheet([resumenHeaders, ...resumenRows])
+
+    // Estilos header
+    const headerStyle = {
+      font: { bold: true, color: { rgb: 'FFFFFF' } },
+      fill: { fgColor: { rgb: '1E3A5F' } },
+      alignment: { horizontal: 'center' }
+    }
+
+    const range = XLSX.utils.decode_range(wsResumen['!ref'] || 'A1')
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell = wsResumen[XLSX.utils.encode_cell({ r: 0, c: C })]
+      if (cell) cell.s = headerStyle
+    }
+
+    // Anchos columna
+    wsResumen['!cols'] = [
+      { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 18 },
+      { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 30 },
+      { wch: 16 }, { wch: 14 }, { wch: 10 }
+    ]
+
+    // Hoja 2: Detalle Cuotas
+    const detalleHeaders = [
+      'Folio', 'Cliente', 'Servicio', 'Valor Contrato (USD)',
+      'Descripción', 'Mes Referencia',
+      'Cuota #', 'Monto Cuota (USD)', 'Fecha Cuota',
+      'Estado Cuota', 'Tipo de Pago', 'Comprobante URL'
+    ]
+
+    const detalleRows: any[][] = []
     payments.forEach(p => {
       const insts = [...p.installments].sort((a, b) => a.payment_number - b.payment_number)
       if (insts.length === 0) {
-        rows.push([
-          p.lead?.folio ?? '',
-          p.lead?.nombre ?? '',
-          p.lead?.servicio ?? '',
-          String(p.contract_value),
-          p.description ?? '',
-          p.payment_month ?? '',
-          '', '', '', '', '', '',
+        detalleRows.push([
+          p.lead?.folio ?? '', p.lead?.nombre ?? '', p.lead?.servicio ?? '',
+          p.contract_value, p.description ?? '', p.payment_month ?? '',
+          '', '', '', '', '', ''
         ])
       } else {
         insts.forEach(inst => {
-          rows.push([
+          detalleRows.push([
             p.lead?.folio ?? '',
             p.lead?.nombre ?? '',
             p.lead?.servicio ?? '',
-            String(p.contract_value),
+            p.contract_value,
             p.description ?? '',
             p.payment_month ?? '',
-            String(inst.payment_number),
-            String(inst.amount),
+            inst.payment_number,
+            parseFloat(inst.amount as any) || 0,
             inst.payment_date ?? '',
             inst.status,
             inst.payment_method ? (METHOD_LABELS[inst.payment_method] ?? inst.payment_method) : '',
-            inst.receipt_url ?? '',
+            inst.receipt_url ?? ''
           ])
         })
       }
     })
 
-    let csv = '\ufeff' + headers.join(',') + '\n'
-    rows.forEach(row => {
-      csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n'
-    })
+    const wsDetalle = XLSX.utils.aoa_to_sheet([detalleHeaders, ...detalleRows])
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `finanzas_${(hoy.mes || 'export').replace(/\s+/g, '_')}.csv`
-    link.click()
-    showMsg('CSV descargado ✓')
+    const range2 = XLSX.utils.decode_range(wsDetalle['!ref'] || 'A1')
+    for (let C = range2.s.c; C <= range2.e.c; ++C) {
+      const cell = wsDetalle[XLSX.utils.encode_cell({ r: 0, c: C })]
+      if (cell) cell.s = headerStyle
+    }
+
+    wsDetalle['!cols'] = [
+      { wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 18 },
+      { wch: 30 }, { wch: 16 }, { wch: 10 }, { wch: 18 },
+      { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 40 }
+    ]
+
+    // Crear workbook y descargar
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen Contratos')
+    XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle Cuotas')
+
+    const fileName = `finanzas_${(hoy.mes || 'export').replace(/\s+/g, '_')}.xlsx`
+    XLSX.writeFile(wb, fileName)
+
+    showMsg('Excel descargado ✓')
+  } catch (err) {
+    console.error('Error exportando Excel:', err)
+    showMsg('Error al generar Excel. Intenta de nuevo.', false)
+  } finally {
+    setLoading(false)
   }
+}
 
   // ─── Styles ────────────────────────────────────────────────────
 
@@ -801,17 +872,19 @@ export default function FinanzasClient({
                 ))}
               </div>
               <button
-                onClick={exportarCSV}
-                style={{
-                  padding: '9px 16px',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white', border: 'none', borderRadius: 9,
-                  fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}
-              >
-                📄 Exportar CSV
-              </button>
+  onClick={exportarExcel}
+  disabled={loadingExport} // nuevo estado
+  style={{
+    padding: '9px 16px',
+    background: loadingExport ? '#94a3b8' : 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white', border: 'none', borderRadius: 9,
+    fontSize: '0.8rem', fontWeight: 700, cursor: loadingExport ? 'not-allowed' : 'pointer',
+    whiteSpace: 'nowrap', flexShrink: 0,
+    opacity: loadingExport ? 0.7 : 1,
+  }}
+>
+  {loadingExport ? '⏳ Generando…' : '📊 Exportar Excel'}
+</button>
             </div>
 
             {/* Table */}
