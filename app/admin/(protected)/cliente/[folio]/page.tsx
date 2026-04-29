@@ -70,7 +70,7 @@ return (
 
       {/* Layout: panel admin + preview */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 28, alignItems: 'start' }}>
-
+// se corrigio notas a notes
         {/* Panel de control */}
         <div>
           <ClienteActions
