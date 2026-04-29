@@ -77,7 +77,7 @@ return (
             folio={folio}
             estadoActual={lead.estado ?? 'nuevo'}
             tieneEmail={!!lead.email}
-            notasActuales={lead.notas_internas ?? ''}
+            notasActuales={lead.notes ?? ''}
           />
         </div>
 
