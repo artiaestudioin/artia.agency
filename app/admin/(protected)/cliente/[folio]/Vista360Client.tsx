@@ -346,19 +346,34 @@ export default function Vista360Client({
   }
 
   async function sendEmail(e: React.FormEvent) {
-    e.preventDefault()
-    if (!lead.email || !emailForm.asunto || !emailForm.cuerpo) return
-    setSendingEmail(true)
-    try {
-      const res = await fetch('/api/admin/send-quick-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: lead.email, asunto: emailForm.asunto, cuerpo: emailForm.cuerpo, nombre: lead.nombre, folio: lead.folio }),
-      })
-      const data = await res.json()
-      if (res.ok) { showMsg(`Email enviado a ${lead.email} ✓`); setShowEmailForm(false) }
-      else showMsg(data.error ?? 'Error enviando email', false)
-    } finally { setSendingEmail(false) }
+  e.preventDefault()
+  if (!lead.email || !emailForm.asunto || !emailForm.cuerpo) return
+  setSendingEmail(true)
+  try {
+    const res = await fetch('/api/admin/send-quick-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: lead.email,
+        asunto: emailForm.asunto,
+        cuerpo: emailForm.cuerpo,
+        nombre: lead.nombre,
+        folio: lead.folio,
+        estado: lead.estado,        // ← NUEVO
+        trackingUrl: `https://artiaagency.vercel.app/seguimiento/${lead.folio}`  // ← NUEVO
+      }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      showMsg(`Email enviado a ${lead.email} ✓`)
+      setShowEmailForm(false)
+    } else {
+      showMsg(data.error ?? 'Error enviando email', false)
+    }
+  } finally {
+    setSendingEmail(false)
   }
+}
 
   // Totales
   const totalPagado    = parents.reduce((s, p) => s + p.installments.filter(i => i.status === 'pagado').reduce((ss, i) => ss + (parseFloat(i.amount as any) || 0), 0), 0)
