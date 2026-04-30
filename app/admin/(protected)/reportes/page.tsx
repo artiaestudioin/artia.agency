@@ -21,7 +21,9 @@ export default async function ReportesPage() {
     supabase.from('projects').select('id, name, status, event_date, created_at, lead:lead_id(nombre, folio)').order('created_at', { ascending: false }),
     supabase.from('email_sends').select('id, to_email, template_name, sent_at, opened').order('sent_at', { ascending: false }).limit(1000),
   ])
-
+  //para verificar si hay errores
+console.log("ERRORES SUPABASE:", paymentsError)
+console.log("DATOS PAYMENTS:", rawPayments)
   // Supabase devuelve `lead` como array en joins de FK 1-a-1.
   // Normalizamos a objeto singular Y casteamos números que llegan como strings.
   const payments = (rawPayments || []).map((p: any) => ({
