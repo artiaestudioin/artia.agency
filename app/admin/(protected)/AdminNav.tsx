@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { COLORS } from '@/components/DesignSystem'
+
 
 type NavItem = {
   href: string
@@ -71,7 +73,7 @@ export default function AdminNav({ email }: { email: string }) {
       <nav
         className="admin-nav-desktop"
         style={{
-          background: '#00113a',
+          background: COLORS.primary,
           height: 60,
           display: 'flex',
           alignItems: 'center',
@@ -107,7 +109,7 @@ export default function AdminNav({ email }: { email: string }) {
                 width: 28,
                 height: 28,
                 borderRadius: 7,
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                background: COLORS.gradientPrimary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -209,7 +211,7 @@ export default function AdminNav({ email }: { email: string }) {
             style={{
               width: 1,
               height: 20,
-              background: 'rgba(255,255,255,0.08)',
+              background: COLORS.gradientPrimary,
             }}
           />
 
@@ -274,7 +276,7 @@ export default function AdminNav({ email }: { email: string }) {
       <nav
         className="admin-nav-mobile"
         style={{
-          background: '#00113a',
+          background: COLORS.primary,
           height: 56,
           display: 'none',
           alignItems: 'center',
@@ -305,7 +307,7 @@ export default function AdminNav({ email }: { email: string }) {
               width: 28,
               height: 28,
               borderRadius: 7,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              background: COLORS.gradientPrimary,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
