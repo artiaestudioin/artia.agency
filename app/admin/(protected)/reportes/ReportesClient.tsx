@@ -126,7 +126,7 @@ export default function ReportesClient({
   posthog: PhData | null
   sentry: SentryData | null
 }) {
-  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d')
+  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('all')
   const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'>('general')
   const [exporting, setExporting] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
@@ -143,10 +143,24 @@ export default function ReportesClient({
     }
   }, [dateRange])
 
-  const filteredPayments = payments.filter(p => new Date(p.created_at) >= cutoffDate)
-  const filteredLeads = leads.filter(l => new Date(l.created_at) >= cutoffDate)
-  const filteredProjects = projects.filter(p => new Date(p.created_at) >= cutoffDate)
-  const filteredEmails = emails.filter(e => new Date(e.sent_at) >= cutoffDate)
+  // Un contrato aplica si fue creado en el rango O si tiene cuotas con fecha en el rango.
+  // Usamos cutoffDate = new Date(0) para 'all', por lo que siempre pasa.
+  const filteredPayments = payments.filter(p => {
+    if (new Date(p.created_at) >= cutoffDate) return true
+    return p.installments.some(i => i.payment_date && new Date(i.payment_date) >= cutoffDate)
+  })
+  const filteredLeads    = leads.filter(l => {
+    const d = new Date(l.created_at)
+    return !isNaN(d.getTime()) && d >= cutoffDate
+  })
+  const filteredProjects = projects.filter(p => {
+    const d = new Date(p.created_at)
+    return !isNaN(d.getTime()) && d >= cutoffDate
+  })
+  const filteredEmails   = emails.filter(e => {
+    const d = new Date(e.sent_at)
+    return !isNaN(d.getTime()) && d >= cutoffDate
+  })
 
   // ── Computed Data ──
   const financeData = useMemo(() => {
