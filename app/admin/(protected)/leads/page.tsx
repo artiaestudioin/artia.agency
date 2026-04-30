@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { ESTADO_CONFIG } from '@/lib/config/estado'
 import NuevoLeadModal from './NuevoLeadModal'
 import Link from 'next/link'
 import { Card, CardBody, Avatar, Badge, StatusBadge, SearchInput, FilterTabs, EmptyState, COLORS, fmtMoney, relTime, GLOBAL_STYLES } from '@/components/DesignSystem'
@@ -28,7 +29,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   const filterOptions = [
     { key: 'todos', label: 'Todos', count: total },
-    ...Object.entries(ESTADO_CONFIG).map(([k, v]) => ({ key: k, label: v.label, count: counts[k] ?? 0 })),
+    ...Object.entries(ESTADO_CONFIG).map(([k, v]) => ({ key: k, label: v.label, count: counts[k as keyof typeof counts] ?? 0 })),
   ]
 
   return (
