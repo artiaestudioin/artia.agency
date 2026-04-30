@@ -100,6 +100,7 @@ export default function FinanzasClient({
   const [filterSearch, setFilterSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingExport, setLoadingExport] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const [editPay, setEditPay] = useState<PaymentParent | null>(null)
@@ -438,6 +439,176 @@ async function exportarExcel() {
     setLoadingExport(false)
   }
 }
+
+  // ─── Export CSV ────────────────────────────────────────────────
+
+  function exportarCSV() {
+    if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
+
+    const headers = [
+      'Folio',
+      'Cliente',
+      'Servicio',
+      'Valor Contrato (USD)',
+      'Descripción',
+      'Mes Referencia',
+      'Cuota #',
+      'Monto Cuota (USD)',
+      'Fecha Cuota',
+      'Estado Cuota',
+      'Tipo de Pago',
+      'Comprobante URL',
+    ]
+
+    const rows: string[][] = []
+    payments.forEach(p => {
+      const insts = [...p.installments].sort((a, b) => a.payment_number - b.payment_number)
+      if (insts.length === 0) {
+        rows.push([
+          p.lead?.folio ?? '',
+          p.lead?.nombre ?? '',
+          p.lead?.servicio ?? '',
+          String(p.contract_value),
+          p.description ?? '',
+          p.payment_month ?? '',
+          '', '', '', '', '', '',
+        ])
+      } else {
+        insts.forEach(inst => {
+          rows.push([
+            p.lead?.folio ?? '',
+            p.lead?.nombre ?? '',
+            p.lead?.servicio ?? '',
+            String(p.contract_value),
+            p.description ?? '',
+            p.payment_month ?? '',
+            String(inst.payment_number),
+            String(inst.amount),
+            inst.payment_date ?? '',
+            inst.status,
+            inst.payment_method ? (METHOD_LABELS[inst.payment_method] ?? inst.payment_method) : '',
+            inst.receipt_url ?? '',
+          ])
+        })
+      }
+    })
+
+    let csv = '\ufeff' + headers.join(',') + '\n'
+    rows.forEach(row => {
+      csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n'
+    })
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `finanzas_${(hoy.mes || 'export').replace(/\s+/g, '_')}.csv`
+    link.click()
+    showMsg('CSV descargado ✓')
+  }
+
+  // ─── Export PDF ────────────────────────────────────────────────
+
+  function exportarPDF() {
+    if (payments.length === 0) { showMsg('No hay registros para exportar', false); return }
+
+    // Build printable HTML and trigger browser print-to-PDF
+    const filas = payments.flatMap(p => {
+      const insts = [...p.installments].sort((a, b) => a.payment_number - b.payment_number)
+      if (insts.length === 0) {
+        return [`<tr>
+          <td>${p.lead?.folio ?? '—'}</td>
+          <td>${p.lead?.nombre ?? '—'}</td>
+          <td>${p.lead?.servicio ?? '—'}</td>
+          <td>$${Number(p.contract_value).toFixed(2)}</td>
+          <td>${p.description ?? ''}</td>
+          <td>${p.payment_month ?? ''}</td>
+          <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+        </tr>`]
+      }
+      return insts.map(inst => {
+        const estadoColor = inst.status === 'pagado' ? '#166534' : inst.status === 'vencido' ? '#991b1b' : '#92400e'
+        const estadoBg   = inst.status === 'pagado' ? '#dcfce7' : inst.status === 'vencido' ? '#fee2e2' : '#fef3c7'
+        const [y, m, d]  = (inst.payment_date ?? '').split('T')[0].split('-').map(Number)
+        const fechaFmt   = inst.payment_date
+          ? new Date(y, m - 1, d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—'
+        return `<tr>
+          <td>${p.lead?.folio ?? '—'}</td>
+          <td>${p.lead?.nombre ?? '—'}</td>
+          <td>${p.lead?.servicio ?? '—'}</td>
+          <td>$${Number(p.contract_value).toFixed(2)}</td>
+          <td>${p.description ?? ''}</td>
+          <td>${p.payment_month ?? ''}</td>
+          <td style="text-align:center">#${inst.payment_number}</td>
+          <td>$${Number(inst.amount).toFixed(2)}</td>
+          <td>${fechaFmt}</td>
+          <td style="background:${estadoBg};color:${estadoColor};font-weight:700;text-align:center;border-radius:4px">
+            ${inst.status.charAt(0).toUpperCase() + inst.status.slice(1)}
+          </td>
+          <td>${inst.payment_method ? (METHOD_LABELS[inst.payment_method] ?? inst.payment_method) : '—'}</td>
+        </tr>`
+      })
+    }).join('')
+
+    const totalPagado    = payments.reduce((s, p) => s + p.installments.filter(i => i.status === 'pagado').reduce((ss, i) => ss + (parseFloat(i.amount as any) || 0), 0), 0)
+    const totalContrato  = payments.reduce((s, p) => s + (p.contract_value || 0), 0)
+    const totalPendiente = totalContrato - totalPagado
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Finanzas — ${hoy.mes || 'Reporte'}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; padding: 24px; }
+  h1  { font-size: 18px; font-weight: 900; color: #00113a; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #64748b; margin-bottom: 16px; }
+  .kpis { display: flex; gap: 12px; margin-bottom: 20px; }
+  .kpi  { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; }
+  .kpi-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 4px; }
+  .kpi-val   { font-size: 15px; font-weight: 900; }
+  table  { width: 100%; border-collapse: collapse; font-size: 10px; }
+  thead  { background: #1e3a5f; color: white; }
+  th     { padding: 7px 8px; text-align: left; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
+  td     { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .footer { margin-top: 16px; font-size: 9px; color: #94a3b8; text-align: right; }
+  @media print { body { padding: 12px; } }
+</style>
+</head>
+<body>
+  <h1>💰 Reporte Financiero</h1>
+  <div class="subtitle">Generado el ${new Date().toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' })} · ${hoy.mes}</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Total Contratos</div><div class="kpi-val" style="color:#5b21b6">$${totalContrato.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-label">Total Cobrado</div><div class="kpi-val" style="color:#059669">$${totalPagado.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-label">Por Cobrar</div><div class="kpi-val" style="color:#d97706">$${totalPendiente.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-label">Contratos</div><div class="kpi-val" style="color:#2563eb">${payments.length}</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Folio</th><th>Cliente</th><th>Servicio</th>
+        <th>Contrato</th><th>Descripción</th><th>Mes</th>
+        <th>Cuota</th><th>Monto</th><th>Fecha</th>
+        <th>Estado</th><th>Tipo Pago</th>
+      </tr>
+    </thead>
+    <tbody>${filas}</tbody>
+  </table>
+  <div class="footer">Artia Studio · Sistema Contable · ${new Date().toISOString().slice(0,10)}</div>
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=1100,height=800')
+    if (!win) { showMsg('Permite ventanas emergentes para exportar PDF', false); return }
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+    setTimeout(() => { win.print(); win.close() }, 400)
+    showMsg('PDF listo para imprimir / guardar ✓')
+  }
 
   // ─── Styles ────────────────────────────────────────────────────
 
@@ -866,22 +1037,106 @@ async function exportarExcel() {
                   </button>
                 ))}
               </div>
-              <button
-  onClick={exportarExcel}
-  disabled={loadingExport}
-  style={{
-    padding: '9px 16px',
-    background: loadingExport ? '#94a3b8' : 'linear-gradient(135deg, #10b981, #059669)',
-    color: 'white', border: 'none', borderRadius: 9,
-    fontSize: '0.8rem', fontWeight: 700,
-    cursor: loadingExport ? 'not-allowed' : 'pointer',
-    whiteSpace: 'nowrap', flexShrink: 0,
-    opacity: loadingExport ? 0.7 : 1,
-    transition: 'all 0.2s',
-  }}
->
-  {loadingExport ? '⏳ Generando…' : '📊 Exportar Excel'}
-</button>
+              {/* Dropdown Exportar */}
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <button
+                  onClick={() => setShowExportMenu(m => !m)}
+                  disabled={loadingExport}
+                  style={{
+                    padding: '9px 16px',
+                    background: loadingExport ? '#94a3b8' : 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white', border: 'none', borderRadius: 9,
+                    fontSize: '0.8rem', fontWeight: 700,
+                    cursor: loadingExport ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    opacity: loadingExport ? 0.7 : 1,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {loadingExport ? '⏳ Generando…' : '📊 Exportar'}
+                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>▼</span>
+                </button>
+
+                {showExportMenu && !loadingExport && (
+                  <>
+                    {/* Overlay para cerrar al hacer clic fuera */}
+                    <div
+                      style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+                      onClick={() => setShowExportMenu(false)}
+                    />
+                    <div style={{
+                      position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+                      background: 'white', borderRadius: 10, zIndex: 999,
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                      border: '1px solid #e2e8f0', overflow: 'hidden',
+                      minWidth: 190,
+                    }}>
+                      {/* Excel */}
+                      <button
+                        onClick={() => { setShowExportMenu(false); exportarExcel() }}
+                        style={{
+                          width: '100%', padding: '11px 16px', border: 'none',
+                          background: 'white', cursor: 'pointer', textAlign: 'left',
+                          fontSize: '0.82rem', fontWeight: 700, color: '#0f172a',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                      >
+                        <span style={{ fontSize: '1.1rem' }}>📊</span>
+                        <div>
+                          <div>Exportar Excel</div>
+                          <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 500 }}>2 hojas: resumen + detalle</div>
+                        </div>
+                      </button>
+
+                      {/* CSV */}
+                      <button
+                        onClick={() => { setShowExportMenu(false); exportarCSV() }}
+                        style={{
+                          width: '100%', padding: '11px 16px', border: 'none',
+                          background: 'white', cursor: 'pointer', textAlign: 'left',
+                          fontSize: '0.82rem', fontWeight: 700, color: '#0f172a',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#eff6ff')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                      >
+                        <span style={{ fontSize: '1.1rem' }}>📄</span>
+                        <div>
+                          <div>Exportar CSV</div>
+                          <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 500 }}>Compatible con Excel / Sheets</div>
+                        </div>
+                      </button>
+
+                      {/* PDF */}
+                      <button
+                        onClick={() => { setShowExportMenu(false); exportarPDF() }}
+                        style={{
+                          width: '100%', padding: '11px 16px', border: 'none',
+                          background: 'white', cursor: 'pointer', textAlign: 'left',
+                          fontSize: '0.82rem', fontWeight: 700, color: '#0f172a',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                      >
+                        <span style={{ fontSize: '1.1rem' }}>🖨️</span>
+                        <div>
+                          <div>Exportar PDF</div>
+                          <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 500 }}>Abre vista de impresión</div>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Table */}

@@ -38,19 +38,17 @@ export function PostHogWidget() {
   const maxVal = data ? Math.max(...data.daily.map(d => d.value), 1) : 1
 
   return (
-    <div className="crm-card" style={{ overflow: 'hidden' }}>
-      <div style={{ padding: '16px 18px 14px', background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', borderBottom: '1px solid #fed7aa' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 18, background: 'rgba(249,115,22,.12)', borderRadius: 8, padding: '5px 7px' }}>🦔</div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#92400e' }}>PostHog Analytics</div>
-            <div style={{ fontSize: 10, color: '#b45309', fontFamily: 'monospace', letterSpacing: 1 }}>ÚLTIMOS 7 DÍAS</div>
-          </div>
+    <div className="analytics-card">
+      <div className="analytics-header" style={{ background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', borderColor: '#fed7aa' }}>
+        <div className="analytics-icon" style={{ background: 'rgba(249,115,22,.12)' }}>🦔</div>
+        <div>
+          <div className="analytics-title" style={{ color: '#92400e' }}>PostHog Analytics</div>
+          <div className="analytics-subtitle" style={{ color: '#b45309' }}>ÚLTIMOS 7 DÍAS</div>
         </div>
       </div>
 
       {!loading && !error && data?.ok && (
-        <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: '#fff' }}>
+        <div className="analytics-tabs">
           {[
             { key: 'overview', label: 'Vista general' },
             { key: 'dashboards', label: 'Dashboards' },
@@ -59,17 +57,8 @@ export function PostHogWidget() {
             <button
               key={t.key}
               onClick={() => setTab(t.key as any)}
-              style={{
-                flex: 1,
-                padding: '10px',
-                fontSize: 11,
-                fontWeight: 700,
-                border: 'none',
-                background: tab === t.key ? '#fff' : 'transparent',
-                color: tab === t.key ? '#92400e' : '#94a3b8',
-                borderBottom: tab === t.key ? '2px solid #f97316' : '2px solid transparent',
-                cursor: 'pointer',
-              }}
+              className={tab === t.key ? 'active' : ''}
+              style={{ color: tab === t.key ? '#92400e' : '#94a3b8', borderColor: tab === t.key ? '#f97316' : 'transparent' }}
             >
               {t.label}
             </button>
@@ -77,45 +66,39 @@ export function PostHogWidget() {
         </div>
       )}
 
-      <div style={{ padding: '18px' }}>
+      <div className="analytics-body">
         {loading ? (
-          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 14 }}>Conectando…</div>
+          <div className="analytics-loading">Conectando…</div>
         ) : error || !data?.ok ? (
-          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, lineHeight: 1.5 }}>
+          <div className="analytics-error">
             {error?.includes('missing_env') ? 'Variables POSTHOG_PERSONAL_API_KEY y POSTHOG_PROJECT_ID no detectadas.'
-              : error?.includes('401') || error?.includes('403') ? '⚠️ API Key inválida — verifica POSTHOG_PERSONAL_API_KEY.'
+              : error?.includes('401') || error?.includes('403') ? '⚠️ API Key inválida.'
               : `Error conectando: ${error ?? 'desconocido'}`}
           </div>
         ) : (
           <>
             {tab === 'overview' && (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div className="analytics-metrics">
                   <div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-1px' }}>
-                      {data.pageviews.toLocaleString()}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pageviews</div>
+                    <div className="metric-value">{data.pageviews.toLocaleString()}</div>
+                    <div className="metric-label">Pageviews</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-1px' }}>
-                      {data.project?.user_count?.toLocaleString() ?? '—'}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Usuarios</div>
+                    <div className="metric-value">{data.project?.user_count?.toLocaleString() ?? '—'}</div>
+                    <div className="metric-label">Usuarios</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-1px' }}>
-                      {data.project?.event_count?.toLocaleString() ?? '—'}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Eventos totales</div>
+                    <div className="metric-value">{data.project?.event_count?.toLocaleString() ?? '—'}</div>
+                    <div className="metric-label">Eventos totales</div>
                   </div>
                 </div>
 
                 {data.daily.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 36, marginBottom: 10 }}>
+                  <div className="chart-bars">
                     {data.daily.map((d, i) => (
-                      <div key={i} title={`${d.label}: ${d.value}`} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
-                        <div style={{ width: '100%', height: `${Math.max((d.value / maxVal) * 100, 4)}%`, background: i === data.daily.length - 1 ? '#f97316' : '#fed7aa', borderRadius: '3px 3px 0 0' }} />
+                      <div key={i} title={`${d.label}: ${d.value}`} className="chart-bar-wrapper">
+                        <div className="chart-bar" style={{ height: `${Math.max((d.value / maxVal) * 100, 4)}%`, background: i === data.daily.length - 1 ? '#f97316' : '#fed7aa' }} />
                       </div>
                     ))}
                   </div>
@@ -124,23 +107,21 @@ export function PostHogWidget() {
             )}
 
             {tab === 'dashboards' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="analytics-list">
                 {data.dashboards.length > 0 ? data.dashboards.map(d => (
-                  <a key={d.id} href={`https://app.posthog.com/dashboard/${d.id}`} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'block', padding: '10px 12px', background: '#fff7ed', borderRadius: 8, textDecoration: 'none', border: '1px solid #fed7aa' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>{d.name}</div>
+                  <a key={d.id} href={`https://app.posthog.com/dashboard/${d.id}`} target="_blank" rel="noopener noreferrer" className="analytics-link" style={{ background: '#fff7ed', borderColor: '#fed7aa' }}>
+                    <div style={{ fontWeight: 700, color: '#92400e' }}>{d.name}</div>
                     {d.description && <div style={{ fontSize: 10, color: '#b45309', marginTop: 2 }}>{d.description}</div>}
                   </a>
-                )) : (
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>No hay dashboards configurados</div>
-                )}
+                )) : <div className="text-muted">No hay dashboards configurados</div>}
+                
                 {data.insights.length > 0 && (
                   <>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 8, marginBottom: 4 }}>Insights</div>
+                    <div className="section-title">Insights</div>
                     {data.insights.map(i => (
-                      <div key={i.id} style={{ fontSize: 11, color: '#64748b', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{i.name}</span>
-                        <span style={{ fontSize: 9, color: '#94a3b8', marginLeft: 6 }}>{i.type}</span>
+                      <div key={i.id} className="list-item">
+                        <span className="item-name">{i.name}</span>
+                        <span className="item-meta">{i.type}</span>
                       </div>
                     ))}
                   </>
@@ -149,30 +130,210 @@ export function PostHogWidget() {
             )}
 
             {tab === 'activity' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="analytics-list">
                 {data.activity.length > 0 ? data.activity.map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontWeight: 600, color: '#0f172a' }}>{a.user}</span>
-                      <span style={{ color: '#64748b' }}> {a.action}</span>
+                  <div key={i} className="activity-item">
+                    <div className="activity-dot" style={{ background: '#f97316' }} />
+                    <div className="activity-content">
+                      <span className="item-name">{a.user}</span>
+                      <span className="text-muted"> {a.action}</span>
                     </div>
-                    <span style={{ fontSize: 9, color: '#94a3b8', fontFamily: 'monospace' }}>
+                    <span className="activity-date">
                       {new Date(a.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
                     </span>
                   </div>
-                )) : (
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>Sin actividad reciente</div>
-                )}
+                )) : <div className="text-muted">Sin actividad reciente</div>}
               </div>
             )}
           </>
         )}
-        <a href="https://app.posthog.com" target="_blank" rel="noopener noreferrer"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#d97706', textDecoration: 'none', marginTop: 12 }}>
+        <a href="https://app.posthog.com" target="_blank" rel="noopener noreferrer" className="analytics-footer" style={{ color: '#d97706' }}>
           Ver dashboard completo →
         </a>
       </div>
+
+      <style>{`
+        .analytics-card {
+          background: #fff;
+          border-radius: 14px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03);
+          overflow: hidden;
+          transition: box-shadow .2s;
+        }
+        .analytics-card:hover {
+          box-shadow: 0 2px 6px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+        }
+        .analytics-header {
+          padding: 16px 18px 14px;
+          border-bottom: 1px solid;
+          display: flex;
+          align-items: center;
+          gap: 10;
+        }
+        .analytics-icon {
+          font-size: 18px;
+          border-radius: 8px;
+          padding: 5px 7px;
+        }
+        .analytics-title {
+          font-weight: 700;
+          font-size: 13px;
+        }
+        .analytics-subtitle {
+          font-size: 10px;
+          font-family: monospace;
+          letter-spacing: 1px;
+        }
+        .analytics-tabs {
+          display: flex;
+          border-bottom: 1px solid #f1f5f9;
+          background: #fff;
+        }
+        .analytics-tabs button {
+          flex: 1;
+          padding: 10px;
+          font-size: 11px;
+          font-weight: 700;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+          transition: all .15s;
+        }
+        .analytics-tabs button.active {
+          background: #fff;
+        }
+        .analytics-body {
+          padding: 18px;
+        }
+        .analytics-loading {
+          font-size: 13px;
+          color: #94a3b8;
+          margin-bottom: 14px;
+        }
+        .analytics-error {
+          font-size: 12px;
+          color: #64748b;
+          margin-bottom: 8px;
+          line-height: 1.5;
+        }
+        .analytics-metrics {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+        @media (max-width: 768px) {
+          .analytics-metrics { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        }
+        .metric-value {
+          font-size: 24px;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -1px;
+        }
+        @media (max-width: 768px) {
+          .metric-value { font-size: 18px; }
+        }
+        .metric-label {
+          font-size: 10px;
+          color: #94a3b8;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .chart-bars {
+          display: flex;
+          align-items: flex-end;
+          gap: 3px;
+          height: 36px;
+          margin-bottom: 10px;
+        }
+        .chart-bar-wrapper {
+          flex: 1;
+          height: 100%;
+          display: flex;
+          align-items: flex-end;
+        }
+        .chart-bar {
+          width: 100%;
+          border-radius: 3px 3px 0 0;
+          transition: height 0.3s;
+        }
+        .analytics-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .analytics-link {
+          display: block;
+          padding: 10px 12px;
+          border-radius: 8px;
+          text-decoration: none;
+          border: 1px solid;
+        }
+        .section-title {
+          font-size: 10px;
+          font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-top: 8px;
+          margin-bottom: 4px;
+        }
+        .list-item {
+          font-size: 11px;
+          color: #64748b;
+          padding: 6px 0;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+        }
+        .item-name {
+          font-weight: 600;
+          color: #0f172a;
+        }
+        .item-meta {
+          font-size: 9px;
+          color: #94a3b8;
+          margin-left: 6px;
+        }
+        .activity-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          padding: 6px 0;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .activity-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .activity-content {
+          flex: 1;
+        }
+        .activity-date {
+          font-size: 9px;
+          color: #94a3b8;
+          font-family: monospace;
+        }
+        .text-muted {
+          color: #94a3b8;
+        }
+        .analytics-footer {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          font-weight: 700;
+          text-decoration: none;
+          margin-top: 12px;
+        }
+      `}</style>
     </div>
   )
 }
@@ -193,54 +354,53 @@ export function SentryWidget() {
   const levelColor = (l: string) => l === 'fatal' ? '#dc2626' : l === 'error' ? '#ea580c' : l === 'warning' ? '#d97706' : '#64748b'
 
   return (
-    <div className="crm-card" style={{ overflow: 'hidden' }}>
-      <div style={{ padding: '16px 18px 14px', background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', borderBottom: '1px solid #ddd6fe' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 18, background: 'rgba(124,58,237,.1)', borderRadius: 8, padding: '5px 7px' }}>🛡️</div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#5b21b6' }}>Sentry Monitoring</div>
-            <div style={{ fontSize: 10, color: '#7c3aed', fontFamily: 'monospace', letterSpacing: 1 }}>ISSUES SIN RESOLVER</div>
-          </div>
+    <div className="analytics-card">
+      <div className="analytics-header" style={{ background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', borderColor: '#ddd6fe' }}>
+        <div className="analytics-icon" style={{ background: 'rgba(124,58,237,.1)' }}>🛡️</div>
+        <div>
+          <div className="analytics-title" style={{ color: '#5b21b6' }}>Sentry Monitoring</div>
+          <div className="analytics-subtitle" style={{ color: '#7c3aed' }}>ISSUES SIN RESOLVER</div>
         </div>
       </div>
-      <div style={{ padding: '18px' }}>
+      <div className="analytics-body">
         {loading ? (
-          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 14 }}>Conectando…</div>
+          <div className="analytics-loading">Conectando…</div>
         ) : error || !data?.ok ? (
-          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, lineHeight: 1.5 }}>
+          <div className="analytics-error">
             {error?.includes('missing_env') ? 'Variables SENTRY_AUTH_TOKEN, SENTRY_ORG y SENTRY_PROJECT no detectadas.'
-              : error?.includes('401') || error?.includes('403') ? '⚠️ Token inválido — verifica SENTRY_AUTH_TOKEN.'
+              : error?.includes('401') || error?.includes('403') ? '⚠️ Token inválido.'
               : `Error conectando: ${error ?? 'desconocido'}`}
           </div>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div className="analytics-metrics">
               <div>
-                <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-1px', color: data.unresolvedCount > 0 ? '#dc2626' : '#16a34a' }}>
+                <div className="metric-value" style={{ color: data.unresolvedCount > 0 ? '#dc2626' : '#16a34a' }}>
                   {data.unresolvedCount}
                 </div>
-                <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Issues</div>
+                <div className="metric-label">Issues</div>
               </div>
               <div>
-                <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-1px', color: '#0f172a' }}>
-                  {data.events24h.toLocaleString()}
-                </div>
-                <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Eventos 24h</div>
+                <div className="metric-value">{data.events24h.toLocaleString()}</div>
+                <div className="metric-label">Eventos 24h</div>
               </div>
               <div>
-                <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-1px', color: '#0f172a' }}>
-                  {data.platform}
-                </div>
-                <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Plataforma</div>
+                <div className="metric-value">{data.platform}</div>
+                <div className="metric-label">Plataforma</div>
               </div>
             </div>
 
             {data.alerts.length > 0 && (
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>Alertas activas</div>
+                <div className="section-title">Alertas activas</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {data.alerts.map(a => (
-                    <span key={a.id} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 20, background: a.active ? '#f0fdf4' : '#f1f5f9', color: a.active ? '#16a34a' : '#94a3b8', fontWeight: 700, border: `0.5px solid ${a.active ? '#bbf7d0' : '#e2e8f0'}` }}>
+                    <span key={a.id} style={{
+                      fontSize: 10, padding: '3px 10px', borderRadius: 20,
+                      background: a.active ? '#f0fdf4' : '#f1f5f9',
+                      color: a.active ? '#16a34a' : '#94a3b8',
+                      fontWeight: 700, border: `0.5px solid ${a.active ? '#bbf7d0' : '#e2e8f0'}`
+                    }}>
                       {a.active ? '●' : '○'} {a.name}
                     </span>
                   ))}
@@ -249,16 +409,21 @@ export function SentryWidget() {
             )}
 
             {data.issues.slice(0, 4).map(i => (
-              <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#475569', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '5px 9px', borderRadius: 6, marginBottom: 5 }}>
+              <div key={i.id} style={{
+                display: 'flex', alignItems: 'center', gap: 6, fontSize: 11,
+                color: '#475569', background: '#f8fafc', border: '1px solid #e2e8f0',
+                padding: '5px 9px', borderRadius: 6, marginBottom: 5
+              }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: levelColor(i.level), flexShrink: 0 }} />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: 'monospace', fontSize: 10 }}>{i.title}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontFamily: 'monospace', fontSize: 10 }}>
+                  {i.title}
+                </span>
                 {i.count && <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>×{i.count}</span>}
               </div>
             ))}
           </>
         )}
-        <a href="https://sentry.io" target="_blank" rel="noopener noreferrer"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#7c3aed', textDecoration: 'none', marginTop: 6 }}>
+        <a href="https://sentry.io" target="_blank" rel="noopener noreferrer" className="analytics-footer" style={{ color: '#7c3aed' }}>
           Ver en Sentry →
         </a>
       </div>

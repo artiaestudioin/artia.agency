@@ -11,11 +11,16 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   if (!user) redirect('/admin/login')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f9fb' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <AdminNav email={user.email ?? ''} />
-      <main style={{ padding: '28px 24px', maxWidth: 1280, margin: '0 auto' }}>
+      <main className="admin-main" style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {children}
       </main>
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-main { padding: 16px !important; }
+        }
+      `}</style>
     </div>
   )
 }
