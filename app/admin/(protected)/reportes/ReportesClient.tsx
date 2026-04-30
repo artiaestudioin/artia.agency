@@ -594,7 +594,7 @@ export default function ReportesClient({
                         <Cell key={`cell-${index}`} fill={COLORS.gradient[index % COLORS.gradient.length]} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} formatter={(v: number) => fmtMoney(v)} />
+                    <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
