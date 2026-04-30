@@ -172,11 +172,11 @@ export default function ReportesClient({
   // ── Computed Data ──
   const financeData = useMemo(() => {
     const totalFacturado = filteredPayments.reduce((s, p) => s + n(p.contract_value), 0)
-    const totalPagado    = filteredPayments.reduce((s, p) =>
-      s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
+    const totalPagado = filteredPayments.reduce((s, p) =>
+  s + p.installments.filter(i => i.status?.toLowerCase() === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
     const totalPendiente = totalFacturado - totalPagado
-    const totalVencido   = filteredPayments.reduce((s, p) =>
-      s + p.installments.filter(i => i.status === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
+    const totalVencido = filteredPayments.reduce((s, p) =>
+  s + p.installments.filter(i => i.status?.toLowerCase() === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
 
     // Monthly revenue — agrupa por mes del contrato
     const monthlyMap = new Map<string, { month: string; facturado: number; pagado: number; pendiente: number }>()
@@ -186,8 +186,8 @@ export default function ReportesClient({
       if (key === 'unknown') return
       const existing = monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
       existing.facturado += n(p.contract_value)
-      existing.pagado    += p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
-      existing.pendiente += p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
+      existing.pagado += p.installments.filter(i => i.status?.toLowerCase() === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
+existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       monthlyMap.set(key, existing)
     })
     const monthlyRevenue = Array.from(monthlyMap.entries())
@@ -210,10 +210,10 @@ export default function ReportesClient({
 
     // Status distribution
     const statusCounts = [
-      { name: 'Pagado',       value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')).length,  color: '#10b981' },
-      { name: 'En progreso',  value: filteredPayments.filter(p => p.installments.some(i => i.status === 'pendiente')).length, color: '#f59e0b' },
-      { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status === 'vencido')).length,  color: '#ef4444' },
-    ]
+  { name: 'Pagado', value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status?.toLowerCase() === 'pagado')).length, color: '#10b981' },
+  { name: 'En progreso', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'pendiente')).length, color: '#f59e0b' },
+  { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'vencido')).length, color: '#ef4444' },
+]
 
     return { totalFacturado, totalPagado, totalPendiente, totalVencido, monthlyRevenue, methodData, statusCounts }
   }, [filteredPayments])
