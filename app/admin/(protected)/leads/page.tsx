@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ESTADO_CONFIG } from '@/lib/config/estado'
 import NuevoLeadModal from './NuevoLeadModal'
 import Link from 'next/link'
-import { Card, CardBody, Avatar, Badge, StatusBadge, SearchInput, FilterTabs, EmptyState, COLORS, fmtMoney, relTime, GLOBAL_STYLES } from '@/components/DesignSystem'
+import { Card, CardBody, Avatar, Badge, StatusBadge, EmptyState, COLORS, fmtMoney, relTime, GLOBAL_STYLES } from '@/components/DesignSystem'
 
 export const metadata = { title: 'Leads — Artia Admin' }
 
@@ -29,8 +29,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   const filterOptions = [
     { key: 'todos', label: 'Todos', count: total },
-    ...Object.entries(ESTADO_CONFIG).map(([k, v]) => ({ key: k, label: v.label, count: counts[k as keyof typeof counts] ?? 0 })),
+    ...Object.entries(ESTADO_CONFIG).map(([k, v]) => ({ key: k, label: v.label, count: counts[k] ?? 0 })),
   ]
+
+  const activeEstado = estado ?? 'todos'
 
   return (
     <div style={{ maxWidth: 1100 }}>
@@ -45,23 +47,77 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <NuevoLeadModal />
       </header>
 
-      {/* Filters */}
-      <div style={{ marginBottom: 16 }}>
-        <FilterTabs options={filterOptions} active={estado ?? 'todos'} onChange={(key) => {
-          // Navigation handled by links in FilterTabs component
-        }} />
+      {/* Filter tabs — Links puros, sin onClick, compatibles con Server Component */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {filterOptions.map(opt => {
+          const isActive = activeEstado === opt.key
+          const href = opt.key === 'todos'
+            ? (q ? `/admin/leads?q=${encodeURIComponent(q)}` : '/admin/leads')
+            : (q ? `/admin/leads?estado=${opt.key}&q=${encodeURIComponent(q)}` : `/admin/leads?estado=${opt.key}`)
+          return (
+            <Link
+              key={opt.key}
+              href={href}
+              style={{
+                padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
+                background: isActive ? COLORS.primary : COLORS.bgHover,
+                color: isActive ? '#fff' : COLORS.textSecondary,
+                border: `1.5px solid ${isActive ? COLORS.primary : COLORS.borderLight}`,
+                transition: 'all 0.15s',
+              }}
+            >
+              {opt.label}
+              <span style={{
+                fontSize: 10, fontWeight: 800,
+                background: isActive ? 'rgba(255,255,255,0.25)' : COLORS.borderLight,
+                color: isActive ? '#fff' : COLORS.textMuted,
+                borderRadius: 20, padding: '1px 7px',
+              }}>
+                {opt.count}
+              </span>
+            </Link>
+          )
+        })}
       </div>
 
-      {/* Search */}
+      {/* Search — form GET puro, sin onChange, compatible con Server Component */}
       <form method="GET" action="/admin/leads" style={{ marginBottom: 20 }}>
         {estado && <input type="hidden" name="estado" value={estado} />}
         <div style={{ display: 'flex', gap: 8 }}>
-          <SearchInput value={q ?? ''} onChange={() => {}} placeholder="Buscar por nombre, email, folio o servicio…" />
-          <button type="submit" style={{ background: COLORS.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ''}
+            placeholder="Buscar por nombre, email, folio o servicio…"
+            style={{
+              flex: 1, padding: '10px 16px',
+              border: `1.5px solid ${COLORS.borderLight}`,
+              borderRadius: 10, fontSize: 13,
+              outline: 'none', background: '#fff',
+              fontFamily: 'inherit',
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              background: COLORS.primary, color: '#fff', border: 'none',
+              borderRadius: 10, padding: '10px 18px',
+              fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            }}
+          >
             Buscar
           </button>
           {(q || estado) && (
-            <a href="/admin/leads" style={{ background: COLORS.bgHover, color: COLORS.textSecondary, borderRadius: 10, padding: '10px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <a
+              href="/admin/leads"
+              style={{
+                background: COLORS.bgHover, color: COLORS.textSecondary,
+                borderRadius: 10, padding: '10px 14px', fontSize: 12,
+                fontWeight: 600, textDecoration: 'none',
+                display: 'flex', alignItems: 'center',
+              }}
+            >
               Limpiar ×
             </a>
           )}
