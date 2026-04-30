@@ -36,11 +36,23 @@ export default async function ReportesPage() {
     // Silently fail analytics
   }
 
+  // Supabase infiere `lead` como array en joins de FK 1-a-1.
+  // Normalizamos aquí para que coincida con los tipos del cliente.
+  const paymentsNorm = (payments || []).map((p) => ({
+    ...p,
+    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : p.lead,
+  }))
+
+  const projectsNorm = (projects || []).map((p) => ({
+    ...p,
+    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : p.lead,
+  }))
+
   return (
     <ReportesClient
-      payments={payments || []}
+      payments={paymentsNorm as any}
       leads={leads || []}
-      projects={projects || []}
+      projects={projectsNorm as any}
       emails={emails || []}
       posthog={posthog}
       sentry={sentry}
