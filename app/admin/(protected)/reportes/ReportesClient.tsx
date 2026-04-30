@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -14,14 +14,14 @@ import jsPDF from 'jspdf'
 type PaymentParent = {
   id: string
   lead_id: string
-  contract_value: number | string | null
+  contract_value: number
   description: string | null
   payment_month: string | null
   status: string
   created_at: string
   installments: {
     id?: string
-    amount: number | string
+    amount: number
     payment_date: string
     status: 'pagado' | 'pendiente' | 'vencido'
     payment_method?: string
@@ -40,7 +40,7 @@ type Lead = {
   folio: string | null
   servicio: string | null
   estado: string | null
-  estimated_value: number | string | null
+  estimated_value: number | null
   created_at: string
 }
 
@@ -91,48 +91,40 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-/** Parsea número desde Supabase (string o number) → number seguro */
-function n(v: number | string | null | undefined): number {
-  if (v == null) return 0
-  if (typeof v === 'number') return isNaN(v) ? 0 : v
-  const parsed = parseFloat(String(v).replace(/,/g, ''))
+// Supabase a veces devuelve números como strings en joins. Este helper los normaliza.
+function n(v: any): number {
+  const parsed = parseFloat(String(v ?? 0))
   return isNaN(parsed) ? 0 : parsed
 }
 
-function fmtMoney(v: number | string | null | undefined) {
-  const num = n(v)
-  return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(num)
+function fmtMoney(v: number) {
+  return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(v)
 }
 
 function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
+  const [y, m, day] = d.split('T')[0].split('-').map(Number)
+  return new Date(y, m - 1, day).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
 }
 
-/** Extrae YYYY-MM de una fecha ISO de forma segura (sin zona horaria) */
+// Usa fecha local sin desfase de UTC
+function safeDate(d: string | null | undefined): Date | null {
+  if (!d) return null
+  const clean = d.split('T')[0]
+  const parts = clean.split('-').map(Number)
+  if (parts.length !== 3 || parts.some(isNaN)) return null
+  return new Date(parts[0], parts[1] - 1, parts[2])
+}
+
 function getMonthKey(d: string) {
-  const iso = d?.split('T')[0] ?? d
-  const parts = iso.split('-')
-  if (parts.length >= 2) return `${parts[0]}-${parts[1]}`
-  const date = new Date(d)
+  const date = safeDate(d)
+  if (!date) return 'unknown'
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
 function getMonthLabel(d: string) {
-  const iso = d?.split('T')[0] ?? d
-  const parts = iso.split('-')
-  if (parts.length >= 2) {
-    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, 1)
-    return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
-  }
-  const date = new Date(d)
+  const date = safeDate(d)
+  if (!date) return '—'
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
-}
-
-/** Compara fechas solo por componente YYYY-MM-DD, evitando problemas de zona horaria */
-function safeDate(d: string): Date {
-  const iso = d?.split('T')[0] ?? d
-  const [y, m, day] = iso.split('-').map(Number)
-  return new Date(y, (m || 1) - 1, day || 1)
 }
 
 // ─── Component ─────────────────────────────────────────────────────
@@ -170,44 +162,42 @@ export default function ReportesClient({
   }, [dateRange])
 
   const filteredPayments = payments.filter(p => {
-    const created = safeDate(p.created_at)
-    if (created >= cutoffDate) return true
-    return p.installments.some(i => i.payment_date && safeDate(i.payment_date) >= cutoffDate)
-  })
-  const filteredLeads    = leads.filter(l => {
-    const d = safeDate(l.created_at)
-    return !isNaN(d.getTime()) && d >= cutoffDate
-  })
-  const filteredProjects = projects.filter(p => {
     const d = safeDate(p.created_at)
-    return !isNaN(d.getTime()) && d >= cutoffDate
+    if (d && d >= cutoffDate) return true
+    // incluir contratos con cuotas dentro del rango aunque el contrato sea más antiguo
+    return p.installments.some(i => {
+      const id = safeDate(i.payment_date)
+      return id && id >= cutoffDate
+    })
   })
-  const filteredEmails   = emails.filter(e => {
-    const d = safeDate(e.sent_at)
-    return !isNaN(d.getTime()) && d >= cutoffDate
-  })
+  const filteredLeads    = leads.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
+  const filteredProjects = projects.filter(p => { const d = safeDate(p.created_at); return d ? d >= cutoffDate : false })
+  const filteredEmails   = emails.filter(e => { const d = safeDate(e.sent_at); return d ? d >= cutoffDate : false })
 
   // ── Computed Data ──
   const financeData = useMemo(() => {
     const totalFacturado = filteredPayments.reduce((s, p) => s + n(p.contract_value), 0)
-    const totalPagado = filteredPayments.reduce((s, p) =>
+    const totalPagado    = filteredPayments.reduce((s, p) =>
       s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
     const totalPendiente = totalFacturado - totalPagado
-    const totalVencido = filteredPayments.reduce((s, p) =>
+    const totalVencido   = filteredPayments.reduce((s, p) =>
       s + p.installments.filter(i => i.status === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
-    
-    // Monthly revenue data
+
+    // Monthly revenue — agrupa por mes del contrato
     const monthlyMap = new Map<string, { month: string; facturado: number; pagado: number; pendiente: number }>()
     filteredPayments.forEach(p => {
-      const key = getMonthKey(p.created_at)
+      const key   = getMonthKey(p.created_at)
       const label = getMonthLabel(p.created_at)
+      if (key === 'unknown') return
       const existing = monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
       existing.facturado += n(p.contract_value)
-      existing.pagado += p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
+      existing.pagado    += p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       existing.pendiente += p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       monthlyMap.set(key, existing)
     })
-    const monthlyRevenue = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
+    const monthlyRevenue = Array.from(monthlyMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, v]) => v)
 
     // Payment method distribution
     const methodMap = new Map<string, number>()
@@ -217,17 +207,17 @@ export default function ReportesClient({
         methodMap.set(method, (methodMap.get(method) || 0) + n(i.amount))
       })
     })
-    const methodData = Array.from(methodMap.entries()).map(([name, value]) => ({
+    const methodData = Array.from(methodMap.entries()).map(([name, value], idx) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       value,
-      color: COLORS.primary[methodMap.size % COLORS.primary.length]
+      color: COLORS.primary[idx % COLORS.primary.length],
     }))
 
     // Status distribution
     const statusCounts = [
-      { name: 'Pagado', value: filteredPayments.filter(p => p.installments.every(i => i.status === 'pagado')).length, color: '#10b981' },
+      { name: 'Pagado',      value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')).length,   color: '#10b981' },
       { name: 'En progreso', value: filteredPayments.filter(p => p.installments.some(i => i.status === 'pendiente')).length, color: '#f59e0b' },
-      { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status === 'vencido')).length, color: '#ef4444' },
+      { name: 'Con vencidas',value: filteredPayments.filter(p => p.installments.some(i => i.status === 'vencido')).length,  color: '#ef4444' },
     ]
 
     return { totalFacturado, totalPagado, totalPendiente, totalVencido, monthlyRevenue, methodData, statusCounts }
@@ -256,12 +246,12 @@ export default function ReportesClient({
       const label = getMonthLabel(l.created_at)
       const existing = monthlyMap.get(key) || { month: label, leads: 0, valor: 0 }
       existing.leads += 1
-      existing.valor += n(l.estimated_value)
+      existing.valor += l.estimated_value || 0
       monthlyMap.set(key, existing)
     })
     const monthlyLeads = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
 
-    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
+    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + (l.estimated_value || 0), 0) }
   }, [filteredLeads])
 
   const projectsData = useMemo(() => {
@@ -644,12 +634,12 @@ export default function ReportesClient({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={filteredPayments
-                    .sort((a, b) => n(b.contract_value) - n(a.contract_value))
+                    .sort((a, b) => (b.contract_value || 0) - (a.contract_value || 0))
                     .slice(0, 10)
                     .map(p => ({
                       name: p.lead?.nombre?.slice(0, 15) || 'Sin nombre',
-                      valor: n(p.contract_value),
-                      pagado: p.installments.filter(i => i.status === 'pagado').reduce((s, i) => s + n(i.amount), 0),
+                      valor: p.contract_value || 0,
+                      pagado: p.installments.filter(i => i.status === 'pagado').reduce((s, i) => s + Number(i.amount), 0),
                     }))}
                   layout="vertical"
                 >
