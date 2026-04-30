@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -14,14 +14,14 @@ import jsPDF from 'jspdf'
 type PaymentParent = {
   id: string
   lead_id: string
-  contract_value: number
+  contract_value: number | string | null
   description: string | null
   payment_month: string | null
   status: string
   created_at: string
   installments: {
     id?: string
-    amount: number
+    amount: number | string
     payment_date: string
     status: 'pagado' | 'pendiente' | 'vencido'
     payment_method?: string
@@ -40,7 +40,7 @@ type Lead = {
   folio: string | null
   servicio: string | null
   estado: string | null
-  estimated_value: number | null
+  estimated_value: number | string | null
   created_at: string
 }
 
@@ -91,22 +91,48 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n)
+/** Parsea número desde Supabase (string o number) → number seguro */
+function n(v: number | string | null | undefined): number {
+  if (v == null) return 0
+  if (typeof v === 'number') return isNaN(v) ? 0 : v
+  const parsed = parseFloat(String(v).replace(/,/g, ''))
+  return isNaN(parsed) ? 0 : parsed
+}
+
+function fmtMoney(v: number | string | null | undefined) {
+  const num = n(v)
+  return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(num)
 }
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
 }
 
+/** Extrae YYYY-MM de una fecha ISO de forma segura (sin zona horaria) */
 function getMonthKey(d: string) {
+  const iso = d?.split('T')[0] ?? d
+  const parts = iso.split('-')
+  if (parts.length >= 2) return `${parts[0]}-${parts[1]}`
   const date = new Date(d)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
 function getMonthLabel(d: string) {
+  const iso = d?.split('T')[0] ?? d
+  const parts = iso.split('-')
+  if (parts.length >= 2) {
+    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, 1)
+    return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
+  }
   const date = new Date(d)
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
+}
+
+/** Compara fechas solo por componente YYYY-MM-DD, evitando problemas de zona horaria */
+function safeDate(d: string): Date {
+  const iso = d?.split('T')[0] ?? d
+  const [y, m, day] = iso.split('-').map(Number)
+  return new Date(y, (m || 1) - 1, day || 1)
 }
 
 // ─── Component ─────────────────────────────────────────────────────
@@ -143,33 +169,32 @@ export default function ReportesClient({
     }
   }, [dateRange])
 
-  // Un contrato aplica si fue creado en el rango O si tiene cuotas con fecha en el rango.
-  // Usamos cutoffDate = new Date(0) para 'all', por lo que siempre pasa.
   const filteredPayments = payments.filter(p => {
-    if (new Date(p.created_at) >= cutoffDate) return true
-    return p.installments.some(i => i.payment_date && new Date(i.payment_date) >= cutoffDate)
+    const created = safeDate(p.created_at)
+    if (created >= cutoffDate) return true
+    return p.installments.some(i => i.payment_date && safeDate(i.payment_date) >= cutoffDate)
   })
   const filteredLeads    = leads.filter(l => {
-    const d = new Date(l.created_at)
+    const d = safeDate(l.created_at)
     return !isNaN(d.getTime()) && d >= cutoffDate
   })
   const filteredProjects = projects.filter(p => {
-    const d = new Date(p.created_at)
+    const d = safeDate(p.created_at)
     return !isNaN(d.getTime()) && d >= cutoffDate
   })
   const filteredEmails   = emails.filter(e => {
-    const d = new Date(e.sent_at)
+    const d = safeDate(e.sent_at)
     return !isNaN(d.getTime()) && d >= cutoffDate
   })
 
   // ── Computed Data ──
   const financeData = useMemo(() => {
-    const totalFacturado = filteredPayments.reduce((s, p) => s + (p.contract_value || 0), 0)
+    const totalFacturado = filteredPayments.reduce((s, p) => s + n(p.contract_value), 0)
     const totalPagado = filteredPayments.reduce((s, p) =>
-      s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + (Number(i.amount) || 0), 0), 0)
+      s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
     const totalPendiente = totalFacturado - totalPagado
     const totalVencido = filteredPayments.reduce((s, p) =>
-      s + p.installments.filter(i => i.status === 'vencido').reduce((sum, i) => sum + (Number(i.amount) || 0), 0), 0)
+      s + p.installments.filter(i => i.status === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
     
     // Monthly revenue data
     const monthlyMap = new Map<string, { month: string; facturado: number; pagado: number; pendiente: number }>()
@@ -177,9 +202,9 @@ export default function ReportesClient({
       const key = getMonthKey(p.created_at)
       const label = getMonthLabel(p.created_at)
       const existing = monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
-      existing.facturado += p.contract_value || 0
-      existing.pagado += p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
-      existing.pendiente += p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
+      existing.facturado += n(p.contract_value)
+      existing.pagado += p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
+      existing.pendiente += p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       monthlyMap.set(key, existing)
     })
     const monthlyRevenue = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
@@ -189,7 +214,7 @@ export default function ReportesClient({
     filteredPayments.forEach(p => {
       p.installments.filter(i => i.status === 'pagado').forEach(i => {
         const method = i.payment_method || 'otro'
-        methodMap.set(method, (methodMap.get(method) || 0) + Number(i.amount))
+        methodMap.set(method, (methodMap.get(method) || 0) + n(i.amount))
       })
     })
     const methodData = Array.from(methodMap.entries()).map(([name, value]) => ({
@@ -231,12 +256,12 @@ export default function ReportesClient({
       const label = getMonthLabel(l.created_at)
       const existing = monthlyMap.get(key) || { month: label, leads: 0, valor: 0 }
       existing.leads += 1
-      existing.valor += l.estimated_value || 0
+      existing.valor += n(l.estimated_value)
       monthlyMap.set(key, existing)
     })
     const monthlyLeads = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
 
-    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + (l.estimated_value || 0), 0) }
+    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
   }, [filteredLeads])
 
   const projectsData = useMemo(() => {
@@ -619,12 +644,12 @@ export default function ReportesClient({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={filteredPayments
-                    .sort((a, b) => (b.contract_value || 0) - (a.contract_value || 0))
+                    .sort((a, b) => n(b.contract_value) - n(a.contract_value))
                     .slice(0, 10)
                     .map(p => ({
                       name: p.lead?.nombre?.slice(0, 15) || 'Sin nombre',
-                      valor: p.contract_value || 0,
-                      pagado: p.installments.filter(i => i.status === 'pagado').reduce((s, i) => s + Number(i.amount), 0),
+                      valor: n(p.contract_value),
+                      pagado: p.installments.filter(i => i.status === 'pagado').reduce((s, i) => s + n(i.amount), 0),
                     }))}
                   layout="vertical"
                 >
