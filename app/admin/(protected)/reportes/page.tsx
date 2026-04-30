@@ -7,9 +7,9 @@ export default async function ReportesPage() {
   const supabase = await createClient()
 
   const [
-    { data: payments },
+    { data: rawPayments },
     { data: leads },
-    { data: projects },
+    { data: rawProjects },
     { data: emails },
   ] = await Promise.all([
     supabase.from('payment_parents').select(`
@@ -22,37 +22,45 @@ export default async function ReportesPage() {
     supabase.from('email_sends').select('id, to_email, template_name, sent_at, opened').order('sent_at', { ascending: false }).limit(1000),
   ])
 
-  // Fetch PostHog & Sentry data
+  // Supabase devuelve `lead` como array en joins de FK 1-a-1.
+  // Normalizamos a objeto singular Y casteamos números que llegan como strings.
+  const payments = (rawPayments || []).map((p: any) => ({
+    ...p,
+    contract_value: parseFloat(p.contract_value ?? 0) || 0,
+    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : (p.lead ?? null),
+    installments: (p.installments || []).map((i: any) => ({
+      ...i,
+      amount: parseFloat(i.amount ?? 0) || 0,
+    })),
+  }))
+
+  const projects = (rawProjects || []).map((p: any) => ({
+    ...p,
+    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : (p.lead ?? null),
+  }))
+
+  // PostHog y Sentry — usar URL absoluta correcta en SSR
   let posthog = null
-  let sentry = null
+  let sentry  = null
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
     const [phRes, seRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/admin/posthog-stats`, { next: { revalidate: 300 } }),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/admin/sentry-stats`, { next: { revalidate: 300 } }),
+      fetch(`${baseUrl}/api/admin/posthog-stats`, { next: { revalidate: 300 } }),
+      fetch(`${baseUrl}/api/admin/sentry-stats`,  { next: { revalidate: 300 } }),
     ])
     if (phRes.ok) posthog = await phRes.json()
-    if (seRes.ok) sentry = await seRes.json()
+    if (seRes.ok) sentry  = await seRes.json()
   } catch {
-    // Silently fail analytics
+    // Analytics opcional — falla silenciosa
   }
-
-  // Supabase infiere `lead` como array en joins de FK 1-a-1.
-  // Normalizamos aquí para que coincida con los tipos del cliente.
-  const paymentsNorm = (payments || []).map((p) => ({
-    ...p,
-    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : p.lead,
-  }))
-
-  const projectsNorm = (projects || []).map((p) => ({
-    ...p,
-    lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : p.lead,
-  }))
 
   return (
     <ReportesClient
-      payments={paymentsNorm as any}
+      payments={payments}
       leads={leads || []}
-      projects={projectsNorm as any}
+      projects={projects}
       emails={emails || []}
       posthog={posthog}
       sentry={sentry}

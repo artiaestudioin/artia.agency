@@ -91,10 +91,10 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-// Supabase a veces devuelve números como strings en joins. Este helper los normaliza.
+// Normaliza cualquier valor a número (cubre strings de Supabase como "150.00")
 function n(v: any): number {
-  const parsed = parseFloat(String(v ?? 0))
-  return isNaN(parsed) ? 0 : parsed
+  const p = parseFloat(String(v ?? 0))
+  return isNaN(p) ? 0 : p
 }
 
 function fmtMoney(v: number) {
@@ -106,22 +106,21 @@ function fmtDate(d: string) {
   return new Date(y, m - 1, day).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
 }
 
-// Usa fecha local sin desfase de UTC
+// Parsea fecha SIN desfase de zona horaria (new Date("2026-04-22") = UTC, en EC es el 21)
 function safeDate(d: string | null | undefined): Date | null {
   if (!d) return null
-  const clean = d.split('T')[0]
-  const parts = clean.split('-').map(Number)
+  const parts = d.split('T')[0].split('-').map(Number)
   if (parts.length !== 3 || parts.some(isNaN)) return null
   return new Date(parts[0], parts[1] - 1, parts[2])
 }
 
-function getMonthKey(d: string) {
+function getMonthKey(d: string): string {
   const date = safeDate(d)
   if (!date) return 'unknown'
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
-function getMonthLabel(d: string) {
+function getMonthLabel(d: string): string {
   const date = safeDate(d)
   if (!date) return '—'
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
@@ -164,15 +163,11 @@ export default function ReportesClient({
   const filteredPayments = payments.filter(p => {
     const d = safeDate(p.created_at)
     if (d && d >= cutoffDate) return true
-    // incluir contratos con cuotas dentro del rango aunque el contrato sea más antiguo
-    return p.installments.some(i => {
-      const id = safeDate(i.payment_date)
-      return id && id >= cutoffDate
-    })
+    return p.installments.some(i => { const id = safeDate(i.payment_date); return id !== null && id >= cutoffDate })
   })
-  const filteredLeads    = leads.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
+  const filteredLeads    = leads.filter(l    => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
   const filteredProjects = projects.filter(p => { const d = safeDate(p.created_at); return d ? d >= cutoffDate : false })
-  const filteredEmails   = emails.filter(e => { const d = safeDate(e.sent_at); return d ? d >= cutoffDate : false })
+  const filteredEmails   = emails.filter(e   => { const d = safeDate(e.sent_at);    return d ? d >= cutoffDate : false })
 
   // ── Computed Data ──
   const financeData = useMemo(() => {
@@ -215,9 +210,9 @@ export default function ReportesClient({
 
     // Status distribution
     const statusCounts = [
-      { name: 'Pagado',      value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')).length,   color: '#10b981' },
-      { name: 'En progreso', value: filteredPayments.filter(p => p.installments.some(i => i.status === 'pendiente')).length, color: '#f59e0b' },
-      { name: 'Con vencidas',value: filteredPayments.filter(p => p.installments.some(i => i.status === 'vencido')).length,  color: '#ef4444' },
+      { name: 'Pagado',       value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')).length,  color: '#10b981' },
+      { name: 'En progreso',  value: filteredPayments.filter(p => p.installments.some(i => i.status === 'pendiente')).length, color: '#f59e0b' },
+      { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status === 'vencido')).length,  color: '#ef4444' },
     ]
 
     return { totalFacturado, totalPagado, totalPendiente, totalVencido, monthlyRevenue, methodData, statusCounts }
@@ -246,12 +241,12 @@ export default function ReportesClient({
       const label = getMonthLabel(l.created_at)
       const existing = monthlyMap.get(key) || { month: label, leads: 0, valor: 0 }
       existing.leads += 1
-      existing.valor += l.estimated_value || 0
+      existing.valor += n(l.estimated_value)
       monthlyMap.set(key, existing)
     })
     const monthlyLeads = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
 
-    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + (l.estimated_value || 0), 0) }
+    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
   }, [filteredLeads])
 
   const projectsData = useMemo(() => {
@@ -290,45 +285,68 @@ export default function ReportesClient({
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
-  // ── Export PDF ──
+  // ── Export PDF — exporta TODO el módulo tab por tab ──
   async function exportPDF() {
     if (!reportRef.current) return
     setExporting(true)
+
+    const originalTab = activeTab
+    const tabs: Array<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'> =
+      ['general', 'finanzas', 'leads', 'proyectos', 'analytics']
+
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        windowWidth: 1400,
-      })
-      
-      const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfWidth  = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = canvas.width
-      const imgHeight = canvas.height
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
-      const imgX = (pdfWidth - imgWidth * ratio) / 2
-      
-      let heightLeft = imgHeight * ratio
-      let position = 0
-      
-      pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio)
-      heightLeft -= pdfHeight
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight * ratio
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio)
-        heightLeft -= pdfHeight
+      let firstPage = true
+
+      for (const tab of tabs) {
+        // Cambiar a la tab, esperar que renderice
+        setActiveTab(tab)
+        await new Promise(r => setTimeout(r, 600))
+
+        if (!reportRef.current) continue
+        const canvas = await html2canvas(reportRef.current, {
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          windowWidth: 1200,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+        })
+
+        const imgData   = canvas.toDataURL('image/png')
+        const imgW      = canvas.width
+        const imgH      = canvas.height
+        const ratio     = pdfWidth / imgW
+        const renderedH = imgH * ratio
+        let   remaining = renderedH
+        let   srcY      = 0
+
+        while (remaining > 0) {
+          if (!firstPage) pdf.addPage()
+          firstPage = false
+
+          // Recortar el trozo de canvas que cabe en la página
+          const sliceH  = Math.min(pdfHeight, remaining)
+          const sliceCanvas = document.createElement('canvas')
+          sliceCanvas.width  = imgW
+          sliceCanvas.height = Math.ceil(sliceH / ratio)
+          const ctx = sliceCanvas.getContext('2d')!
+          ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
+          pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, sliceH)
+
+          srcY      += sliceCanvas.height
+          remaining -= pdfHeight
+        }
       }
-      
+
       pdf.save(`reporte-artia-${new Date().toISOString().slice(0, 10)}.pdf`)
     } catch (err) {
       console.error('Error exportando PDF:', err)
-      alert('Error al generar PDF')
+      alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
     } finally {
+      setActiveTab(originalTab)
       setExporting(false)
     }
   }
@@ -407,7 +425,7 @@ export default function ReportesClient({
                 transition: 'all 0.2s',
               }}
             >
-              {exporting ? '⏳ Generando…' : '📄 Exportar PDF'}
+              {exporting ? '⏳ Exportando todas las tabs…' : '📄 Exportar PDF'}
             </button>
           </div>
         </div>
@@ -489,8 +507,8 @@ export default function ReportesClient({
               <KPIPulseCard
                 icon="👁️"
                 label="Pageviews (7d)"
-                value={posthog ? posthog.pageviews.toLocaleString() : '—'}
-                sub="PostHog Analytics"
+                value={posthog?.pageviews != null ? posthog.pageviews.toLocaleString() : '—'}
+                sub={posthog ? 'PostHog Analytics' : 'No configurado'}
                 color="#f97316"
               />
             </div>
