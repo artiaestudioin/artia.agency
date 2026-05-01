@@ -67,6 +67,8 @@ console.log("DATOS ENVIADOS AL CLIENTE:", JSON.stringify(payments[0], null, 2));
         projects={projects}
         emails={emails || []}
         paymentMethods={paymentMethodsData || []}
+        posthog={posthog}        // ← AGREGAR
+  sentry={sentry}          // ← AGREGAR
       />
 
       {/* 2. Sección de Analítica s (Tus nuevos widgets) */}
