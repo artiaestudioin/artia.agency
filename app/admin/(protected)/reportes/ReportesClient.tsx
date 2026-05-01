@@ -126,7 +126,7 @@ function getMonthLabel(d: string): string {
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
 }
 
-// Garantiza una serie temporal continua de N meses para que las gráficas siempre tengan curva
+// Garantiza serie temporal continua de N meses → las gráficas siempre tienen curva
 function buildLastNMonths(n: number): { key: string; label: string }[] {
   const result: { key: string; label: string }[] = []
   const now = new Date()
@@ -142,8 +142,7 @@ function buildLastNMonths(n: number): { key: string; label: string }[] {
 // ─── Component ─────────────────────────────────────────────────────
 
 export default function ReportesClient({
-  initialPayments, 
-  payments = initialPayments || [],
+  payments = [],
   leads,
   projects,
   emails,
@@ -327,7 +326,6 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
       let firstPage = true
 
       for (const tab of tabs) {
-        // Cambiar a la tab, esperar que renderice
         setActiveTab(tab)
         await new Promise(r => setTimeout(r, 700))
 
@@ -358,11 +356,11 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
           sliceCanvas.width  = imgW
           sliceCanvas.height = Math.ceil(sliceH / ratio)
           const ctx = sliceCanvas.getContext('2d')!
-          // Rellenar fondo blanco antes de dibujar para eliminar transparencia
+          // Fondo blanco explícito antes de dibujar → elimina transparencia
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
           ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
-          // JPEG en lugar de PNG: mucho más liviano y sin transparencia
+          // JPEG en vez de PNG: sin transparencia, ~5x más liviano
           pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, pdfWidth, sliceH)
 
           srcY      += sliceCanvas.height
@@ -607,37 +605,27 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
               <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
                 <div style={{ padding: '8px 0' }}>
                   {projectsData.byStatus.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '40px 0' }}>Sin proyectos en este período</div>
-                  ) : (
-                    (() => {
-                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
-                      return projectsData.byStatus.map((entry, i) => (
-                        <div key={i} style={{ marginBottom: 18 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ width: 10, height: 10, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                              <span style={{
-                                fontSize: 13, fontWeight: 800, color: entry.color,
-                                background: `${entry.color}15`, padding: '2px 10px', borderRadius: 20,
-                              }}>{entry.value}</span>
-                            </div>
+                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '60px 0' }}>Sin proyectos en este período</div>
+                  ) : (() => {
+                    const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                    return projectsData.byStatus.map((entry, i) => (
+                      <div key={i} style={{ marginBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
                           </div>
-                          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{
-                              height: '100%', borderRadius: 99,
-                              width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
-                              background: entry.color,
-                              transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
-                            }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: entry.color, background: `${entry.color}18`, padding: '2px 10px', borderRadius: 20 }}>{entry.value}</span>
                           </div>
                         </div>
-                      ))
-                    })()
-                  )}
+                        <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: entry.color, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
+                        </div>
+                      </div>
+                    ))
+                  })()}
                 </div>
               </ChartCard>
             </div>
@@ -811,59 +799,42 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
-                <div style={{ padding: '16px 0' }}>
+                <div style={{ padding: '8px 0' }}>
                   {projectsData.byStatus.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '60px 0' }}>Sin proyectos en este período</div>
-                  ) : (
-                    (() => {
-                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
-                      return (
-                        <>
-                          {/* Barra de proporción visual */}
-                          <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
-                            {projectsData.byStatus.map((entry, i) => (
-                              <div key={i} style={{
-                                flex: entry.value,
-                                background: entry.color,
-                                transition: 'flex 0.8s ease',
-                                minWidth: entry.value > 0 ? 4 : 0,
-                              }} />
-                            ))}
-                          </div>
-                          {/* Lista detallada */}
+                  ) : (() => {
+                    const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                    return (
+                      <>
+                        <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
                           {projectsData.byStatus.map((entry, i) => (
-                            <div key={i} style={{ marginBottom: 20 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
-                                  <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                                  <span style={{
-                                    fontSize: 14, fontWeight: 800, color: '#fff',
-                                    background: entry.color, padding: '3px 12px', borderRadius: 20,
-                                  }}>{entry.value}</span>
-                                </div>
+                            <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
+                          ))}
+                        </div>
+                        {projectsData.byStatus.map((entry, i) => (
+                          <div key={i} style={{ marginBottom: 18 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
+                                <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
                               </div>
-                              <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                <div style={{
-                                  height: '100%', borderRadius: 99,
-                                  width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
-                                  background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`,
-                                  transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
-                                }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
                               </div>
                             </div>
-                          ))}
-                          <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                            <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
+                            </div>
                           </div>
-                        </>
-                      )
-                    })()
-                  )}
+                        ))}
+                        <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
+                          <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               </ChartCard>
 
@@ -899,7 +870,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
                 color="#ef4444"
               />
             </div>
-//posthog añadido
+
             {posthog && posthog.daily.length > 0 && (
               <ChartCard title="Trafico Web — Últimos 7 días" subtitle="Pageviews diarios">
                 <ResponsiveContainer width="100%" height={300}>
