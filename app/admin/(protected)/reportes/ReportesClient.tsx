@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -91,7 +91,6 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
-// Normaliza cualquier valor a número (cubre strings de Supabase como "150.00")
 function n(v: any): number {
   const p = parseFloat(String(v ?? 0))
   return isNaN(p) ? 0 : p
@@ -106,7 +105,6 @@ function fmtDate(d: string) {
   return new Date(y, m - 1, day).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
 }
 
-// Parsea fecha SIN desfase de zona horaria (new Date("2026-04-22") = UTC, en EC es el 21)
 function safeDate(d: string | null | undefined): Date | null {
   if (!d) return null
   const parts = d.split('T')[0].split('-').map(Number)
@@ -126,7 +124,6 @@ function getMonthLabel(d: string): string {
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
 }
 
-// Garantiza una serie temporal continua de N meses para que las gráficas siempre tengan curva
 function buildLastNMonths(n: number): { key: string; label: string }[] {
   const result: { key: string; label: string }[] = []
   const now = new Date()
@@ -151,7 +148,7 @@ export default function ReportesClient({
   sentry,
   paymentMethods = [],
 }: {
-  initialPayments?: PaymentParent[]   // opcional — lo usa page.tsx como fallback
+  initialPayments?: PaymentParent[]
   payments?: PaymentParent[]
   leads: Lead[]
   projects: Project[]
@@ -187,35 +184,30 @@ export default function ReportesClient({
   const filteredEmails   = emails.filter(e   => { const d = safeDate(e.sent_at);    return d ? d >= cutoffDate : false })
 
   // ── Computed Data ──
-  // ─── Pon esto ARRIBA con los otros useMemo ───────────────────────
-const methodData = useMemo(() => {
-  const methodMap = new Map<string, number>()
-  
-  if (paymentMethods && Array.isArray(paymentMethods)) {
-    paymentMethods.forEach((p: any) => {
-      // Normalizamos: primera letra mayúscula, resto minúscula
-      const raw = p.method?.trim().toLowerCase() || 'otro';
-      const method = raw.charAt(0).toUpperCase() + raw.slice(1);
-      
-      methodMap.set(method, (methodMap.get(method) || 0) + 1)
-    })
-  }
+  const methodData = useMemo(() => {
+    const methodMap = new Map<string, number>()
+    if (paymentMethods && Array.isArray(paymentMethods)) {
+      paymentMethods.forEach((p: any) => {
+        const raw = p.method?.trim().toLowerCase() || 'otro';
+        const method = raw.charAt(0).toUpperCase() + raw.slice(1);
+        methodMap.set(method, (methodMap.get(method) || 0) + 1)
+      })
+    }
+    return Array.from(methodMap.entries()).map(([name, value], idx) => ({
+      name,
+      value,
+      color: COLORS.gradient[idx % COLORS.gradient.length],
+    }))
+  }, [paymentMethods])
 
-  return Array.from(methodMap.entries()).map(([name, value], idx) => ({
-    name, // Ya viene formateado
-    value,
-    color: COLORS.gradient[idx % COLORS.gradient.length],
-  }))
-}, [paymentMethods])
   const financeData = useMemo(() => {
     const totalFacturado = filteredPayments.reduce((s, p) => s + n(p.contract_value), 0)
     const totalPagado = filteredPayments.reduce((s, p) =>
-  s + p.installments.filter(i => i.status?.toLowerCase() === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
+      s + p.installments.filter(i => i.status?.toLowerCase() === 'pagado').reduce((sum, i) => sum + n(i.amount), 0), 0)
     const totalPendiente = totalFacturado - totalPagado
     const totalVencido = filteredPayments.reduce((s, p) =>
-  s + p.installments.filter(i => i.status?.toLowerCase() === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
+      s + p.installments.filter(i => i.status?.toLowerCase() === 'vencido').reduce((sum, i) => sum + n(i.amount), 0), 0)
 
-    // Monthly revenue — agrupa por mes del contrato
     const monthlyMap = new Map<string, { month: string; facturado: number; pagado: number; pendiente: number }>()
     filteredPayments.forEach(p => {
       const key   = getMonthKey(p.created_at)
@@ -224,19 +216,18 @@ const methodData = useMemo(() => {
       const existing = monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
       existing.facturado += n(p.contract_value)
       existing.pagado += p.installments.filter(i => i.status?.toLowerCase() === 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
-existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
+      existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       monthlyMap.set(key, existing)
     })
     const monthlyRevenue = buildLastNMonths(6).map(({ key, label }) =>
       monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
     )
 
-    // Status distribution
     const statusCounts = [
-  { name: 'Pagado', value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status?.toLowerCase() === 'pagado')).length, color: '#10b981' },
-  { name: 'En progreso', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'pendiente')).length, color: '#f59e0b' },
-  { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'vencido')).length, color: '#ef4444' },
-]
+      { name: 'Pagado', value: filteredPayments.filter(p => p.installments.length > 0 && p.installments.every(i => i.status?.toLowerCase() === 'pagado')).length, color: '#10b981' },
+      { name: 'En progreso', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'pendiente')).length, color: '#f59e0b' },
+      { name: 'Con vencidas', value: filteredPayments.filter(p => p.installments.some(i => i.status?.toLowerCase() === 'vencido')).length, color: '#ef4444' },
+    ]
 
     return { totalFacturado, totalPagado, totalPendiente, totalVencido, monthlyRevenue, methodData, statusCounts }
   }, [filteredPayments])
@@ -257,7 +248,6 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
       }, {} as Record<string, number>)
     ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6)
 
-    // Monthly leads
     const monthlyMap = new Map<string, { month: string; leads: number; valor: number }>()
     filteredLeads.forEach(l => {
       const key = getMonthKey(l.created_at)
@@ -312,7 +302,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
-  // ── Export PDF — exporta TODO el módulo tab por tab ──
+  // ── Export PDF ──
   async function exportPDF() {
     if (!reportRef.current) return
     setExporting(true)
@@ -325,23 +315,99 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth  = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
-      let firstPage = true
+      
+      // ─── PORTADA DEL PDF ───
+      const now = new Date()
+      const fechaStr = now.toLocaleDateString('es-EC', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      
+      // Fondo oscuro para portada
+      pdf.setFillColor(0, 17, 58) // #00113a
+      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+      
+      // Logo / Marca
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFontSize(42)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
+      
+      pdf.setFontSize(14)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
+      
+      // Línea decorativa
+      pdf.setDrawColor(99, 102, 241)
+      pdf.setLineWidth(1.5)
+      pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
+      
+      // Título del reporte
+      pdf.setFontSize(22)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
+      
+      // Descripción
+      pdf.setFontSize(11)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setTextColor(148, 163, 184) // slate-400
+      const descLines = pdf.splitTextToSize(
+        'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, leads, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
+        pdfWidth - 60
+      )
+      pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
+      
+      // Fecha de generación
+      pdf.setFontSize(12)
+      pdf.setTextColor(255, 255, 255)
+      pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
+      
+      // Info del período
+      const periodoLabel = {
+        '7d': 'Últimos 7 días',
+        '30d': 'Últimos 30 días',
+        '90d': 'Últimos 90 días',
+        '1y': 'Último año',
+        'all': 'Histórico completo'
+      }[dateRange]
+      
+      pdf.setFontSize(10)
+      pdf.setTextColor(148, 163, 184)
+      pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
+      
+      // URL
+      pdf.setFontSize(9)
+      pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
+      
+      let firstPage = false // Ya tenemos la portada
 
       for (const tab of tabs) {
-        // Cambiar a la tab, esperar que renderice
         setActiveTab(tab)
-        await new Promise(r => setTimeout(r, 700))
+        await new Promise(r => setTimeout(r, 900)) // Más tiempo para renderizar
 
         if (!reportRef.current) continue
-        const canvas = await html2canvas(reportRef.current, {
-          scale: 1.2,
+        
+        // ─── CRÍTICO: Forzar fondo blanco antes de capturar ───
+        const el = reportRef.current
+        const originalBg = el.style.backgroundColor
+        el.style.backgroundColor = '#ffffff'
+        
+        const canvas = await html2canvas(el, {
+          scale: 2, // Mayor calidad
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 1200,
+          backgroundColor: '#ffffff', // Fondo explícito
+          windowWidth: 1400,
           scrollX: 0,
           scrollY: -window.scrollY,
         })
+        
+        // Restaurar fondo original
+        el.style.backgroundColor = originalBg
 
         const imgW      = canvas.width
         const imgH      = canvas.height
@@ -351,7 +417,9 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
         let   srcY      = 0
 
         while (remaining > 0) {
-          if (!firstPage) pdf.addPage()
+          if (!firstPage) {
+            pdf.addPage()
+          }
           firstPage = false
 
           const sliceH      = Math.min(pdfHeight, remaining)
@@ -359,19 +427,18 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
           sliceCanvas.width  = imgW
           sliceCanvas.height = Math.ceil(sliceH / ratio)
           const ctx = sliceCanvas.getContext('2d')!
-          // Rellenar fondo blanco antes de dibujar para eliminar transparencia
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
           ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
-          // JPEG en lugar de PNG: mucho más liviano y sin transparencia
-          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, pdfWidth, sliceH)
+          
+          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pdfWidth, sliceH)
 
           srcY      += sliceCanvas.height
           remaining -= pdfHeight
         }
       }
 
-      pdf.save(`reporte-artia-${new Date().toISOString().slice(0, 10)}.pdf`)
+      pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
     } catch (err) {
       console.error('Error exportando PDF:', err)
       alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
@@ -420,7 +487,6 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {/* Date Range */}
             <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 4, gap: 2 }}>
               {[
                 { key: '7d', label: '7 días' },
@@ -463,11 +529,11 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginTop: 20, borderBottom: '2px solid #f1f5f9', paddingBottom: 2 }}>
           {[
-            { key: 'general', label: '📈 General', icon: '📈' },
-            { key: 'finanzas', label: '💰 Finanzas', icon: '💰' },
-            { key: 'leads', label: '👥 Leads', icon: '👥' },
-            { key: 'proyectos', label: '📁 Proyectos', icon: '📁' },
-            { key: 'analytics', label: '📡 Analytics', icon: '📡' },
+            { key: 'general', label: '📈 General' },
+            { key: 'finanzas', label: '💰 Finanzas' },
+            { key: 'leads', label: '👥 Leads' },
+            { key: 'proyectos', label: '📁 Proyectos' },
+            { key: 'analytics', label: '📡 Analytics' },
           ].map(t => (
             <button
               key={t.key}
@@ -486,7 +552,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
       </header>
 
       {/* Report Content */}
-      <div ref={reportRef} style={{ background: '#f8fafc', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
+      <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
         {/* Watermark for PDF */}
         <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
           ARTIA
@@ -495,48 +561,14 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
         {/* ─── GENERAL TAB ─── */}
         {activeTab === 'general' && (
           <div className="fade-in">
-            {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-              <KPIPulseCard
-                icon="💰"
-                label="Total Facturado"
-                value={fmtMoney(financeData.totalFacturado)}
-                sub={`${fmtMoney(financeData.totalPagado)} cobrado`}
-                color="#6366f1"
-                trend={financeData.totalFacturado > 0 ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 100) : 0}
-              />
-              <KPIPulseCard
-                icon="⏳"
-                label="Pendiente por Cobrar"
-                value={fmtMoney(financeData.totalPendiente)}
-                sub={`${fmtMoney(financeData.totalVencido)} vencido`}
-                color="#f59e0b"
-                trend={financeData.totalPendiente > 0 ? Math.round((financeData.totalVencido / financeData.totalPendiente) * 100) : 0}
-              />
-              <KPIPulseCard
-                icon="👥"
-                label="Nuevos Leads"
-                value={String(leadsData.total)}
-                sub={`Valor estimado: ${fmtMoney(leadsData.totalValue)}`}
-                color="#10b981"
-              />
-              <KPIPulseCard
-                icon="📁"
-                label="Proyectos Activos"
-                value={String(projectsData.total)}
-                sub={`${projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0} en curso`}
-                color="#3b82f6"
-              />
-              <KPIPulseCard
-                icon="✉️"
-                label="Emails Enviados"
-                value={String(emailData.total)}
-                sub={`${emailData.rate}% tasa de apertura`}
-                color="#ec4899"
-              />
+              <KPIPulseCard icon="💰" label="Total Facturado" value={fmtMoney(financeData.totalFacturado)} sub={`${fmtMoney(financeData.totalPagado)} cobrado`} color="#6366f1" trend={financeData.totalFacturado > 0 ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 100) : 0} />
+              <KPIPulseCard icon="⏳" label="Pendiente por Cobrar" value={fmtMoney(financeData.totalPendiente)} sub={`${fmtMoney(financeData.totalVencido)} vencido`} color="#f59e0b" trend={financeData.totalPendiente > 0 ? Math.round((financeData.totalVencido / financeData.totalPendiente) * 100) : 0} />
+              <KPIPulseCard icon="👥" label="Nuevos Leads" value={String(leadsData.total)} sub={`Valor estimado: ${fmtMoney(leadsData.totalValue)}`} color="#10b981" />
+              <KPIPulseCard icon="📁" label="Proyectos Activos" value={String(projectsData.total)} sub={`${projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0} en curso`} color="#3b82f6" />
+              <KPIPulseCard icon="✉️" label="Emails Enviados" value={String(emailData.total)} sub={`${emailData.rate}% tasa de apertura`} color="#ec4899" />
             </div>
 
-            {/* Charts Row 1 */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
               <ChartCard title="Ingresos Mensuales" subtitle="Facturado vs Pagado vs Pendiente">
                 <ResponsiveContainer width="100%" height={300}>
@@ -565,17 +597,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
               <ChartCard title="Estado de Pagos" subtitle="Distribución de contratos">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie
-                      data={financeData.statusCounts}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={5}
-                      dataKey="value"
-                      animationBegin={0}
-                      animationDuration={1000}
-                    >
+                    <Pie data={financeData.statusCounts} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" animationBegin={0} animationDuration={1000}>
                       {financeData.statusCounts.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -587,7 +609,6 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
               </ChartCard>
             </div>
 
-            {/* Charts Row 2 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <ChartCard title="Leads por Estado" subtitle="Pipeline actual">
                 <ResponsiveContainer width="100%" height={280}>
@@ -621,19 +642,11 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                              <span style={{
-                                fontSize: 13, fontWeight: 800, color: entry.color,
-                                background: `${entry.color}15`, padding: '2px 10px', borderRadius: 20,
-                              }}>{entry.value}</span>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: entry.color, background: `${entry.color}15`, padding: '2px 10px', borderRadius: 20 }}>{entry.value}</span>
                             </div>
                           </div>
                           <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{
-                              height: '100%', borderRadius: 99,
-                              width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
-                              background: entry.color,
-                              transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
-                            }} />
+                            <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: entry.color, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
                           </div>
                         </div>
                       ))
@@ -672,42 +685,20 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
               </ChartCard>
 
               <ChartCard title="Métodos de Pago" subtitle="Distribución por frecuencia">
-  <ResponsiveContainer width="100%" height={320}>
-    <PieChart>
-      <Pie
-        data={methodData}
-        cx="50%"
-        cy="50%"
-        innerRadius={70} // Dona más delgada y moderna
-        outerRadius={100}
-        paddingAngle={5} // Espacio entre segmentos
-        dataKey="value"
-        label={false} // <--- ESTO QUITA EL TEXTO QUE SE VE MAL
-        animationBegin={0}
-        animationDuration={1200}
-      >
-        {methodData.map((entry, index) => (
-          <Cell key={`cell-${index}`} fill={entry.color} />
-        ))}
-      </Pie>
-      
-      {/* Tooltip para ver el detalle al pasar el mouse */}
-      <Tooltip content={<CustomTooltip />} />
-      
-      {/* LA LEYENDA DEBAJO: Igual que en statusCounts */}
-      <Legend 
-        verticalAlign="bottom" 
-        align="center"
-        iconType="circle"
-        layout="horizontal"
-        wrapperStyle={{ paddingTop: '20px' }}
-      />
-    </PieChart>
-  </ResponsiveContainer>
-</ChartCard>
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Pie data={methodData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" label={false} animationBegin={0} animationDuration={1200}>
+                      {methodData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend verticalAlign="bottom" align="center" iconType="circle" layout="horizontal" wrapperStyle={{ paddingTop: '20px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
 
-            {/* Top Contratos */}
             <ChartCard title="Top 10 Contratos por Valor" subtitle="Mayores facturaciones">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
@@ -747,17 +738,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
               <ChartCard title="Leads por Estado" subtitle="Distribución del pipeline">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie
-                      data={leadsData.byStatus}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={4}
-                      dataKey="value"
-                      animationBegin={0}
-                      animationDuration={1000}
-                    >
+                    <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value" animationBegin={0} animationDuration={1000}>
                       {leadsData.byStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -820,18 +801,11 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
                       const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
                       return (
                         <>
-                          {/* Barra de proporción visual */}
                           <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
                             {projectsData.byStatus.map((entry, i) => (
-                              <div key={i} style={{
-                                flex: entry.value,
-                                background: entry.color,
-                                transition: 'flex 0.8s ease',
-                                minWidth: entry.value > 0 ? 4 : 0,
-                              }} />
+                              <div key={i} style={{ flex: entry.value, background: entry.color, transition: 'flex 0.8s ease', minWidth: entry.value > 0 ? 4 : 0 }} />
                             ))}
                           </div>
-                          {/* Lista detallada */}
                           {projectsData.byStatus.map((entry, i) => (
                             <div key={i} style={{ marginBottom: 20 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
@@ -841,19 +815,11 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                   <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                                  <span style={{
-                                    fontSize: 14, fontWeight: 800, color: '#fff',
-                                    background: entry.color, padding: '3px 12px', borderRadius: 20,
-                                  }}>{entry.value}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
                                 </div>
                               </div>
                               <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                <div style={{
-                                  height: '100%', borderRadius: 99,
-                                  width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
-                                  background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`,
-                                  transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
-                                }} />
+                                <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
                               </div>
                             </div>
                           ))}
@@ -887,22 +853,12 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
         {activeTab === 'analytics' && (
           <div className="fade-in">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard
-                label="Pageviews (7d)"
-                value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'}
-                icon="👁️"
-                color="#f97316"
-              />
-              <StatCard
-                label="Issues Sentry"
-                value={sentry ? String(sentry.unresolvedCount) : 'N/A'}
-                icon="🐛"
-                color="#ef4444"
-              />
+              <StatCard label="Pageviews (7d)" value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'} icon="👁️" color="#f97316" />
+              <StatCard label="Issues Sentry" value={sentry ? String(sentry.unresolvedCount) : 'N/A'} icon="🐛" color="#ef4444" />
             </div>
-//posthog añadido
+
             {posthog && posthog.daily.length > 0 && (
-              <ChartCard title="Trafico Web — Últimos 7 días" subtitle="Pageviews diarios">
+              <ChartCard title="Tráfico Web — Últimos 7 días" subtitle="Pageviews diarios">
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={posthog.daily}>
                     <defs>
@@ -924,9 +880,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
             {sentry && sentry.issues.length > 0 && (
               <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart
-                    data={sentry.issues.map(i => ({ name: i.level, count: parseInt(i.count) || 0, color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' }))}
-                  >
+                  <BarChart data={sentry.issues.map(i => ({ name: i.level, count: parseInt(i.count) || 0, color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
@@ -970,21 +924,11 @@ function KPIPulseCard({ icon, label, value, sub, color, trend }: {
     }}>
       <div className="pulse-ring" style={{ '--pulse-color': color } as any} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, position: 'relative', zIndex: 1 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 12,
-          background: `${color}15`, display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.4rem',
-        }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
           {icon}
         </div>
         {trend !== undefined && (
-          <div style={{
-            marginLeft: 'auto', fontSize: 11, fontWeight: 700,
-            color: trend > 50 ? '#10b981' : '#f59e0b',
-            background: trend > 50 ? '#f0fdf4' : '#fef3c7',
-            padding: '4px 10px', borderRadius: 20,
-          }}>
+          <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: trend > 50 ? '#10b981' : '#f59e0b', background: trend > 50 ? '#f0fdf4' : '#fef3c7', padding: '4px 10px', borderRadius: 20 }}>
             {trend}%
           </div>
         )}
@@ -1011,12 +955,7 @@ function StatCard({ label, value, icon, color }: {
       border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
       display: 'flex', alignItems: 'center', gap: 14,
     }}>
-      <div style={{
-        width: 48, height: 48, borderRadius: 12,
-        background: `${color}12`, display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        fontSize: '1.5rem', flexShrink: 0,
-      }}>
+      <div style={{ width: 48, height: 48, borderRadius: 12, background: `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
         {icon}
       </div>
       <div>
