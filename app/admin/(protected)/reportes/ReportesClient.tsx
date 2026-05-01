@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  AreaChart, Area,
 } from 'recharts'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
@@ -126,6 +126,19 @@ function getMonthLabel(d: string): string {
   return date.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
 }
 
+// Garantiza una serie temporal continua de N meses para que las gráficas siempre tengan curva
+function buildLastNMonths(n: number): { key: string; label: string }[] {
+  const result: { key: string; label: string }[] = []
+  const now = new Date()
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const label = d.toLocaleDateString('es-EC', { month: 'short', year: 'numeric' })
+    result.push({ key, label })
+  }
+  return result
+}
+
 // ─── Component ─────────────────────────────────────────────────────
 
 export default function ReportesClient({
@@ -213,24 +226,9 @@ const methodData = useMemo(() => {
 existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pagado').reduce((sum, i) => sum + n(i.amount), 0)
       monthlyMap.set(key, existing)
     })
-    const monthlyRevenue = Array.from(monthlyMap.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([, v]) => v)
-
-    // Payment method distribution
-const methodMap = new Map<string, number>()
-filteredPayments.forEach(p => {
-  p.installments
-    .filter(i => i.status?.toLowerCase() === 'pagado') // Filtramos solo lo cobrado
-    .forEach(i => {
-      // Si el método está vacío, nulo o es solo espacios, ponemos 'Otro'
-      const rawMethod = i.payment_method?.trim();
-      const method = rawMethod && rawMethod !== "" ? rawMethod : 'Otro';
-      
-      methodMap.set(method, (methodMap.get(method) || 0) + n(i.amount))
-    })
-})
-
+    const monthlyRevenue = buildLastNMonths(6).map(({ key, label }) =>
+      monthlyMap.get(key) || { month: label, facturado: 0, pagado: 0, pendiente: 0 }
+    )
 
     // Status distribution
     const statusCounts = [
@@ -268,7 +266,9 @@ filteredPayments.forEach(p => {
       existing.valor += n(l.estimated_value)
       monthlyMap.set(key, existing)
     })
-    const monthlyLeads = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
+    const monthlyLeads = buildLastNMonths(6).map(({ key, label }) =>
+      monthlyMap.get(key) || { month: label, leads: 0, valor: 0 }
+    )
 
     return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
   }, [filteredLeads])
@@ -289,7 +289,9 @@ filteredPayments.forEach(p => {
       existing.proyectos += 1
       monthlyMap.set(key, existing)
     })
-    const monthlyProjects = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month))
+    const monthlyProjects = buildLastNMonths(6).map(({ key, label }) =>
+      monthlyMap.get(key) || { month: label, proyectos: 0 }
+    )
 
     return { byStatus, monthlyProjects, total: filteredProjects.length }
   }, [filteredProjects])
@@ -327,19 +329,19 @@ filteredPayments.forEach(p => {
       for (const tab of tabs) {
         // Cambiar a la tab, esperar que renderice
         setActiveTab(tab)
-        await new Promise(r => setTimeout(r, 600))
+        await new Promise(r => setTimeout(r, 700))
 
         if (!reportRef.current) continue
         const canvas = await html2canvas(reportRef.current, {
-          scale: 1.5,
+          scale: 1.2,
           useCORS: true,
           logging: false,
+          backgroundColor: '#ffffff',
           windowWidth: 1200,
           scrollX: 0,
           scrollY: -window.scrollY,
         })
 
-        const imgData   = canvas.toDataURL('image/png')
         const imgW      = canvas.width
         const imgH      = canvas.height
         const ratio     = pdfWidth / imgW
@@ -351,14 +353,17 @@ filteredPayments.forEach(p => {
           if (!firstPage) pdf.addPage()
           firstPage = false
 
-          // Recortar el trozo de canvas que cabe en la página
-          const sliceH  = Math.min(pdfHeight, remaining)
+          const sliceH      = Math.min(pdfHeight, remaining)
           const sliceCanvas = document.createElement('canvas')
           sliceCanvas.width  = imgW
           sliceCanvas.height = Math.ceil(sliceH / ratio)
           const ctx = sliceCanvas.getContext('2d')!
+          // Rellenar fondo blanco antes de dibujar para eliminar transparencia
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
           ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
-          pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, sliceH)
+          // JPEG en lugar de PNG: mucho más liviano y sin transparencia
+          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, pdfWidth, sliceH)
 
           srcY      += sliceCanvas.height
           remaining -= pdfHeight
@@ -528,13 +533,6 @@ filteredPayments.forEach(p => {
                 sub={`${emailData.rate}% tasa de apertura`}
                 color="#ec4899"
               />
-              <KPIPulseCard
-                icon="👁️"
-                label="Pageviews (7d)"
-                value={posthog?.pageviews != null ? posthog.pageviews.toLocaleString() : '—'}
-                sub={posthog ? 'PostHog Analytics' : 'No configurado'}
-                color="#f97316"
-              />
             </div>
 
             {/* Charts Row 1 */}
@@ -607,15 +605,40 @@ filteredPayments.forEach(p => {
               </ChartCard>
 
               <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
-                <ResponsiveContainer width="100%" height={280}>
-                  <RadarChart data={projectsData.byStatus}>
-                    <PolarGrid stroke="#e2e8f0" />
-                    <PolarAngleAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
-                    <PolarRadiusAxis tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                    <Radar name="Proyectos" dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} strokeWidth={2} />
-                    <Tooltip content={<CustomTooltip />} />
-                  </RadarChart>
-                </ResponsiveContainer>
+                <div style={{ padding: '8px 0' }}>
+                  {projectsData.byStatus.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '40px 0' }}>Sin proyectos en este período</div>
+                  ) : (
+                    (() => {
+                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                      return projectsData.byStatus.map((entry, i) => (
+                        <div key={i} style={{ marginBottom: 18 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 10, height: 10, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                              <span style={{
+                                fontSize: 13, fontWeight: 800, color: entry.color,
+                                background: `${entry.color}15`, padding: '2px 10px', borderRadius: 20,
+                              }}>{entry.value}</span>
+                            </div>
+                          </div>
+                          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{
+                              height: '100%', borderRadius: 99,
+                              width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
+                              background: entry.color,
+                              transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
+                            }} />
+                          </div>
+                        </div>
+                      ))
+                    })()
+                  )}
+                </div>
               </ChartCard>
             </div>
           </div>
@@ -788,25 +811,60 @@ filteredPayments.forEach(p => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={projectsData.byStatus}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={120}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                      animationBegin={0}
-                      animationDuration={1000}
-                    >
-                      {projectsData.byStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={{ padding: '16px 0' }}>
+                  {projectsData.byStatus.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '60px 0' }}>Sin proyectos en este período</div>
+                  ) : (
+                    (() => {
+                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                      return (
+                        <>
+                          {/* Barra de proporción visual */}
+                          <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
+                            {projectsData.byStatus.map((entry, i) => (
+                              <div key={i} style={{
+                                flex: entry.value,
+                                background: entry.color,
+                                transition: 'flex 0.8s ease',
+                                minWidth: entry.value > 0 ? 4 : 0,
+                              }} />
+                            ))}
+                          </div>
+                          {/* Lista detallada */}
+                          {projectsData.byStatus.map((entry, i) => (
+                            <div key={i} style={{ marginBottom: 20 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
+                                  <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                                  <span style={{
+                                    fontSize: 14, fontWeight: 800, color: '#fff',
+                                    background: entry.color, padding: '3px 12px', borderRadius: 20,
+                                  }}>{entry.value}</span>
+                                </div>
+                              </div>
+                              <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{
+                                  height: '100%', borderRadius: 99,
+                                  width: `${total > 0 ? (entry.value / total) * 100 : 0}%`,
+                                  background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`,
+                                  transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
+                                }} />
+                              </div>
+                            </div>
+                          ))}
+                          <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                          </div>
+                        </>
+                      )
+                    })()
+                  )}
+                </div>
               </ChartCard>
 
               <ChartCard title="Proyectos por Mes" subtitle="Creación mensual">
