@@ -899,7 +899,7 @@ existing.pendiente += p.installments.filter(i => i.status?.toLowerCase() !== 'pa
                 color="#ef4444"
               />
             </div>
-
+//posthog añadido
             {posthog && posthog.daily.length > 0 && (
               <ChartCard title="Trafico Web — Últimos 7 días" subtitle="Pageviews diarios">
                 <ResponsiveContainer width="100%" height={300}>
