@@ -302,151 +302,185 @@ export default function ReportesClient({
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
-  // ── Export PDF ──
-  async function exportPDF() {
-    if (!reportRef.current) return
-    setExporting(true)
+  // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
+async function exportPDF() {
+  if (!reportRef.current) return
+  setExporting(true)
 
-    const originalTab = activeTab
-    const tabs: Array<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'> =
-      ['general', 'finanzas', 'leads', 'proyectos', 'analytics']
+  const originalTab = activeTab
+  const tabs: Array<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'> =
+    ['general', 'finanzas', 'leads', 'proyectos', 'analytics']
 
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth  = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
-      
-      // ─── PORTADA DEL PDF ───
-      const now = new Date()
-      const fechaStr = now.toLocaleDateString('es-EC', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-      
-      // Fondo oscuro para portada
-      pdf.setFillColor(0, 17, 58) // #00113a
-      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-      
-      // Logo / Marca
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(42)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
-      
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
-      
-      // Línea decorativa
-      pdf.setDrawColor(99, 102, 241)
-      pdf.setLineWidth(1.5)
-      pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
-      
-      // Título del reporte
-      pdf.setFontSize(22)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
-      
-      // Descripción
-      pdf.setFontSize(11)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setTextColor(148, 163, 184) // slate-400
-      const descLines = pdf.splitTextToSize(
-        'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, leads, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
-        pdfWidth - 60
-      )
-      pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
-      
-      // Fecha de generación
-      pdf.setFontSize(12)
-      pdf.setTextColor(255, 255, 255)
-      pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
-      
-      // Info del período
-      const periodoLabel = {
-        '7d': 'Últimos 7 días',
-        '30d': 'Últimos 30 días',
-        '90d': 'Últimos 90 días',
-        '1y': 'Último año',
-        'all': 'Histórico completo'
-      }[dateRange]
-      
-      pdf.setFontSize(10)
-      pdf.setTextColor(148, 163, 184)
-      pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
-      
-      // URL
-      pdf.setFontSize(9)
-      pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
-      
-      let firstPage = false // Ya tenemos la portada
+  try {
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdfWidth  = pdf.internal.pageSize.getWidth()
+    const pdfHeight = pdf.internal.pageSize.getHeight()
+    
+    // ─── PORTADA DEL PDF ───
+    const now = new Date()
+    const fechaStr = now.toLocaleDateString('es-EC', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    })
+    
+    pdf.setFillColor(0, 17, 58)
+    pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+    
+    pdf.setTextColor(255, 255, 255)
+    pdf.setFontSize(42)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
+    
+    pdf.setFontSize(14)
+    pdf.setFont('helvetica', 'normal')
+    pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
+    
+    pdf.setDrawColor(99, 102, 241)
+    pdf.setLineWidth(1.5)
+    pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
+    
+    pdf.setFontSize(22)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
+    
+    pdf.setFontSize(11)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(148, 163, 184)
+    const descLines = pdf.splitTextToSize(
+      'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, leads, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
+      pdfWidth - 60
+    )
+    pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
+    
+    pdf.setFontSize(12)
+    pdf.setTextColor(255, 255, 255)
+    pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
+    
+    const periodoLabel = {
+      '7d': 'Últimos 7 días',
+      '30d': 'Últimos 30 días',
+      '90d': 'Últimos 90 días',
+      '1y': 'Último año',
+      'all': 'Histórico completo'
+    }[dateRange]
+    
+    pdf.setFontSize(10)
+    pdf.setTextColor(148, 163, 184)
+    pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
+    
+    pdf.setFontSize(9)
+    pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
+    
+    let firstPage = false
 
-      for (const tab of tabs) {
-        setActiveTab(tab)
-        await new Promise(r => setTimeout(r, 900)) // Más tiempo para renderizar
+    for (const tab of tabs) {
+      setActiveTab(tab)
+      // Esperar más tiempo para que Recharts renderice completamente
+      await new Promise(r => setTimeout(r, 1200))
 
-        if (!reportRef.current) continue
-        
-        // ─── CRÍTICO: Forzar fondo blanco antes de capturar ───
-        const el = reportRef.current
-        const originalBg = el.style.backgroundColor
-        el.style.backgroundColor = '#ffffff'
-        
-        const canvas = await html2canvas(el, {
-          scale: 2, // Mayor calidad
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff', // Fondo explícito
-          windowWidth: 1400,
-          scrollX: 0,
-          scrollY: -window.scrollY,
-        })
-        
-        // Restaurar fondo original
-        el.style.backgroundColor = originalBg
-
-        const imgW      = canvas.width
-        const imgH      = canvas.height
-        const ratio     = pdfWidth / imgW
-        const renderedH = imgH * ratio
-        let   remaining = renderedH
-        let   srcY      = 0
-
-        while (remaining > 0) {
-          if (!firstPage) {
-            pdf.addPage()
-          }
-          firstPage = false
-
-          const sliceH      = Math.min(pdfHeight, remaining)
-          const sliceCanvas = document.createElement('canvas')
-          sliceCanvas.width  = imgW
-          sliceCanvas.height = Math.ceil(sliceH / ratio)
-          const ctx = sliceCanvas.getContext('2d')!
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
-          ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
+      if (!reportRef.current) continue
+      
+      // ─── CAPTURA ROBUSTA CON CLONADO Y ESTILOS FORZADOS ───
+      const el = reportRef.current
+      
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1400,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        // CLAVE: Modificar el DOM clonado antes de capturar
+        onclone: (clonedDoc, clonedEl) => {
+          // 1. Forzar fondo blanco en el contenedor principal
+          clonedEl.style.backgroundColor = '#ffffff !important'
+          clonedEl.style.background = '#ffffff !important'
           
-          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pdfWidth, sliceH)
-
-          srcY      += sliceCanvas.height
-          remaining -= pdfHeight
+          // 2. Aplicar fondos blancos a TODAS las tarjetas internas
+          const allCards = clonedEl.querySelectorAll('[style*="background"]')
+          allCards.forEach((card: any) => {
+            // Si tiene transparencia o gradiente, forzar blanco sólido
+            const currentBg = window.getComputedStyle(card).backgroundColor
+            if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
+              card.style.backgroundColor = '#ffffff'
+            }
+          })
+          
+          // 3. Forzar fondo blanco en todos los divs que no tengan fondo explícito
+          const allDivs = clonedEl.querySelectorAll('div')
+          allDivs.forEach((div: any) => {
+            const computed = window.getComputedStyle(div)
+            if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
+              // Solo si no es un elemento de gráfico de Recharts
+              if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
+                div.style.backgroundColor = '#ffffff'
+              }
+            }
+          })
+          
+          // 4. Asegurar que los textos tengan color oscuro visible
+          const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
+          allText.forEach((text: any) => {
+            const computed = window.getComputedStyle(text)
+            const color = computed.color
+            // Si el color es muy claro o transparente, forzar oscuro
+            if (color.includes('0)') || color.includes('rgba(0')) {
+              text.style.color = '#0f172a'
+            }
+          })
+          
+          // 5. Desactivar cualquier animación CSS en el clon
+          const style = clonedDoc.createElement('style')
+          style.textContent = `
+            * { animation: none !important; transition: none !important; }
+            .recharts-surface { overflow: visible !important; }
+            .recharts-wrapper { background: #ffffff !important; }
+          `
+          clonedDoc.head.appendChild(style)
         }
-      }
+      })
 
-      pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
-    } catch (err) {
-      console.error('Error exportando PDF:', err)
-      alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
-    } finally {
-      setActiveTab(originalTab)
-      setExporting(false)
+      const imgW      = canvas.width
+      const imgH      = canvas.height
+      const ratio     = pdfWidth / imgW
+      const renderedH = imgH * ratio
+      let   remaining = renderedH
+      let   srcY      = 0
+
+      while (remaining > 0) {
+        if (!firstPage) {
+          pdf.addPage()
+        }
+        firstPage = false
+
+        const sliceH      = Math.min(pdfHeight, remaining)
+        const sliceCanvas = document.createElement('canvas')
+        sliceCanvas.width  = imgW
+        sliceCanvas.height = Math.ceil(sliceH / ratio)
+        const ctx = sliceCanvas.getContext('2d')!
+        
+        // Fondo blanco sólido
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
+        ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
+        
+        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, sliceH)
+
+        srcY      += sliceCanvas.height
+        remaining -= pdfHeight
+      }
     }
+
+    pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
+  } catch (err) {
+    console.error('Error exportando PDF:', err)
+    alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
+  } finally {
+    setActiveTab(originalTab)
+    setExporting(false)
   }
+}
 
   // ── Custom Tooltip ──
   const CustomTooltip = ({ active, payload, label }: any) => {
