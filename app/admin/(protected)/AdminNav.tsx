@@ -28,6 +28,15 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: 'Landings & Marketing',
+    items: [
+      { href: '/admin/landings', label: 'Landing Pages', icon: '🎯' },
+      { href: '/admin/landings/orders', label: 'Pedidos Landings', icon: '🛒' },
+      { href: '/admin/landings/analytics', label: 'Analytics', icon: '📈' },
+      { href: '/admin/landings/utm', label: 'UTM Links', icon: '🔗' },
+    ],
+  },
+  {
     title: 'Operaciones',
     items: [
       { href: '/admin/proyectos', label: 'Proyectos', icon: '▣' },
