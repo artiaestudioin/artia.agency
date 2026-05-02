@@ -78,11 +78,10 @@ export default function UtmPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          landing_id: selectedLanding,
-          slug: landing.slug,
-          name: form.name,
-          ...form,
-        }),
+  ...form,
+  landing_id: selectedLanding,
+  slug: landing.slug,
+}),
       })
 
       if (res.ok) {
