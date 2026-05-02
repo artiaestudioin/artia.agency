@@ -7,14 +7,13 @@ export async function POST(request: Request) {
   const { type, landing_id, format } = await request.json()
 
   if (type === 'leads_csv') {
-    // Export leads as CSV
     const { data: orders } = await supabase
       .from('landing_orders')
       .select('*')
       .order('created_at', { ascending: false })
 
     if (landing_id) {
-      const filtered = (orders || []).filter(o => o.landing_id === landing_id)
+      const filtered = (orders || []).filter((o: any) => o.landing_id === landing_id)
       return exportCSV(filtered, 'landing_leads')
     }
 
@@ -22,7 +21,6 @@ export async function POST(request: Request) {
   }
 
   if (type === 'landing_html') {
-    // Export landing as standalone HTML
     const { data: landing } = await supabase
       .from('landings')
       .select('*')
@@ -44,11 +42,7 @@ export async function POST(request: Request) {
   }
 
   if (type === 'analytics_pdf') {
-    // Return JSON data for PDF generation (client-side)
-    const { data: stats } = await supabase
-      .from('landing_stats')
-      .select('*')
-
+    const { data: stats } = await supabase.from('landing_stats').select('*')
     const { data: events } = await supabase
       .from('landing_events')
       .select('*')
@@ -73,18 +67,18 @@ function exportCSV(data: any[], filename: string) {
   const headers = Object.keys(data[0])
   const csvRows = [
     headers.join(','),
-    ...data.map(row => 
+    ...data.map(row =>
       headers.map(h => {
         const val = row[h]
         if (val === null || val === undefined) return ''
-        if (typeof val === 'object') return JSON.stringify(val).replace(/"/g, '""')
-        return String(val).replace(/"/g, '""')
+        if (typeof val === 'object') return `"${JSON.stringify(val).replace(/"/g, '""')}"`
+        return `"${String(val).replace(/"/g, '""')}"`
       }).join(',')
-    )
+    ),
   ]
 
-  const csv = csvRows.join('
-')
+  // FIX: usar '\n' explícito — no salto de línea literal dentro del string
+  const csv = csvRows.join('\n')
 
   return new NextResponse(csv, {
     headers: {
@@ -108,16 +102,14 @@ function generateStandaloneHTML(landing: any): string {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>* { font-family: 'Inter', sans-serif; }</style>
   ${config.custom_css ? `<style>${config.custom_css}</style>` : ''}
-  ${config.pixel_id ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${config.pixel_id}');fbq('track','PageView');</script>` : ''}
+  ${config.pixel_id ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${config.pixel_id}');fbq('track','PageView');<\/script>` : ''}
 </head>
 <body class="bg-gray-50">
-  <!-- Landing content would be fully rendered here -->
   <div class="max-w-6xl mx-auto px-4 py-12">
     <h1 class="text-5xl font-black text-center mb-8">${config.headline}</h1>
     <p class="text-xl text-center text-gray-600 mb-12">${config.subheadline}</p>
-    <!-- ... full landing content ... -->
   </div>
-  ${config.custom_js ? `<script>${config.custom_js}</script>` : ''}
+  ${config.custom_js ? `<script>${config.custom_js}<\/script>` : ''}
 </body>
 </html>`
 }
