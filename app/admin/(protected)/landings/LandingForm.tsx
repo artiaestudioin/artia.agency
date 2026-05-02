@@ -49,8 +49,8 @@ export default function LandingForm({ initialData }: LandingFormProps) {
     setTimeout(() => setToast(null), 3500)
   }, [])
 
-  const updateConfig = (field: keyof LandingConfig, value: any) => {
-    setForm(f => ({ ...f, config: { ...f.config, [field]: value } }))
+  const updateConfig = (field: string, value: any) => {
+    setForm(f => ({ ...f, config: { ...f.config, [field]: value } as LandingConfig }))
   }
 
   const addFeature = () => {
@@ -275,7 +275,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                 </div>
                 <div>
                   <label style={labelStyle}>Meta de conversión</label>
-                  <select value={form.config.conversion_goal || 'purchase'} onChange={e => updateConfig('conversion_goal', e.target.value)} style={inputStyle}>
+                  <select value={(form.config as any).conversion_goal || 'purchase'} onChange={e => updateConfig('conversion_goal', e.target.value)} style={inputStyle}>
                     <option value="purchase">Compra</option>
                     <option value="lead">Lead</option>
                     <option value="signup">Registro</option>
