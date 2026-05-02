@@ -1,26 +1,26 @@
 // app/api/admin/landings/[id]/duplicate/route.ts
+// FIX: params debe ser Promise<{ id: string }> en Next.js 15
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = await createClient()
   const { variant_name, traffic_split = 50 } = await request.json()
 
-  // Get original landing
   const { data: original, error: fetchError } = await supabase
     .from('landings')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (fetchError || !original) {
     return NextResponse.json({ error: 'Landing not found' }, { status: 404 })
   }
 
-  // Create variant
   const { data: variant, error: createError } = await supabase
     .from('landings')
     .insert({
@@ -43,7 +43,6 @@ export async function POST(
     return NextResponse.json({ error: createError.message }, { status: 500 })
   }
 
-  // Create variant link
   await supabase.from('landing_variants').insert({
     landing_id: original.id,
     variant_id: variant.id,

@@ -1,10 +1,8 @@
 // app/api/landing-orders/route.ts
-// FIX: resend importado de forma condicional para evitar crash si no está instalado.
-// Si no tienes resend instalado ejecuta: npm install resend
+// FIX: importación dinámica de resend para evitar "Module not found" en build
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-// Importación dinámica segura — no rompe el build si RESEND_API_KEY no está configurado
 async function sendOrderEmail(order: any) {
   if (!order.email || !process.env.RESEND_API_KEY) return
   try {
@@ -18,9 +16,8 @@ async function sendOrderEmail(order: any) {
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #667eea;">¡Gracias por tu pedido!</h1>
           <p>Tu número de seguimiento es: <strong>${order.folio}</strong></p>
-          <p>Puedes ver el estado de tu pedido en:</p>
           <a href="https://artiaagency.vercel.app/cliente/${order.folio}"
-             style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+             style="background:#667eea;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block;">
             Seguir mi pedido →
           </a>
         </div>
@@ -49,9 +46,7 @@ export async function GET(request: Request) {
   if (folio)      query = query.eq('folio', folio)
 
   const { data, error } = await query
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
   return NextResponse.json({ orders: data })
 }
 
@@ -67,7 +62,6 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Actualizar stats de conversión
   if (body.landing_id) {
     await supabase.rpc('increment_landing_conversion', {
       landing_uuid: body.landing_id,
@@ -75,15 +69,10 @@ export async function POST(request: Request) {
     })
   }
 
-  // Enviar email de confirmación (no bloquea si falla)
   await sendOrderEmail(order)
 
-  // Marcar email como enviado si todo fue bien
   if (order.email && process.env.RESEND_API_KEY) {
-    await supabase
-      .from('landing_orders')
-      .update({ email_sent: true })
-      .eq('id', order.id)
+    await supabase.from('landing_orders').update({ email_sent: true }).eq('id', order.id)
   }
 
   return NextResponse.json({ order }, { status: 201 })
