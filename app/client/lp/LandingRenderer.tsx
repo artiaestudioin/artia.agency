@@ -48,7 +48,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
     const handleScroll = () => {
       const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
       setScrollProgress(scrollPercent)
-      setShowSticky(window.scrollY > 600)
+      setShowSticky(window.scrollY > 600);
 
       // Track scroll milestones
       [25, 50, 75, 90].forEach(threshold => {
