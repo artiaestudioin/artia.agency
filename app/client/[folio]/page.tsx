@@ -1,21 +1,24 @@
-// app/cliente/[folio]/page.tsx
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import ClienteTracker from './ClienteTracker'
 
-export async function generateMetadata({ params }: { params: { folio: string } }) {
+// 1. Corregimos los tipos y extraemos params con await en generateMetadata
+export async function generateMetadata({ params }: { params: Promise<{ folio: string }> }) {
+  const { folio } = await params
   return {
-    title: `Seguimiento ${params.folio} — Artia Studio`,
+    title: `Seguimiento ${folio} — Artia Studio`,
   }
 }
 
-export default async function ClientePage({ params }: { params: { folio: string } }) {
+// 2. Aplicamos la misma Promise y await en la función principal
+export default async function ClientePage({ params }: { params: Promise<{ folio: string }> }) {
+  const { folio } = await params
   const supabase = await createClient()
 
   const { data: order, error } = await supabase
     .from('landing_orders')
     .select('*')
-    .eq('folio', params.folio)
+    .eq('folio', folio)
     .single()
 
   if (error || !order) {
