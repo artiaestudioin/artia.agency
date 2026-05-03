@@ -203,10 +203,13 @@ export default async function LandingOrdersPage({
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          // CORRECTO (cambiar /cliente/ por /client/):
-<Link href={`/client/${order.folio}`} target="_blank" ...>
-  👁️ Ver
-</Link>
+                          <Link href={`/client/${order.folio}`} target="_blank"
+                            style={{
+                              fontSize: 11, color: '#2563eb', background: '#eff6ff',
+                              padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
+                            }}>
+                            👁️ Ver
+                          </Link>
                           <Link href={`/admin/landings/orders/${order.id}`}
                             style={{
                               fontSize: 11, color: '#475569', background: '#f1f5f9',
