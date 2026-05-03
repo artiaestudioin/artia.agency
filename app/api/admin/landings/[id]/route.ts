@@ -9,6 +9,12 @@ export async function GET(
   const { id } = await params
   const supabase = await createClient()
 
+  // 🔒 VERIFICACIÓN DE SESIÓN
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
   const { data, error } = await supabase
     .from('landings')
     .select('*, variants:landings!parent_id(*)')
@@ -25,6 +31,13 @@ export async function PATCH(
 ) {
   const { id } = await params
   const supabase = await createClient()
+  
+  // 🔒 VERIFICACIÓN DE SESIÓN
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión para editar.' }, { status: 401 })
+  }
+
   const body = await request.json()
 
   const { data, error } = await supabase
@@ -44,6 +57,12 @@ export async function DELETE(
 ) {
   const { id } = await params
   const supabase = await createClient()
+
+  // 🔒 VERIFICACIÓN DE SESIÓN
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión para eliminar.' }, { status: 401 })
+  }
 
   const { error } = await supabase
     .from('landings')          // ← tabla LANDINGS, no landing_orders
