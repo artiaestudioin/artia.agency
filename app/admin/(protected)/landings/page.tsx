@@ -216,21 +216,23 @@ export default async function LandingsPage({
                       }}>
                       👁️ Ver
                     </Link>
-                    <Link href={`/admin/landings/${landing.id}/editar`}
-                      style={{
-                        flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
-                        background: '#f8fafc', color: '#475569', textDecoration: 'none',
-                        fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
-                      }}>
-                      ✏️ Editar
-                    <Link href={`/admin/(protected)/landings/${landing.analytics}`} target="_blank"
-                      style={{
-                        flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
-                        background: '#f8fafc', color: '#475569', textDecoration: 'none',
-                        fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
-                      }}>
-                      📊 Stats
-                    </Link>
+                    {/* DESPUÉS (CORREGIDO): */}
+<Link href={`/admin/landings/${landing.id}/editar`}
+  style={{
+    flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
+    background: '#f8fafc', color: '#475569', textDecoration: 'none',
+    fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
+  }}>
+  ✏️ Editar
+</Link>
+<Link href={`/admin/landings/${landing.id}/analytics`}  // ← sin (protected), usa landing.id
+  style={{
+    flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
+    background: '#f8fafc', color: '#475569', textDecoration: 'none',
+    fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
+  }}>
+  📊 Stats
+</Link>
                   </div>
                 </div>
               </div>
