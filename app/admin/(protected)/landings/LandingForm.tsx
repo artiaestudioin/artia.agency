@@ -240,8 +240,14 @@ export default function LandingForm({ initialData }: LandingFormProps) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Slug (URL) *</label>
-                  <input type="text" required value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-                    placeholder="taza-personalizada" style={inputStyle} />
+                  <input 
+                    type="text" 
+                    required 
+                    value={form.slug} 
+                    onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                    placeholder="taza-personalizada" 
+                    style={inputStyle} 
+                  />
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: '4px 0 0' }}>URL pública: /lp/{form.slug}</p>
                 </div>
                 <div>
