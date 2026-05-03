@@ -1,5 +1,4 @@
-// app/api/landing-orders/[id]/route.ts
-// FIX: params debe ser Promise<{ id: string }> en Next.js 15
+// app/api/admin/landings/[id]/route.ts
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -11,15 +10,15 @@ export async function GET(
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('landing_orders')
-    .select('*')
+    .from('landings')
+    .select('*, variants:landings!parent_id(*)')
     .eq('id', id)
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ order: data })
+  return NextResponse.json({ landing: data })
 }
-// se corrije landing a landing_orders
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -29,14 +28,14 @@ export async function PATCH(
   const body = await request.json()
 
   const { data, error } = await supabase
-    .from('landing_orders')
+    .from('landings')          // ← tabla LANDINGS, no landing_orders
     .update(body)
     .eq('id', id)
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ order: data })
+  return NextResponse.json({ landing: data })
 }
 
 export async function DELETE(
@@ -47,7 +46,7 @@ export async function DELETE(
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from('landing_orders')
+    .from('landings')          // ← tabla LANDINGS, no landing_orders
     .delete()
     .eq('id', id)
 
