@@ -5,13 +5,14 @@ import LandingRenderer from './LandingRenderer'
 import { Metadata } from 'next'
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
+  const { slug } = await params
   const supabase = await createClient()
   const { data: landing } = await supabase
     .from('landings')
     .select('config')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'active')
     .single()
 
@@ -43,20 +44,19 @@ export default async function LandingPage({
   params,
   searchParams,
 }: {
-  params: { slug: string }
-  searchParams: { edit?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string }
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ edit?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string }>
 }) {
+  const { slug } = await params
+  const sp = await searchParams
   const supabase = await createClient()
 
-  // Check for variant assignment (A/B testing)
-  let landingQuery = supabase
+  const { data: landing, error } = await supabase
     .from('landings')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'active')
     .single()
-
-  const { data: landing, error } = await landingQuery
 
   if (error || !landing) {
     notFound()
@@ -89,24 +89,24 @@ export default async function LandingPage({
   await supabase.from('landing_events').insert({
     landing_id: selectedLanding.id,
     event_type: 'page_view',
-    utm_source: searchParams.utm_source || null,
-    utm_medium: searchParams.utm_medium || null,
-    utm_campaign: searchParams.utm_campaign || null,
+    utm_source: sp.utm_source || null,
+    utm_medium: sp.utm_medium || null,
+    utm_campaign: sp.utm_campaign || null,
   })
 
   // Increment view counter
   await supabase.rpc('increment_landing_views', { landing_uuid: selectedLanding.id })
 
-  const isEditMode = searchParams.edit === 'true'
+  const isEditMode = sp.edit === 'true'
 
   return (
     <LandingRenderer
       landing={selectedLanding}
       isEditMode={isEditMode}
       utmParams={{
-        source: searchParams.utm_source,
-        medium: searchParams.utm_medium,
-        campaign: searchParams.utm_campaign,
+        source: sp.utm_source,
+        medium: sp.utm_medium,
+        campaign: sp.utm_campaign,
       }}
     />
   )
