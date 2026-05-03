@@ -223,8 +223,7 @@ export default async function LandingsPage({
                         fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
                       }}>
                       ✏️ Editar
-                    </Link>
-                    <Link href={`/admin/landings/${landing.id}/analytics`}
+                    <Link href={`/admin/(protected)/landings/${landing.analytics}`} target="_blank"
                       style={{
                         flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
                         background: '#f8fafc', color: '#475569', textDecoration: 'none',
