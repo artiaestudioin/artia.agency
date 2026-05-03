@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import LandingRenderer from './LandingRenderer'
 import { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -28,16 +30,6 @@ export async function generateMetadata(
       images: config.meta_image ? [config.meta_image] : [config.image],
     },
   }
-}
-
-export async function generateStaticParams() {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('landings')
-    .select('slug')
-    .eq('status', 'active')
-
-  return (data || []).map((l) => ({ slug: l.slug }))
 }
 
 export default async function LandingPage({
@@ -72,7 +64,6 @@ export default async function LandingPage({
       .eq('status', 'active')
 
     if (variants && variants.length > 0) {
-      // Simple traffic split
       const random = Math.random() * 100
       let cumulative = 0
       for (const variant of variants) {
