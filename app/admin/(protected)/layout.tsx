@@ -11,14 +11,40 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   if (!user) redirect('/admin/login')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#F8FAFC',
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        display: 'flex',
+      }}
+    >
       <AdminNav email={user.email ?? ''} />
-      <main className="admin-main" style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
-        {children}
-      </main>
+
+      {/* Main content area — offset by sidebar + topbar */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Desktop top bar spacer */}
+        <div className="admin-topbar-spacer" style={{ height: 60 }} />
+
+        <main
+          className="admin-main"
+          style={{
+            flex: 1,
+            padding: '28px 32px',
+            maxWidth: 1400,
+            width: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
+          }}
+        >
+          {children}
+        </main>
+      </div>
+
       <style>{`
-        @media (max-width: 768px) {
-          .admin-main { padding: 16px !important; }
+        @media (max-width: 1024px) {
+          .admin-topbar-spacer { height: 56px !important; }
+          .admin-main { padding: 20px 16px !important; }
         }
       `}</style>
     </div>

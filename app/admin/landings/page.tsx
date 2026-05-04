@@ -225,7 +225,7 @@ export default async function LandingsPage({
   }}>
   ✏️ Editar
 </Link>
-<Link href={`/admin/landings/${landing.id}/analytics`}  // ← sin (protected), usa landing.id
+<Link href={`/admin/landings/${landing.id}/stats`}
   style={{
     flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
     background: '#f8fafc', color: '#475569', textDecoration: 'none',

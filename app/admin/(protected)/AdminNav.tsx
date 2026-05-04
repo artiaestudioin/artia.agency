@@ -1,356 +1,472 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { COLORS } from '@/components/DesignSystem'
+import { useState } from 'react'
+import {
+  LayoutDashboard,
+  Users,
+  GitBranch,
+  Building2,
+  ShoppingBag,
+  DollarSign,
+  FolderKanban,
+  ImageIcon,
+  BarChart3,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  ShoppingCart,
+  TrendingUp,
+  Link2,
+  LogOut,
+  Globe,
+  Search,
+  Bell,
+  Plus,
+  HelpCircle,
+} from 'lucide-react'
 
-
-type NavItem = {
+// ─── NAV STRUCTURE ───────────────────────────────────────────────
+type NavLeaf = {
   href: string
   label: string
-  icon: string
-  badge?: number
+  icon: React.ReactNode
 }
 
 type NavGroup = {
-  title: string
-  items: NavItem[]
+  href?: string
+  label: string
+  icon: React.ReactNode
+  children?: NavLeaf[]
 }
 
-const NAV_GROUPS: NavGroup[] = [
+const NAV_ITEMS: NavGroup[] = [
   {
-    title: 'Principal',
-    items: [
-      { href: '/admin', label: 'Dashboard', icon: '◆' },
-      { href: '/admin/leads', label: 'Leads', icon: '👤' },
-      { href: '/admin/pipeline', label: 'Pipeline', icon: '▦' },
-      { href: '/admin/cliente', label: 'Clientes', icon: '◈' },
+    href: '/admin',
+    label: 'Dashboard',
+    icon: <LayoutDashboard size={18} />,
+  },
+  {
+    href: '/admin/leads',
+    label: 'Contactos',
+    icon: <Users size={18} />,
+  },
+  {
+    href: '/admin/pipeline',
+    label: 'Proceso de ventas',
+    icon: <GitBranch size={18} />,
+  },
+  {
+    href: '/admin/cliente',
+    label: 'Clientes',
+    icon: <Building2 size={18} />,
+  },
+  {
+    label: 'Ventas',
+    icon: <ShoppingBag size={18} />,
+    children: [
+      { href: '/admin/landings', label: 'Páginas de venta', icon: <FileText size={15} /> },
+      { href: '/admin/landings/orders', label: 'Pedidos', icon: <ShoppingCart size={15} /> },
+      { href: '/admin/landings/analytics', label: 'Rendimiento', icon: <TrendingUp size={15} /> },
+      { href: '/admin/landings/utm', label: 'Campañas', icon: <Link2 size={15} /> },
     ],
   },
   {
-    title: 'Landings & Marketing',
-    items: [
-      { href: '/admin/landings', label: 'Landing Pages', icon: '🎯' },
-      { href: '/admin/landings/orders', label: 'Pedidos Landings', icon: '🛒' },
-      { href: '/admin/landings/analytics', label: 'Analytics', icon: '📈' },
-      { href: '/admin/landings/utm', label: 'UTM Links', icon: '🔗' },
-    ],
+    href: '/admin/finanzas',
+    label: 'Ingresos',
+    icon: <DollarSign size={18} />,
   },
   {
-    title: 'Operaciones',
-    items: [
-      { href: '/admin/proyectos', label: 'Proyectos', icon: '▣' },
-      { href: '/admin/imagenes', label: 'Media', icon: '▣' },
-      { href: '/admin/emails', label: 'Emails', icon: '✉' },
-    ],
+    href: '/admin/proyectos',
+    label: 'Proyectos',
+    icon: <FolderKanban size={18} />,
   },
   {
-  title: 'Finanzas & IA',
-  items: [
-    { href: '/admin/finanzas', label: 'Finanzas', icon: '$' },
-    { href: '/admin/reportes', label: 'Reportes', icon: '📊' },  // ← NUEVO
-    { href: '/admin/ia', label: 'IA', icon: '◉' },
-  ],
-},
+    href: '/admin/imagenes',
+    label: 'Archivos',
+    icon: <ImageIcon size={18} />,
+  },
+  {
+    href: '/admin/reportes',
+    label: 'Reportes',
+    icon: <BarChart3 size={18} />,
+  },
+  {
+    href: '/admin/ia',
+    label: 'Asistente IA',
+    icon: <Sparkles size={18} />,
+  },
 ]
 
+// ─── COMPONENT ───────────────────────────────────────────────────
 export default function AdminNav({ email }: { email: string }) {
   const pathname = usePathname()
+  const [salesOpen, setSalesOpen] = useState(() =>
+    pathname.startsWith('/admin/landings')
+  )
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-
-  // Detectar scroll para sombra dinámica
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Cerrar menú móvil al cambiar de ruta
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
   }
 
-  return (
-    <>
-      {/* ─── Desktop Nav ─── */}
-      <nav
-        className="admin-nav-desktop"
+  const initials = email.slice(0, 2).toUpperCase()
+  const username = email.split('@')[0]
+
+  const SidebarContent = () => (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      padding: '20px 12px',
+      gap: 4,
+    }}>
+      {/* Logo */}
+      <a
+        href="/admin"
         style={{
-          background: COLORS.primary,
-          height: 60,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          boxShadow: scrolled ? '0 4px 24px rgba(0,0,0,0.15)' : 'none',
-          transition: 'box-shadow 0.3s ease',
+          gap: 10,
+          padding: '8px 12px',
+          marginBottom: 20,
+          textDecoration: 'none',
         }}
       >
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <a
-            href="/admin"
-            style={{
-              color: '#fff',
-              fontWeight: 900,
-              fontSize: 15,
-              letterSpacing: '-0.3px',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
-                background: COLORS.gradientPrimary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-              }}
-            >
-              A
-            </div>
-            <span>
-              ARTIA <span style={{ color: '#6b8cff', fontWeight: 400 }}>CRM</span>
-            </span>
-          </a>
-
-          {/* Links agrupados */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {NAV_GROUPS.map((group, gi) => (
-              <div key={gi} style={{ display: 'flex', alignItems: 'center' }}>
-                {gi > 0 && (
-                  <div
-                    style={{
-                      width: 1,
-                      height: 20,
-                      background: 'rgba(255,255,255,0.08)',
-                      margin: '0 12px',
-                    }}
-                  />
-                )}
-                {group.items.map((item) => {
-                  const active = isActive(item.href)
-                  return (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      style={{
-                        color: active ? '#fff' : 'rgba(179,197,255,0.65)',
-                        fontSize: 13,
-                        textDecoration: 'none',
-                        fontWeight: active ? 600 : 500,
-                        padding: '6px 12px',
-                        borderRadius: 8,
-                        whiteSpace: 'nowrap',
-                        background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
-                        transition: 'all 0.15s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!active) {
-                          e.currentTarget.style.color = '#fff'
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) {
-                          e.currentTarget.style.color = 'rgba(179,197,255,0.65)'
-                          e.currentTarget.style.background = 'transparent'
-                        }
-                      }}
-                    >
-                      <span style={{ fontSize: 11, opacity: 0.8 }}>{item.icon}</span>
-                      {item.label}
-                    </a>
-                  )
-                })}
-              </div>
-            ))}
+        <div style={{
+          width: 34,
+          height: 34,
+          borderRadius: 10,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          fontWeight: 800,
+          fontSize: 15,
+          flexShrink: 0,
+        }}>
+          A
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', letterSpacing: '-0.3px' }}>
+            ARTIA
+          </div>
+          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, letterSpacing: '0.5px' }}>
+            CRM
           </div>
         </div>
+      </a>
 
-        {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* Nav Items */}
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {NAV_ITEMS.map((item) => {
+          // GROUP WITH CHILDREN (Ventas)
+          if (item.children) {
+            const groupActive = item.children.some(c => isActive(c.href))
+            return (
+              <div key={item.label}>
+                <button
+                  onClick={() => setSalesOpen(!salesOpen)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '9px 12px',
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: groupActive ? '#ede9fe' : 'transparent',
+                    color: groupActive ? '#5b21b6' : '#475569',
+                    fontWeight: groupActive ? 600 : 500,
+                    fontSize: 14,
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => {
+                    if (!groupActive) {
+                      e.currentTarget.style.background = '#f8fafc'
+                      e.currentTarget.style.color = '#1e293b'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!groupActive) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = '#475569'
+                    }
+                  }}
+                >
+                  <span style={{ color: groupActive ? '#7c3aed' : '#94a3b8', flexShrink: 0 }}>
+                    {item.icon}
+                  </span>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  <span style={{ color: '#cbd5e1', transition: 'transform 0.2s', transform: salesOpen ? 'rotate(180deg)' : 'none' }}>
+                    <ChevronDown size={14} />
+                  </span>
+                </button>
+
+                {/* Submenu */}
+                {salesOpen && (
+                  <div style={{ marginLeft: 20, marginTop: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {item.children.map(child => {
+                      const active = isActive(child.href)
+                      return (
+                        <a
+                          key={child.href}
+                          href={child.href}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            textDecoration: 'none',
+                            fontSize: 13,
+                            fontWeight: active ? 600 : 400,
+                            color: active ? '#5b21b6' : '#64748b',
+                            background: active ? '#ede9fe' : 'transparent',
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => {
+                            if (!active) {
+                              e.currentTarget.style.background = '#f8fafc'
+                              e.currentTarget.style.color = '#1e293b'
+                            }
+                          }}
+                          onMouseLeave={e => {
+                            if (!active) {
+                              e.currentTarget.style.background = 'transparent'
+                              e.currentTarget.style.color = '#64748b'
+                            }
+                          }}
+                        >
+                          <span style={{ color: active ? '#7c3aed' : '#94a3b8' }}>{child.icon}</span>
+                          {child.label}
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // REGULAR ITEM
+          const active = isActive(item.href!)
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '9px 12px',
+                borderRadius: 10,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: active ? 600 : 500,
+                color: active ? '#5b21b6' : '#475569',
+                background: active ? '#ede9fe' : 'transparent',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                if (!active) {
+                  e.currentTarget.style.background = '#f8fafc'
+                  e.currentTarget.style.color = '#1e293b'
+                }
+              }}
+              onMouseLeave={e => {
+                if (!active) {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = '#475569'
+                }
+              }}
+            >
+              <span style={{ color: active ? '#7c3aed' : '#94a3b8', flexShrink: 0 }}>
+                {item.icon}
+              </span>
+              {item.label}
+            </a>
+          )
+        })}
+      </nav>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: '#f1f5f9', margin: '8px 4px' }} />
+
+      {/* User footer */}
+      <div style={{ padding: '4px 8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#fff',
+            flexShrink: 0,
+          }}>
+            {initials}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Artia Studio
+            </div>
+            <div style={{ fontSize: 11, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Administrador
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
           <a
             href="https://artiaagency.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontSize: 12,
-              color: 'rgba(179,197,255,0.5)',
-              textDecoration: 'none',
-              padding: '6px 12px',
-              border: '1px solid rgba(255,255,255,0.1)',
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 5,
+              padding: '7px 10px',
               borderRadius: 8,
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              color: '#64748b',
+              fontSize: 12,
+              fontWeight: 500,
+              textDecoration: 'none',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-              e.currentTarget.style.color = 'rgba(179,197,255,0.8)'
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#cbd5e1'
+              e.currentTarget.style.color = '#1e293b'
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-              e.currentTarget.style.color = 'rgba(179,197,255,0.5)'
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = '#e2e8f0'
+              e.currentTarget.style.color = '#64748b'
             }}
           >
-            Ver sitio ↗
+            <Globe size={13} />
+            Sitio
           </a>
-
-          <div
-            style={{
-              width: 1,
-              height: 20,
-              background: COLORS.gradientPrimary,
-            }}
-          />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 700,
-                color: '#fff',
-              }}
-            >
-              {email.charAt(0).toUpperCase()}
-            </div>
-            <span
-              style={{
-                color: 'rgba(179,197,255,0.6)',
-                fontSize: 12,
-                fontWeight: 500,
-              }}
-            >
-              {email.split('@')[0]}
-            </span>
-          </div>
-
-          <form action="/api/auth/logout" method="POST">
+          <form action="/api/auth/logout" method="POST" style={{ flex: 1 }}>
             <button
               type="submit"
               style={{
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(255,255,255,0.65)',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                padding: '7px 10px',
                 borderRadius: 8,
-                padding: '6px 14px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#ef4444',
                 fontSize: 12,
+                fontWeight: 500,
                 cursor: 'pointer',
                 transition: 'all 0.15s',
-                fontWeight: 600,
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
-                e.currentTarget.style.color = '#fff'
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#fee2e2'
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
-                e.currentTarget.style.color = 'rgba(255,255,255,0.65)'
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#fef2f2'
               }}
             >
+              <LogOut size={13} />
               Salir
             </button>
           </form>
         </div>
-      </nav>
+      </div>
+    </div>
+  )
 
-      {/* ─── Mobile Nav ─── */}
-      <nav
-        className="admin-nav-mobile"
+  return (
+    <>
+      {/* ─── Desktop Sidebar ─── */}
+      <aside
+        className="admin-sidebar-desktop"
         style={{
-          background: COLORS.primary,
-          height: 56,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: 220,
+          background: '#ffffff',
+          borderRight: '1px solid #e2e8f0',
+          zIndex: 100,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* ─── Mobile Header ─── */}
+      <header
+        className="admin-header-mobile"
+        style={{
           display: 'none',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
+          height: 56,
+          background: '#fff',
+          borderBottom: '1px solid #e2e8f0',
           zIndex: 100,
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 16px',
         }}
       >
-        <a
-          href="/admin"
-          style={{
-            color: '#fff',
-            fontWeight: 900,
-            fontSize: 15,
-            textDecoration: 'none',
+        <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+          <div style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 7,
-              background: COLORS.gradientPrimary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-            }}
-          >
-            A
-          </div>
-          <span>
-            ARTIA <span style={{ color: '#6b8cff', fontWeight: 400 }}>CRM</span>
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: 13,
+          }}>A</div>
+          <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+            ARTIA <span style={{ color: '#7c3aed', fontWeight: 400 }}>CRM</span>
           </span>
         </a>
-
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            color: '#fff',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: 8,
-            padding: '8px 12px',
-            fontSize: 14,
+            padding: '6px 12px',
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#475569',
           }}
         >
-          <span>{mobileOpen ? '✕' : '☰'}</span>
-          <span style={{ fontSize: 12, fontWeight: 600 }}>Menú</span>
+          {mobileOpen ? '✕' : '☰'}
         </button>
-      </nav>
+      </header>
 
-      {/* ─── Mobile Menu Overlay ─── */}
+      {/* ─── Mobile Drawer ─── */}
       {mobileOpen && (
         <div
           style={{
@@ -359,200 +475,138 @@ export default function AdminNav({ email }: { email: string }) {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,17,58,0.98)',
-            backdropFilter: 'blur(20px)',
             zIndex: 99,
-            padding: '20px 16px',
-            overflowY: 'auto',
-            animation: 'slideIn 0.2s ease',
+            display: 'flex',
           }}
         >
-          {NAV_GROUPS.map((group, gi) => (
-            <div key={gi} style={{ marginBottom: 24 }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1.5px',
-                  color: 'rgba(179,197,255,0.4)',
-                  marginBottom: 12,
-                  paddingLeft: 4,
-                }}
-              >
-                {group.title}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {group.items.map((item) => {
-                  const active = isActive(item.href)
-                  return (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '12px 16px',
-                        borderRadius: 12,
-                        textDecoration: 'none',
-                        fontSize: 15,
-                        fontWeight: active ? 700 : 500,
-                        color: active ? '#fff' : 'rgba(179,197,255,0.8)',
-                        background: active
-                          ? 'linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2))'
-                          : 'transparent',
-                        border: active
-                          ? '1px solid rgba(102,126,234,0.3)'
-                          : '1px solid transparent',
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 10,
-                          background: active
-                            ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                            : 'rgba(255,255,255,0.06)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 14,
-                        }}
-                      >
-                        {item.icon}
-                      </span>
-                      {item.label}
-                    </a>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-
           <div
             style={{
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              paddingTop: 20,
-              marginTop: 8,
+              width: 260,
+              background: '#fff',
+              borderRight: '1px solid #e2e8f0',
+              overflowY: 'auto',
             }}
+            onClick={() => setMobileOpen(false)}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: '#fff',
-                }}
-              >
-                {email.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div
-                  style={{
-                    color: '#fff',
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  {email.split('@')[0]}
-                </div>
-                <div
-                  style={{
-                    color: 'rgba(179,197,255,0.5)',
-                    fontSize: 12,
-                  }}
-                >
-                  {email}
-                </div>
-              </div>
-            </div>
-
-            <a
-              href="https://artiaagency.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 16px',
-                borderRadius: 12,
-                background: 'rgba(255,255,255,0.05)',
-                color: 'rgba(179,197,255,0.8)',
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 500,
-                marginBottom: 12,
-              }}
-            >
-              <span>🌐</span>
-              Ver sitio público ↗
-            </a>
-
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                style={{
-                  width: '100%',
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.2)',
-                  color: '#ef4444',
-                  borderRadius: 12,
-                  padding: '12px 16px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                <span>→</span>
-                Cerrar sesión
-              </button>
-            </form>
+            <SidebarContent />
           </div>
+          <div
+            style={{ flex: 1, background: 'rgba(15,23,42,0.4)' }}
+            onClick={() => setMobileOpen(false)}
+          />
         </div>
       )}
 
-      {/* ─── Spacer para el contenido ─── */}
-      <div className="nav-spacer-desktop" style={{ height: 60 }} />
-      <div className="nav-spacer-mobile" style={{ height: 56, display: 'none' }} />
+      {/* ─── Top bar (desktop only, search + actions) ─── */}
+      <div
+        className="admin-topbar-desktop"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 220,
+          right: 0,
+          height: 60,
+          background: '#fff',
+          borderBottom: '1px solid #e2e8f0',
+          zIndex: 90,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 28px',
+          gap: 16,
+        }}
+      >
+        {/* Search */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 10,
+          padding: '0 14px',
+          height: 36,
+          flex: '1',
+          maxWidth: 320,
+        }}>
+          <Search size={14} color="#94a3b8" />
+          <span style={{ fontSize: 13, color: '#94a3b8' }}>Buscar...</span>
+        </div>
+
+        {/* Right actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            borderRadius: 8,
+            padding: 8,
+            color: '#64748b',
+            display: 'flex',
+            alignItems: 'center',
+            position: 'relative',
+          }}>
+            <Bell size={18} />
+            <span style={{
+              position: 'absolute',
+              top: 5,
+              right: 5,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#7c3aed',
+              border: '1.5px solid #fff',
+            }} />
+          </button>
+          <button style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            borderRadius: 8,
+            padding: 8,
+            color: '#64748b',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <HelpCircle size={18} />
+          </button>
+          <button style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: '#7c3aed',
+            border: 'none',
+            borderRadius: 9,
+            padding: '7px 14px',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}>
+            <Plus size={15} />
+            Nuevo
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Spacers ─── */}
+      <div className="admin-spacer-desktop" style={{ width: 220, flexShrink: 0 }} />
+      <div className="admin-spacer-mobile" style={{ height: 56, display: 'none' }} />
 
       <style>{`
         @media (max-width: 1024px) {
-          .admin-nav-desktop { display: none !important; }
-          .admin-nav-mobile { display: flex !important; }
-          .nav-spacer-desktop { display: none !important; }
-          .nav-spacer-mobile { display: block !important; }
+          .admin-sidebar-desktop { display: none !important; }
+          .admin-topbar-desktop { display: none !important; }
+          .admin-header-mobile { display: flex !important; }
+          .admin-spacer-desktop { display: none !important; }
+          .admin-spacer-mobile { display: block !important; }
         }
         @media (min-width: 1025px) {
-          .admin-nav-desktop { display: flex !important; }
-          .admin-nav-mobile { display: none !important; }
-          .nav-spacer-desktop { display: block !important; }
-          .nav-spacer-mobile { display: none !important; }
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+          .admin-sidebar-desktop { display: block !important; }
+          .admin-topbar-desktop { display: flex !important; }
+          .admin-header-mobile { display: none !important; }
+          .admin-spacer-desktop { display: block !important; }
+          .admin-spacer-mobile { display: none !important; }
         }
       `}</style>
     </>
