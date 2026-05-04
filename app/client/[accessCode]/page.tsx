@@ -29,6 +29,11 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ a
 
   const fileList = files ?? []
 
+  // Normalizar el lead (puede venir como array u objeto según tipos de Supabase)
+  const lead = Array.isArray(project.leads) 
+    ? project.leads[0] 
+    : (project.leads as { nombre: string | null; email: string | null } | null)
+
   const projectInfo = {
     id: project.id,
     name: project.name,
@@ -36,7 +41,7 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ a
     access_code: project.access_code,
     event_date: project.event_date,
     status: project.status,
-    lead_name: Array.isArray(project.leads) ? project.leads[0]?.nombre : project.leads?.nombre,
+    lead_name: lead?.nombre,
   }
 
   return (
