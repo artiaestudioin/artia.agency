@@ -217,6 +217,7 @@ export default async function LandingsPage({
                       👁️ Ver
                     </Link>
                     {/* DESPUÉS (CORREGIDO): */}
+                    
 <Link href={`/admin/landings/${landing.id}/editar`}
   style={{
     flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
