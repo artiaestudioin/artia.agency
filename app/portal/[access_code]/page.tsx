@@ -1,3 +1,4 @@
+//nuevos cambios 
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import ImageGallery from '@/components/client-portal/ImageGallery'
@@ -66,7 +67,7 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ a
       </div>
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-        <ImageGallery files={fileList} projectId={project.id} />
+        <ImageGallery files={fileList} projectId={project.id} accessCode={access_code.toUpperCase()} />
       </div>
 
       {/* Contacto */}

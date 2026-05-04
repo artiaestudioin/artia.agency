@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 // Inicializa PostHog solo en el navegador
@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
     capture_pageview:      false, // lo manejamos manualmente abajo
     capture_pageleave:     true,
     session_recording: {
-      maskAllInputs: false,       // puedes poner true si quieres más privacidad
+      maskAllInputs: false,
     },
   })
 }
@@ -26,6 +26,9 @@ function PageViewTracker() {
   const lastTracked    = useRef<string>('')
 
   useEffect(() => {
+    // Solo ejecutar en cliente cuando el componente esté montado
+    if (typeof window === 'undefined') return
+    
     const url = pathname + (searchParams.toString() ? `?${searchParams}` : '')
     if (url === lastTracked.current) return
     lastTracked.current = url
@@ -35,12 +38,23 @@ function PageViewTracker() {
   return null
 }
 
-// Provider principal — envuelve toda la app
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
+// Wrapper que evita hydration mismatch
+function PostHogWrapper({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
     <PHProvider client={posthog}>
-      <PageViewTracker />
+      {mounted && <PageViewTracker />}
       {children}
     </PHProvider>
   )
+}
+
+// Provider principal — envuelve toda la app
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  return <PostHogWrapper>{children}</PostHogWrapper>
 }

@@ -1,5 +1,5 @@
 'use client'
-
+//nuevos cambios
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ function fmtSize(bytes: number | null) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-function formatDate(dateStr: string | null) {
+function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -120,6 +120,21 @@ export default function ImageGallery({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const slideshowRef = useRef<NodeJS.Timeout | null>(null)
 
+  // ─── Computed values (DEBEN ir antes de los useEffect que las usan) ───
+
+  const filteredImages = images.filter(img => {
+    if (filter === 'favorites') return favorites.has(img.id)
+    if (filter === 'selected') return selected.has(img.id)
+    return true
+  })
+
+  const currentImage = filteredImages[lightboxIndex]
+
+  // Info del evento
+  const eventName = projectInfo?.name || 'Proyecto'
+  const eventDate = formatDate(projectInfo?.event_date)
+  const clientName = projectInfo?.lead_name || projectInfo?.description || ''
+
   // Persistencia
   useEffect(() => {
     localStorage.setItem(`favorites-${pid}`, JSON.stringify([...favorites]))
@@ -185,12 +200,6 @@ export default function ImageGallery({
     }
   }
 
-  const filteredImages = images.filter(img => {
-    if (filter === 'favorites') return favorites.has(img.id)
-    if (filter === 'selected') return selected.has(img.id)
-    return true
-  })
-
   const openLightbox = (index: number) => {
     setLightboxIndex(index)
     setLightboxOpen(true)
@@ -207,13 +216,6 @@ export default function ImageGallery({
     })
     setZoomed(false)
   }
-
-  const currentImage = filteredImages[lightboxIndex]
-
-  // Info del evento
-  const eventName = projectInfo?.name || 'Proyecto'
-  const eventDate = formatDate(projectInfo?.event_date)
-  const clientName = projectInfo?.lead_name || projectInfo?.description || ''
 
   // ─── Empty State ──────────────────────────────────────────────────
 

@@ -20,8 +20,6 @@ export const metadata: Metadata = {
   title: 'Artia Studio',
 }
 
-// Este layout aplica a rutas Next.js (/admin, /api).
-// Los HTML estáticos tienen sus propios <head> y no pasan por aquí.
 export default function RootLayout({
   children,
 }: {
@@ -30,10 +28,6 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
       <body style={{ margin: 0, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
-        {/*
-          PostHogProvider usa useSearchParams() internamente,
-          por eso necesita estar dentro de <Suspense>.
-        */}
         <Suspense fallback={null}>
           <PostHogProvider>
             {children}
