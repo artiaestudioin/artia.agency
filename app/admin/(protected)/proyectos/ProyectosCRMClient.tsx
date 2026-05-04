@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
 type Lead = { id: string; nombre: string; email: string | null; folio: string | null; servicio: string | null; payment_status: string | null }
 type Project = {
   id: string; name: string; description: string | null; access_code: string
   status: string; event_date: string | null; created_at: string; lead_id: string | null
-  leads: Lead | null; file_count: number
+  leads: Lead | null; file_count: number; cover_url?: string | null
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
@@ -22,6 +23,12 @@ function fmtDate(d: string | null) {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artiaagency.vercel.app'
 
+// Cliente de Supabase para el navegador (solo Storage)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export default function ProyectosCRMClient({ projects: init }: { projects: Project[] }) {
   const [projects, setProjects] = useState<Project[]>(init)
   const [selected, setSelected] = useState<Project | null>(null)
@@ -34,7 +41,17 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   const [uploadError, setUploadError]   = useState('')
   const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
-  const [newForm, setNewForm]   = useState({ name: '', description: '', event_date: '' })
+  
+  // Estado para nuevo proyecto con cover
+  const [newForm, setNewForm]   = useState({ 
+    name: '', 
+    description: '', 
+    event_date: '',
+    cover_image: null as File | null 
+  })
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [uploadingCover, setUploadingCover] = useState(false)
+  
   const [saving, setSaving]     = useState(false)
   const [deletingProject, setDeletingProject] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -71,6 +88,38 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     await uploadFiles(Array.from(e.dataTransfer.files))
   }, [selected])
 
+  // ─── SUBIR ARCHIVO A SUPABASE STORAGE ───
+  async function uploadToStorage(file: File, projectId: string): Promise<string | null> {
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
+      const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
+      const path = `project-${projectId}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('projects')
+        .upload(path, file, {
+          contentType: file.type || 'application/octet-stream',
+          upsert: false,
+        })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        return null
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('projects')
+        .getPublicUrl(path)
+
+      return publicUrl
+    } catch (e) {
+      console.error('Error uploading:', e)
+      return null
+    }
+  }
+
+  // ─── SUBIR FOTOS DEL PROYECTO ───
   async function uploadFiles(filesToUpload: File[]) {
     if (!selected || filesToUpload.length === 0) return
     setUploading(true)
@@ -80,20 +129,39 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i]
       setUploadProgress(`Subiendo ${i + 1}/${filesToUpload.length}: ${file.name}`)
+      
+      const publicUrl = await uploadToStorage(file, selected.id)
+      
+      if (!publicUrl) {
+        setUploadError(`Error subiendo ${file.name}`)
+        continue
+      }
+
+      // Guardar en DB
       try {
-        const form = new FormData()
-        form.append('file', file)
-        form.append('projectId', selected.id)
-        const res  = await fetch('/api/admin/project-files', { method: 'POST', body: form })
-        const data = await res.json()
-        if (res.ok && data.file) {
-          setFiles(prev => [data.file, ...prev])
-          success++
-        } else {
-          setUploadError(data.error ?? 'Error subiendo archivo')
+        const dbRes = await fetch('/api/admin/project-files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_id: selected.id,
+            file_url: publicUrl,
+            file_name: file.name,
+            file_type: file.type,
+            file_size: file.size,
+          }),
+        })
+
+        if (!dbRes.ok) {
+          const err = await dbRes.json()
+          setUploadError(err.error ?? `Error guardando ${file.name}`)
+          continue
         }
+
+        const data = await dbRes.json()
+        setFiles(prev => [data.file, ...prev])
+        success++
       } catch (e: any) {
-        setUploadError(e.message ?? 'Error de conexión')
+        setUploadError(e.message ?? `Error guardando ${file.name}`)
       }
     }
 
@@ -106,12 +174,24 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
 
   async function deleteFile(fileId: string) {
     if (!selected || !confirm('¿Eliminar este archivo?')) return
+    
+    const fileToDelete = files.find(f => f.id === fileId)
+    
     const res = await fetch('/api/admin/project-files', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileId, projectId: selected.id }),
     })
+    
     if (res.ok) {
+      if (fileToDelete?.file_url) {
+        const pathMatch = fileToDelete.file_url.match(/project-[^/]+\/(.+)$/)
+        if (pathMatch) {
+          const path = `project-${selected.id}/${pathMatch[1]}`
+          await supabase.storage.from('projects').remove([path])
+        }
+      }
+      
       setFiles(prev => prev.filter(f => f.id !== fileId))
       setProjects(prev => prev.map(p => p.id === selected.id ? { ...p, file_count: Math.max(0, p.file_count - 1) } : p))
       showMsg('Archivo eliminado')
@@ -153,26 +233,55 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     }
   }
 
+  // ─── CREAR PROYECTO CON COVER ───
   async function createProject() {
     if (!newForm.name.trim()) return
+    
     setSaving(true)
+    setUploadingCover(true)
+    
     try {
-      const res  = await fetch('/api/admin/projects', {
+      let coverUrl = null
+      
+      // Si hay imagen de portada, subirla primero
+      if (newForm.cover_image) {
+        setUploadProgress('Subiendo foto de portada...')
+        coverUrl = await uploadToStorage(newForm.cover_image, 'covers')
+        if (!coverUrl) {
+          showMsg('Error subiendo foto de portada', false)
+          setSaving(false)
+          setUploadingCover(false)
+          return
+        }
+      }
+
+      // Crear proyecto
+      const res = await fetch('/api/admin/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newForm),
+        body: JSON.stringify({
+          name: newForm.name,
+          description: newForm.description,
+          event_date: newForm.event_date,
+          cover_url: coverUrl,
+        }),
       })
+      
       const data = await res.json()
+      
       if (res.ok && data.project) {
-        setProjects(prev => [{ ...data.project, leads: null, file_count: 0 }, ...prev])
+        setProjects(prev => [{ ...data.project, leads: null, file_count: 0, cover_url: coverUrl }, ...prev])
         setShowNewModal(false)
-        setNewForm({ name: '', description: '', event_date: '' })
+        setNewForm({ name: '', description: '', event_date: '', cover_image: null })
+        setCoverPreview(null)
         showMsg('Proyecto creado ✓')
       } else {
         showMsg(data.error ?? 'Error', false)
       }
     } finally {
       setSaving(false)
+      setUploadingCover(false)
+      setUploadProgress('')
     }
   }
 
@@ -235,7 +344,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
                     <span style={{ fontSize: 10, color: isActive ? 'rgba(255,255,255,0.4)' : '#94a3b8' }}>
                       {p.file_count} archivo{p.file_count !== 1 ? 's' : ''}
                     </span>
-                    {/* Botón eliminar proyecto */}
                     <button
                       onClick={e => { e.stopPropagation(); deleteProject(p.id, p.name) }}
                       disabled={deletingProject}
@@ -331,6 +439,12 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
             {tab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Cover image */}
+                {selected.cover_url && (
+                  <div style={{ borderRadius: 12, overflow: 'hidden', height: 200 }}>
+                    <img src={selected.cover_url} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
                 {selected.description && (
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Descripción</div>
@@ -354,11 +468,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
                 {uploadError && (
                   <div style={{ background: '#fef2f2', border: '0.5px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
                     ⚠️ {uploadError}
-                    {uploadError.includes('bucket') && (
-                      <div style={{ marginTop: 4, fontSize: 11, color: '#ef4444', fontWeight: 400 }}>
-                        Ve a Supabase → Storage → New bucket → nombre: <strong>projects</strong> → Public ✅
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -434,31 +543,78 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
         </div>
       )}
 
-      {/* Modal nuevo proyecto */}
+      {/* ═══ MODAL NUEVO PROYECTO CON COVER ═══ */}
       {showNewModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440, maxHeight: '90vh', overflow: 'auto' }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#00113a', margin: '0 0 20px' }}>Nuevo proyecto</h3>
+            
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Nombre */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Nombre *</label>
                 <input value={newForm.name} onChange={e => setNewForm(p => ({ ...p, name: e.target.value }))} placeholder="ej: Boda García — Fotografía" style={inp} />
               </div>
+              
+              {/* Descripción */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Descripción</label>
                 <textarea value={newForm.description} onChange={e => setNewForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
+              
+              {/* Fecha */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Fecha del evento</label>
                 <input type="date" value={newForm.event_date} onChange={e => setNewForm(p => ({ ...p, event_date: e.target.value }))} style={inp} />
               </div>
+              
+              {/* ═══ FOTO DE PORTADA ═══ */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>
+                  Foto de portada
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0] ?? null
+                    setNewForm(p => ({ ...p, cover_image: file }))
+                    if (file) {
+                      setCoverPreview(URL.createObjectURL(file))
+                    } else {
+                      setCoverPreview(null)
+                    }
+                  }}
+                  style={{ fontSize: 12, width: '100%' }}
+                />
+                {coverPreview && (
+                  <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', height: 120, border: '1px solid #e2e8f0' }}>
+                    <img src={coverPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+              </div>
             </div>
+            
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={createProject} disabled={saving || !newForm.name.trim()}
-                style={{ flex: 1, background: '#00113a', color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                {saving ? 'Creando…' : 'Crear proyecto'}
+              <button onClick={createProject} disabled={saving || !newForm.name.trim() || uploadingCover}
+                style={{ 
+                  flex: 1, 
+                  background: saving || uploadingCover ? '#93c5fd' : '#00113a', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  padding: '12px', 
+                  fontSize: 13, 
+                  fontWeight: 700, 
+                  cursor: saving || uploadingCover ? 'not-allowed' : 'pointer' 
+                }}>
+                {uploadingCover ? 'Subiendo cover...' : saving ? 'Creando…' : 'Crear proyecto'}
               </button>
-              <button onClick={() => setShowNewModal(false)}
+              <button onClick={() => {
+                setShowNewModal(false)
+                setNewForm({ name: '', description: '', event_date: '', cover_image: null })
+                setCoverPreview(null)
+              }}
                 style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, padding: '12px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancelar
               </button>
