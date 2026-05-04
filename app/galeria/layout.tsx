@@ -1,5 +1,5 @@
 // Layout limpio para el portal del cliente (sin sidebar del admin)
-export default function ClientLayout({ 
+export default function GalleryLayout({ 
   children 
 }: { 
   children: React.ReactNode 
