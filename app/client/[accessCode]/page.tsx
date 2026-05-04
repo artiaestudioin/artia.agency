@@ -2,20 +2,20 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import ImageGallery from '@/components/client-portal/ImageGallery'
 
-export async function generateMetadata({ params }: { params: Promise<{ access_code: string }> }) {
-  const { access_code } = await params
-  return { title: `Galería — ${access_code}` }
+export async function generateMetadata({ params }: { params: Promise<{ accessCode: string }> }) {
+  const { accessCode } = await params
+  return { title: `Galería — ${accessCode}` }
 }
 
-export default async function ClientPortalPage({ params }: { params: Promise<{ access_code: string }> }) {
-  const { access_code } = await params
+export default async function ClientPortalPage({ params }: { params: Promise<{ accessCode: string }> }) {
+  const { accessCode } = await params
   const supabase = await createClient()
 
-  // Buscar proyecto por código
+  // Buscar proyecto por código — AGREGAR access_code AL SELECT
   const { data: project } = await supabase
     .from('projects')
-    .select('id, name, description, status, event_date, created_at, lead_id, leads(nombre, email)')
-    .eq('access_code', access_code.toUpperCase())
+    .select('id, name, description, status, event_date, created_at, lead_id, access_code, leads(nombre, email)')
+    .eq('access_code', accessCode.toUpperCase())
     .maybeSingle()
 
   if (!project) return notFound()
@@ -43,7 +43,7 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ a
     <ImageGallery 
       files={fileList} 
       projectId={project.id}
-      accessCode={access_code.toUpperCase()}
+      accessCode={accessCode.toUpperCase()}
       projectInfo={projectInfo}
     />
   )

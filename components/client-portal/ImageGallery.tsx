@@ -57,20 +57,19 @@ function Toast({ message, visible, onClose }: { message: string; visible: boolea
   if (!visible) return null
 
   return (
-    <div style={{
+    <div className="animate-fade-up" style={{
       position: 'fixed',
       bottom: 100,
       left: '50%',
       transform: 'translateX(-50%)',
-      background: '#1a1a1a',
+      background: 'var(--color-accent-hover)',
       color: '#fff',
       padding: '14px 28px',
       borderRadius: 50,
       fontSize: 14,
       fontWeight: 500,
       zIndex: 9999,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-      animation: 'toastIn 0.3s ease',
+      boxShadow: 'var(--shadow-lg)',
       whiteSpace: 'nowrap',
     }}>
       {message}
@@ -220,28 +219,33 @@ export default function ImageGallery({
 
   if (files.length === 0) {
     return (
-      <div style={{
+      <div className="animate-fade-in" style={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#faf9f7',
-        fontFamily: 'var(--font-inter), -apple-system, sans-serif',
+        background: 'var(--color-bg)',
       }}>
         <div style={{
           textAlign: 'center',
           padding: '80px 40px',
-          background: '#fff',
-          borderRadius: 24,
-          border: '1px solid #e8e4df',
+          background: 'var(--color-bg-white)',
+          borderRadius: 'var(--radius-2xl)',
+          border: '1px solid var(--color-border)',
           maxWidth: 480,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+          boxShadow: 'var(--shadow-md)',
         }}>
           <div style={{ fontSize: 56, marginBottom: 24, opacity: 0.6 }}>📷</div>
-          <h3 style={{ fontSize: 22, fontWeight: 600, color: '#2d2a26', margin: '0 0 12px', fontFamily: 'var(--font-playfair), serif' }}>
+          <h3 style={{ 
+            fontSize: 22, 
+            fontWeight: 600, 
+            color: 'var(--color-text-primary)', 
+            margin: '0 0 12px', 
+            fontFamily: 'var(--font-playfair), serif' 
+          }}>
             Tu galeria esta siendo preparada
           </h3>
-          <p style={{ fontSize: 15, color: '#8a8279', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'var(--color-text-light)', margin: 0, lineHeight: 1.6 }}>
             Pronto encontraras aqui todos los momentos capturados de tu dia especial.
             <br />Te notificaremos cuando esten disponibles.
           </p>
@@ -255,9 +259,8 @@ export default function ImageGallery({
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#faf9f7',
-      fontFamily: 'var(--font-inter), -apple-system, sans-serif',
-      color: '#2d2a26',
+      background: 'var(--color-bg)',
+      color: 'var(--color-text-primary)',
     }}>
       {/* Sidebar */}
       <aside style={{
@@ -266,29 +269,35 @@ export default function ImageGallery({
         top: 0,
         width: sidebarOpen ? 280 : 72,
         height: '100vh',
-        background: '#fff',
-        borderRight: '1px solid #e8e4df',
+        background: 'var(--color-bg-white)',
+        borderRight: '1px solid var(--color-border)',
         zIndex: 100,
-        transition: 'width 0.3s ease',
+        transition: 'width var(--transition-slow)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
       }}>
         {/* Logo */}
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid #f0ebe5' }}>
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--color-border-light)' }}>
           <div style={{
             fontFamily: 'var(--font-playfair), serif',
             fontSize: sidebarOpen ? 20 : 14,
             fontWeight: 700,
-            color: '#2d2a26',
+            color: 'var(--color-text-primary)',
             letterSpacing: 1,
             textAlign: sidebarOpen ? 'left' : 'center',
-            transition: 'all 0.3s',
+            transition: 'all var(--transition-slow)',
           }}>
             {sidebarOpen ? 'ARTIA STUDIO' : 'AS'}
           </div>
           {sidebarOpen && (
-            <div style={{ fontSize: 10, color: '#a69f94', letterSpacing: 3, marginTop: 4, textTransform: 'uppercase' }}>
+            <div style={{ 
+              fontSize: 10, 
+              color: 'var(--color-text-muted)', 
+              letterSpacing: 3, 
+              marginTop: 4, 
+              textTransform: 'uppercase' 
+            }}>
               Fotografia
             </div>
           )}
@@ -296,12 +305,12 @@ export default function ImageGallery({
 
         {/* Event Info */}
         {sidebarOpen && (
-          <div style={{ padding: '20px', borderBottom: '1px solid #f0ebe5' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid var(--color-border-light)' }}>
             <div style={{
               width: 56,
               height: 56,
               borderRadius: '50%',
-              background: '#f0ebe5',
+              background: 'var(--color-bg-cream)',
               margin: '0 auto 12px',
               display: 'flex',
               alignItems: 'center',
@@ -310,16 +319,31 @@ export default function ImageGallery({
             }}>
               💑
             </div>
-            <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, color: '#2d2a26', marginBottom: 4 }}>
+            <div style={{ 
+              textAlign: 'center', 
+              fontSize: 15, 
+              fontWeight: 600, 
+              color: 'var(--color-text-primary)', 
+              marginBottom: 4 
+            }}>
               {eventName}
             </div>
             {clientName && (
-              <div style={{ textAlign: 'center', fontSize: 12, color: '#a69f94', marginBottom: 4 }}>
+              <div style={{ 
+                textAlign: 'center', 
+                fontSize: 12, 
+                color: 'var(--color-text-muted)', 
+                marginBottom: 4 
+              }}>
                 {clientName}
               </div>
             )}
             {eventDate && (
-              <div style={{ textAlign: 'center', fontSize: 12, color: '#a69f94' }}>
+              <div style={{ 
+                textAlign: 'center', 
+                fontSize: 12, 
+                color: 'var(--color-text-muted)' 
+              }}>
                 {eventDate}
               </div>
             )}
@@ -343,12 +367,12 @@ export default function ImageGallery({
                 gap: 12,
                 padding: sidebarOpen ? '12px 16px' : '12px 0',
                 justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-md)',
                 border: 'none',
-                background: filter === item.key ? '#f5f0ea' : 'transparent',
-                color: filter === item.key ? '#2d2a26' : '#8a8279',
+                background: filter === item.key ? 'var(--color-bg-warm)' : 'transparent',
+                color: filter === item.key ? 'var(--color-text-primary)' : 'var(--color-text-light)',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all var(--transition-base)',
                 fontSize: 14,
                 fontWeight: filter === item.key ? 600 : 400,
                 position: 'relative',
@@ -362,10 +386,10 @@ export default function ImageGallery({
                   <span style={{
                     fontSize: 12,
                     fontWeight: 600,
-                    background: filter === item.key ? '#e8e0d6' : '#f0ebe5',
+                    background: filter === item.key ? '#e8e0d6' : 'var(--color-bg-cream)',
                     padding: '2px 8px',
                     borderRadius: 10,
-                    color: '#6b6560',
+                    color: 'var(--color-text-secondary)',
                   }}>
                     {item.count}
                   </span>
@@ -377,19 +401,25 @@ export default function ImageGallery({
 
         {/* Access Code */}
         {sidebarOpen && (
-          <div style={{ padding: '16px 20px', borderTop: '1px solid #f0ebe5' }}>
-            <div style={{ fontSize: 10, color: '#a69f94', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-light)' }}>
+            <div style={{ 
+              fontSize: 10, 
+              color: 'var(--color-text-muted)', 
+              letterSpacing: '1px', 
+              textTransform: 'uppercase', 
+              marginBottom: 6 
+            }}>
               Codigo de acceso
             </div>
             <code style={{
               fontSize: 12,
               fontFamily: 'monospace',
-              background: '#f5f0ea',
+              background: 'var(--color-bg-warm)',
               padding: '6px 12px',
-              borderRadius: 8,
+              borderRadius: 'var(--radius-md)',
               display: 'block',
               textAlign: 'center',
-              color: '#6b6560',
+              color: 'var(--color-text-secondary)',
               letterSpacing: '2px',
             }}>
               {accessCode}
@@ -404,9 +434,9 @@ export default function ImageGallery({
             padding: 16,
             border: 'none',
             background: 'transparent',
-            borderTop: '1px solid #f0ebe5',
+            borderTop: '1px solid var(--color-border-light)',
             cursor: 'pointer',
-            color: '#a69f94',
+            color: 'var(--color-text-muted)',
             fontSize: 18,
             textAlign: 'center',
           }}
@@ -418,7 +448,7 @@ export default function ImageGallery({
       {/* Main Content */}
       <main style={{
         marginLeft: sidebarOpen ? 280 : 72,
-        transition: 'margin-left 0.3s ease',
+        transition: 'margin-left var(--transition-slow)',
         minHeight: '100vh',
         paddingBottom: selected.size > 0 ? 120 : 0,
       }}>
@@ -436,7 +466,7 @@ export default function ImageGallery({
               fontFamily: 'var(--font-playfair), serif',
               fontSize: 32,
               fontWeight: 600,
-              color: '#2d2a26',
+              color: 'var(--color-text-primary)',
               margin: '0 0 8px',
               letterSpacing: -0.5,
             }}>
@@ -444,7 +474,7 @@ export default function ImageGallery({
               {filter === 'favorites' && 'Tus favoritos'}
               {filter === 'selected' && 'Fotos seleccionadas'}
             </h1>
-            <p style={{ fontSize: 14, color: '#a69f94', margin: 0 }}>
+            <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0 }}>
               {filteredImages.length} {filteredImages.length === 1 ? 'fotografia' : 'fotografias'}
               {filter === 'all' && ` · ${images.length} en total`}
             </p>
@@ -455,17 +485,17 @@ export default function ImageGallery({
               onClick={() => { setFilter('all'); openLightbox(0); setSlideshow(true); }}
               style={{
                 padding: '10px 20px',
-                borderRadius: 10,
-                border: '1px solid #e8e4df',
-                background: '#fff',
-                color: '#6b6560',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-white)',
+                color: 'var(--color-text-secondary)',
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                transition: 'all 0.2s',
+                transition: 'all var(--transition-base)',
               }}
             >
               ▶ Presentacion
@@ -474,14 +504,14 @@ export default function ImageGallery({
               onClick={() => setFilter('all')}
               style={{
                 padding: '10px 20px',
-                borderRadius: 10,
-                border: '1px solid #e8e4df',
-                background: filter === 'all' ? '#2d2a26' : '#fff',
-                color: filter === 'all' ? '#fff' : '#6b6560',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                background: filter === 'all' ? 'var(--color-accent)' : 'var(--color-bg-white)',
+                color: filter === 'all' ? '#fff' : 'var(--color-text-secondary)',
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all var(--transition-base)',
               }}
             >
               Todo
@@ -490,14 +520,14 @@ export default function ImageGallery({
               onClick={() => setFilter('favorites')}
               style={{
                 padding: '10px 20px',
-                borderRadius: 10,
-                border: '1px solid #e8e4df',
-                background: filter === 'favorites' ? '#2d2a26' : '#fff',
-                color: filter === 'favorites' ? '#fff' : '#6b6560',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                background: filter === 'favorites' ? 'var(--color-accent)' : 'var(--color-bg-white)',
+                color: filter === 'favorites' ? '#fff' : 'var(--color-text-secondary)',
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all var(--transition-base)',
               }}
             >
               ❤️ Favoritos
@@ -506,14 +536,14 @@ export default function ImageGallery({
               onClick={() => setFilter('selected')}
               style={{
                 padding: '10px 20px',
-                borderRadius: 10,
-                border: '1px solid #e8e4df',
-                background: filter === 'selected' ? '#2d2a26' : '#fff',
-                color: filter === 'selected' ? '#fff' : '#6b6560',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                background: filter === 'selected' ? 'var(--color-accent)' : 'var(--color-bg-white)',
+                color: filter === 'selected' ? '#fff' : 'var(--color-text-secondary)',
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all var(--transition-base)',
               }}
             >
               ✓ Seleccionadas
@@ -539,15 +569,16 @@ export default function ImageGallery({
                 onMouseEnter={() => setHoveredId(img.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => openLightbox(idx)}
+                className="animate-fade-up"
                 style={{
                   position: 'relative',
-                  borderRadius: 12,
+                  borderRadius: 'var(--radius-lg)',
                   overflow: 'hidden',
                   cursor: 'pointer',
                   aspectRatio: '4/3',
-                  background: '#f0ebe5',
-                  boxShadow: isHover ? '0 8px 32px rgba(0,0,0,0.12)' : '0 2px 8px rgba(0,0,0,0.06)',
-                  transition: 'box-shadow 0.3s ease',
+                  background: 'var(--color-bg-cream)',
+                  boxShadow: isHover ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+                  transition: 'box-shadow var(--transition-slow)',
                 }}
               >
                 <img
@@ -558,7 +589,7 @@ export default function ImageGallery({
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'var(--transition-transform)',
                     transform: isHover ? 'scale(1.04)' : 'scale(1)',
                   }}
                 />
@@ -568,7 +599,7 @@ export default function ImageGallery({
                   position: 'absolute',
                   inset: 0,
                   background: isHover ? 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)' : 'transparent',
-                  transition: 'all 0.3s ease',
+                  transition: 'all var(--transition-slow)',
                   pointerEvents: 'none',
                 }} />
 
@@ -591,7 +622,7 @@ export default function ImageGallery({
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 14,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      boxShadow: 'var(--shadow-sm)',
                     }}>❤️</span>
                   )}
                   {isSel && (
@@ -599,14 +630,14 @@ export default function ImageGallery({
                       width: 28,
                       height: 28,
                       borderRadius: '50%',
-                      background: '#2d2a26',
+                      background: 'var(--color-accent)',
                       color: '#fff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 14,
                       fontWeight: 700,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      boxShadow: 'var(--shadow-sm)',
                     }}>✓</span>
                   )}
                 </div>
@@ -614,6 +645,7 @@ export default function ImageGallery({
                 {/* Hover Actions */}
                 {isHover && (
                   <div
+                    className="animate-fade-up"
                     style={{
                       position: 'absolute',
                       bottom: 12,
@@ -621,7 +653,6 @@ export default function ImageGallery({
                       right: 12,
                       display: 'flex',
                       gap: 8,
-                      animation: 'fadeUp 0.2s ease',
                     }}
                     onClick={e => e.stopPropagation()}
                   >
@@ -630,15 +661,15 @@ export default function ImageGallery({
                       style={{
                         flex: 1,
                         padding: '10px 0',
-                        borderRadius: 8,
+                        borderRadius: 'var(--radius-sm)',
                         border: 'none',
                         background: isFav ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.9)',
-                        color: isFav ? '#e11d48' : '#2d2a26',
+                        color: isFav ? 'var(--color-favorite)' : 'var(--color-text-primary)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: 'pointer',
                         backdropFilter: 'blur(8px)',
-                        transition: 'all 0.2s',
+                        transition: 'all var(--transition-base)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -652,15 +683,15 @@ export default function ImageGallery({
                       style={{
                         flex: 1,
                         padding: '10px 0',
-                        borderRadius: 8,
+                        borderRadius: 'var(--radius-sm)',
                         border: 'none',
-                        background: isSel ? '#2d2a26' : 'rgba(255,255,255,0.9)',
-                        color: isSel ? '#fff' : '#2d2a26',
+                        background: isSel ? 'var(--color-accent)' : 'rgba(255,255,255,0.9)',
+                        color: isSel ? '#fff' : 'var(--color-text-primary)',
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: 'pointer',
                         backdropFilter: 'blur(8px)',
-                        transition: 'all 0.2s',
+                        transition: 'all var(--transition-base)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -674,7 +705,7 @@ export default function ImageGallery({
 
                 {/* Filename on hover */}
                 {isHover && (
-                  <div style={{
+                  <div className="animate-fade-up" style={{
                     position: 'absolute',
                     bottom: 56,
                     left: 12,
@@ -682,7 +713,6 @@ export default function ImageGallery({
                     fontSize: 12,
                     fontWeight: 500,
                     textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                    animation: 'fadeUp 0.2s ease',
                   }}>
                     {img.file_name}
                   </div>
@@ -693,10 +723,10 @@ export default function ImageGallery({
         </div>
 
         {filteredImages.length === 0 && (
-          <div style={{
+          <div className="animate-fade-in" style={{
             textAlign: 'center',
             padding: '80px 20px',
-            color: '#a69f94',
+            color: 'var(--color-text-muted)',
           }}>
             <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>
               {filter === 'favorites' ? '❤️' : '✓'}
@@ -710,20 +740,20 @@ export default function ImageGallery({
 
       {/* Bottom Action Bar */}
       {selected.size > 0 && (
-        <div style={{
+        <div className="animate-slide-right" style={{
           position: 'fixed',
           bottom: 0,
           left: sidebarOpen ? 280 : 72,
           right: 0,
-          background: '#fff',
-          borderTop: '1px solid #e8e4df',
+          background: 'var(--color-bg-white)',
+          borderTop: '1px solid var(--color-border)',
           padding: '16px 32px',
           display: 'flex',
           alignItems: 'center',
           gap: 20,
           zIndex: 90,
           boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
-          transition: 'left 0.3s ease',
+          transition: 'left var(--transition-slow)',
         }}>
           {/* Thumbnails */}
           <div style={{
@@ -740,10 +770,10 @@ export default function ImageGallery({
                 <div key={id} style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 8,
+                  borderRadius: 'var(--radius-sm)',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  border: '2px solid #2d2a26',
+                  border: '2px solid var(--color-accent)',
                   position: 'relative',
                 }}>
                   <img src={img.file_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -756,7 +786,7 @@ export default function ImageGallery({
                       width: 18,
                       height: 18,
                       borderRadius: '50%',
-                      background: '#2d2a26',
+                      background: 'var(--color-accent)',
                       color: '#fff',
                       border: '2px solid #fff',
                       fontSize: 10,
@@ -776,14 +806,14 @@ export default function ImageGallery({
               <div style={{
                 width: 48,
                 height: 48,
-                borderRadius: 8,
-                background: '#f0ebe5',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-bg-cream)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#6b6560',
+                color: 'var(--color-text-secondary)',
                 flexShrink: 0,
               }}>
                 +{selected.size - 8}
@@ -795,8 +825,8 @@ export default function ImageGallery({
 
           {/* Counter */}
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 13, color: '#a69f94' }}>seleccionadas</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#2d2a26', lineHeight: 1 }}>
+            <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>seleccionadas</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1 }}>
               {selected.size}
             </div>
           </div>
@@ -806,10 +836,10 @@ export default function ImageGallery({
             onClick={() => setFilter('selected')}
             style={{
               padding: '12px 24px',
-              borderRadius: 10,
-              border: '1px solid #e8e4df',
-              background: '#fff',
-              color: '#6b6560',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-bg-white)',
+              color: 'var(--color-text-secondary)',
               fontSize: 14,
               fontWeight: 500,
               cursor: 'pointer',
@@ -822,9 +852,9 @@ export default function ImageGallery({
             onClick={saveSelection}
             style={{
               padding: '12px 32px',
-              borderRadius: 10,
+              borderRadius: 'var(--radius-md)',
               border: 'none',
-              background: '#2d2a26',
+              background: 'var(--color-accent)',
               color: '#fff',
               fontSize: 14,
               fontWeight: 600,
@@ -833,8 +863,8 @@ export default function ImageGallery({
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              boxShadow: '0 4px 16px rgba(45,42,38,0.3)',
-              transition: 'all 0.2s',
+              boxShadow: 'var(--shadow-md)',
+              transition: 'all var(--transition-base)',
             }}
           >
             💾 Guardar seleccion
@@ -845,6 +875,7 @@ export default function ImageGallery({
       {/* Lightbox Modal */}
       {lightboxOpen && currentImage && (
         <div
+          className="animate-fade-in"
           style={{
             position: 'fixed',
             inset: 0,
@@ -852,7 +883,6 @@ export default function ImageGallery({
             zIndex: 1000,
             display: 'flex',
             flexDirection: 'column',
-            animation: 'fadeIn 0.3s ease',
           }}
           onClick={() => { setLightboxOpen(false); setSlideshow(false); }}
         >
@@ -874,7 +904,7 @@ export default function ImageGallery({
                 onClick={() => setSlideshow(!slideshow)}
                 style={{
                   padding: '8px 16px',
-                  borderRadius: 8,
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   background: slideshow ? 'rgba(255,255,255,0.2)' : 'transparent',
                   color: '#fff',
@@ -888,7 +918,7 @@ export default function ImageGallery({
                 onClick={() => setZoomed(!zoomed)}
                 style={{
                   padding: '8px 16px',
-                  borderRadius: 8,
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   background: 'transparent',
                   color: '#fff',
@@ -961,7 +991,7 @@ export default function ImageGallery({
                 maxHeight: zoomed ? '150%' : '85vh',
                 objectFit: 'contain',
                 borderRadius: 4,
-                transition: 'all 0.3s ease',
+                transition: 'all var(--transition-slow)',
                 cursor: zoomed ? 'zoom-out' : 'default',
               }}
               onClick={() => !zoomed && setZoomed(true)}
@@ -1004,7 +1034,7 @@ export default function ImageGallery({
               onClick={() => toggleFavorite(currentImage.id)}
               style={{
                 padding: '12px 24px',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 background: favorites.has(currentImage.id) ? 'rgba(225,29,72,0.8)' : 'rgba(255,255,255,0.1)',
                 color: '#fff',
@@ -1024,10 +1054,10 @@ export default function ImageGallery({
               onClick={() => toggleSelect(currentImage.id)}
               style={{
                 padding: '12px 24px',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 background: selected.has(currentImage.id) ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)',
-                color: selected.has(currentImage.id) ? '#2d2a26' : '#fff',
+                color: selected.has(currentImage.id) ? 'var(--color-text-primary)' : '#fff',
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1044,7 +1074,7 @@ export default function ImageGallery({
               download
               style={{
                 padding: '12px 24px',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 background: 'rgba(255,255,255,0.1)',
                 color: '#fff',

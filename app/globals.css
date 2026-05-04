@@ -1,0 +1,261 @@
+/* ============================================
+   ARTIA STUDIO - Global Styles
+   Portal de Clientes - Galería de Fotos
+   ============================================ */
+
+/* ─── Reset & Base ────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #faf9f7;
+  color: #2d2a26;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ─── CSS Variables ───────────────────────── */
+:root {
+  /* Colors - Premium Wedding Palette */
+  --color-bg: #faf9f7;
+  --color-bg-white: #ffffff;
+  --color-bg-warm: #f5f0ea;
+  --color-bg-cream: #f0ebe5;
+
+  --color-text-primary: #2d2a26;
+  --color-text-secondary: #6b6560;
+  --color-text-muted: #a69f94;
+  --color-text-light: #8a8279;
+
+  --color-border: #e8e4df;
+  --color-border-light: #f0ebe5;
+
+  --color-accent: #2d2a26;
+  --color-accent-hover: #1a1815;
+  --color-favorite: #e11d48;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.16);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-transform: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Sidebar */
+  --sidebar-width: 280px;
+  --sidebar-collapsed: 72px;
+}
+
+/* ─── Scrollbar ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4cfc8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a69f94;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4cfc8 transparent;
+}
+
+/* ─── Selection ───────────────────────────── */
+::selection {
+  background: rgba(45, 42, 38, 0.15);
+  color: #2d2a26;
+}
+
+/* ─── Animations ──────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ─── Utility Classes ─────────────────────── */
+.animate-fade-in {
+  animation: fadeIn var(--transition-slow) ease;
+}
+
+.animate-fade-up {
+  animation: fadeUp var(--transition-slow) ease;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-slow) ease;
+}
+
+.animate-slide-left {
+  animation: slideInLeft var(--transition-slow) ease;
+}
+
+.animate-slide-right {
+  animation: slideInRight var(--transition-slow) ease;
+}
+
+/* ─── Image Loading Skeleton ──────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-cream) 25%,
+    var(--color-bg-warm) 50%,
+    var(--color-bg-cream) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Focus Styles ────────────────────────── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Responsive Typography ───────────────── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+}
+
+/* ─── Print Styles ────────────────────────── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+}
