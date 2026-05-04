@@ -38,7 +38,7 @@ function fmtSize(bytes: number | null) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-function formatDate(dateStr: string | null) {
+function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -1110,4 +1110,4 @@ export default function ImageGallery({
       <Toast message={toast.message} visible={toast.visible} onClose={() => setToast({ ...toast, visible: false })} />
     </div>
   )
-                }
+}
