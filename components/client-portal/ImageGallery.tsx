@@ -74,12 +74,6 @@ function Toast({ message, visible, onClose }: { message: string; visible: boolea
       whiteSpace: 'nowrap',
     }}>
       {message}
-      <style>{\`
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-          to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-      \`}</style>
     </div>
   )
 }
@@ -170,7 +164,7 @@ export default function ImageGallery({
     setFavorites(prev => {
       const next = new Set(prev)
       if (next.has(id)) { next.delete(id); showToast('Eliminado de favoritos') }
-      else { next.add(id); showToast('Añadido a favoritos ❤️') }
+      else { next.add(id); showToast('Añadido a favoritos') }
       return next
     })
   }, [])
@@ -179,7 +173,7 @@ export default function ImageGallery({
     setSelected(prev => {
       const next = new Set(prev)
       if (next.has(id)) { next.delete(id); showToast('Foto deseleccionada') }
-      else { next.add(id); showToast('Foto seleccionada ✓') }
+      else { next.add(id); showToast('Foto seleccionada') }
       return next
     })
   }, [])
@@ -188,7 +182,7 @@ export default function ImageGallery({
     try {
       showToast(`${selected.size} fotos guardadas correctamente`)
     } catch {
-      showToast('Error guardando selección')
+      showToast('Error guardando seleccion')
     }
   }
 
@@ -245,11 +239,11 @@ export default function ImageGallery({
         }}>
           <div style={{ fontSize: 56, marginBottom: 24, opacity: 0.6 }}>📷</div>
           <h3 style={{ fontSize: 22, fontWeight: 600, color: '#2d2a26', margin: '0 0 12px', fontFamily: 'var(--font-playfair), serif' }}>
-            Tu galería está siendo preparada
+            Tu galeria esta siendo preparada
           </h3>
           <p style={{ fontSize: 15, color: '#8a8279', margin: 0, lineHeight: 1.6 }}>
-            Pronto encontrarás aquí todos los momentos capturados de tu día especial.
-            <br />Te notificaremos cuando estén disponibles.
+            Pronto encontraras aqui todos los momentos capturados de tu dia especial.
+            <br />Te notificaremos cuando esten disponibles.
           </p>
         </div>
       </div>
@@ -265,7 +259,7 @@ export default function ImageGallery({
       fontFamily: 'var(--font-inter), -apple-system, sans-serif',
       color: '#2d2a26',
     }}>
-      {/* ─── Sidebar ──────────────────────────────────────────────── */}
+      {/* Sidebar */}
       <aside style={{
         position: 'fixed',
         left: 0,
@@ -280,7 +274,7 @@ export default function ImageGallery({
         flexDirection: 'column',
         overflow: 'hidden',
       }}>
-        {/* Logo / Brand */}
+        {/* Logo */}
         <div style={{ padding: '24px 20px', borderBottom: '1px solid #f0ebe5' }}>
           <div style={{
             fontFamily: 'var(--font-playfair), serif',
@@ -295,7 +289,7 @@ export default function ImageGallery({
           </div>
           {sidebarOpen && (
             <div style={{ fontSize: 10, color: '#a69f94', letterSpacing: 3, marginTop: 4, textTransform: 'uppercase' }}>
-              Fotografía
+              Fotografia
             </div>
           )}
         </div>
@@ -335,7 +329,7 @@ export default function ImageGallery({
         {/* Navigation */}
         <nav style={{ flex: 1, padding: '16px 12px' }}>
           {[
-            { key: 'all' as FilterType, icon: '🖼️', label: 'Galería completa', count: images.length },
+            { key: 'all' as FilterType, icon: '🖼️', label: 'Galeria completa', count: images.length },
             { key: 'favorites' as FilterType, icon: '❤️', label: 'Favoritos', count: favorites.size },
             { key: 'selected' as FilterType, icon: '✓', label: 'Seleccionadas', count: selected.size },
           ].map(item => (
@@ -385,7 +379,7 @@ export default function ImageGallery({
         {sidebarOpen && (
           <div style={{ padding: '16px 20px', borderTop: '1px solid #f0ebe5' }}>
             <div style={{ fontSize: 10, color: '#a69f94', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 6 }}>
-              Código de acceso
+              Codigo de acceso
             </div>
             <code style={{
               fontSize: 12,
@@ -421,7 +415,7 @@ export default function ImageGallery({
         </button>
       </aside>
 
-      {/* ─── Main Content ─────────────────────────────────────────── */}
+      {/* Main Content */}
       <main style={{
         marginLeft: sidebarOpen ? 280 : 72,
         transition: 'margin-left 0.3s ease',
@@ -446,12 +440,12 @@ export default function ImageGallery({
               margin: '0 0 8px',
               letterSpacing: -0.5,
             }}>
-              {filter === 'all' && 'Galería completa'}
+              {filter === 'all' && 'Galeria completa'}
               {filter === 'favorites' && 'Tus favoritos'}
               {filter === 'selected' && 'Fotos seleccionadas'}
             </h1>
             <p style={{ fontSize: 14, color: '#a69f94', margin: 0 }}>
-              {filteredImages.length} {filteredImages.length === 1 ? 'fotografía' : 'fotografías'}
+              {filteredImages.length} {filteredImages.length === 1 ? 'fotografia' : 'fotografias'}
               {filter === 'all' && ` · ${images.length} en total`}
             </p>
           </div>
@@ -474,7 +468,7 @@ export default function ImageGallery({
                 transition: 'all 0.2s',
               }}
             >
-              ▶ Presentación
+              ▶ Presentacion
             </button>
             <button
               onClick={() => setFilter('all')}
@@ -558,7 +552,7 @@ export default function ImageGallery({
               >
                 <img
                   src={img.file_url}
-                  alt={img.file_name ?? 'Fotografía'}
+                  alt={img.file_name ?? 'Fotografia'}
                   loading="lazy"
                   style={{
                     width: '100%',
@@ -651,7 +645,7 @@ export default function ImageGallery({
                         gap: 6,
                       }}
                     >
-                      {isFav ? '❤️' : '🤍'} {isFav ? 'Favorito' : 'Favorito'}
+                      {isFav ? '❤️' : '🤍'} Favorito
                     </button>
                     <button
                       onClick={() => toggleSelect(img.id)}
@@ -708,13 +702,13 @@ export default function ImageGallery({
               {filter === 'favorites' ? '❤️' : '✓'}
             </div>
             <p style={{ fontSize: 16 }}>
-              No hay fotos {filter === 'favorites' ? 'en favoritos' : 'seleccionadas'} aún
+              No hay fotos {filter === 'favorites' ? 'en favoritos' : 'seleccionadas'} aun
             </p>
           </div>
         )}
       </main>
 
-      {/* ─── Bottom Action Bar ────────────────────────────────────── */}
+      {/* Bottom Action Bar */}
       {selected.size > 0 && (
         <div style={{
           position: 'fixed',
@@ -822,7 +816,7 @@ export default function ImageGallery({
               whiteSpace: 'nowrap',
             }}
           >
-            👁 Ver selección
+            👁 Ver seleccion
           </button>
           <button
             onClick={saveSelection}
@@ -843,12 +837,12 @@ export default function ImageGallery({
               transition: 'all 0.2s',
             }}
           >
-            💾 Guardar selección
+            💾 Guardar seleccion
           </button>
         </div>
       )}
 
-      {/* ─── Lightbox Modal ───────────────────────────────────────── */}
+      {/* Lightbox Modal */}
       {lightboxOpen && currentImage && (
         <div
           style={{
@@ -888,7 +882,7 @@ export default function ImageGallery({
                   cursor: 'pointer',
                 }}
               >
-                {slideshow ? '⏸ Pausar' : '▶ Presentación'}
+                {slideshow ? '⏸ Pausar' : '▶ Presentacion'}
               </button>
               <button
                 onClick={() => setZoomed(!zoomed)}
@@ -1077,17 +1071,6 @@ export default function ImageGallery({
           }}>
             {currentImage.file_name} · {fmtSize(currentImage.file_size)}
           </div>
-
-          <style>{\`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes fadeUp {
-              from { opacity: 0; transform: translateY(10px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          \`}</style>
         </div>
       )}
 
