@@ -120,6 +120,21 @@ export default function ImageGallery({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const slideshowRef = useRef<NodeJS.Timeout | null>(null)
 
+  // ─── Computed values (DEBEN ir antes de los useEffect que las usan) ───
+
+  const filteredImages = images.filter(img => {
+    if (filter === 'favorites') return favorites.has(img.id)
+    if (filter === 'selected') return selected.has(img.id)
+    return true
+  })
+
+  const currentImage = filteredImages[lightboxIndex]
+
+  // Info del evento
+  const eventName = projectInfo?.name || 'Proyecto'
+  const eventDate = formatDate(projectInfo?.event_date)
+  const clientName = projectInfo?.lead_name || projectInfo?.description || ''
+
   // Persistencia
   useEffect(() => {
     localStorage.setItem(`favorites-${pid}`, JSON.stringify([...favorites]))
@@ -185,12 +200,6 @@ export default function ImageGallery({
     }
   }
 
-  const filteredImages = images.filter(img => {
-    if (filter === 'favorites') return favorites.has(img.id)
-    if (filter === 'selected') return selected.has(img.id)
-    return true
-  })
-
   const openLightbox = (index: number) => {
     setLightboxIndex(index)
     setLightboxOpen(true)
@@ -207,13 +216,6 @@ export default function ImageGallery({
     })
     setZoomed(false)
   }
-
-  const currentImage = filteredImages[lightboxIndex]
-
-  // Info del evento
-  const eventName = projectInfo?.name || 'Proyecto'
-  const eventDate = formatDate(projectInfo?.event_date)
-  const clientName = projectInfo?.lead_name || projectInfo?.description || ''
 
   // ─── Empty State ──────────────────────────────────────────────────
 
@@ -1108,4 +1110,4 @@ export default function ImageGallery({
       <Toast message={toast.message} visible={toast.visible} onClose={() => setToast({ ...toast, visible: false })} />
     </div>
   )
-}
+                }
