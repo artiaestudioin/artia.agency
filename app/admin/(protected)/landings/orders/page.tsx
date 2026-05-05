@@ -12,25 +12,45 @@ export default async function LandingOrdersPage({
   const { status, q } = await searchParams
   const supabase = await createClient()
 
+  // Validar status
+  const activeStatus = status && status !== 'all' ? status : null
+
   let query = supabase
     .from('landing_orders')
     .select('*, landing:landing_id(name, slug)')
     .order('created_at', { ascending: false })
 
-  if (status && status !== 'all') {
-    query = query.eq('status', status)
+  if (activeStatus) {
+    query = query.eq('status', activeStatus)
   }
 
-  const { data: orders } = await query
+  const { data: orders, error: ordersError } = await query
 
+  if (ordersError) {
+    console.error('Error fetching orders:', ordersError)
+  }
+
+  // FIX: Búsqueda ampliada — buscar en todos los campos relevantes
   const filtered = (orders || []).filter((o: any) => {
     if (!q) return true
-    const term = q.toLowerCase()
-    return o.name?.toLowerCase().includes(term) || 
-           o.folio?.toLowerCase().includes(term) || 
-           o.phone?.includes(term)
+    const term = q.toLowerCase().trim()
+    const searchFields = [
+      o.name,
+      o.folio,
+      o.phone,
+      o.email,
+      o.product_name,
+      o.tracking_number,
+      o.landing?.name,
+      o.landing?.slug,
+      o.utm_source,
+      o.utm_campaign,
+    ].filter(Boolean)
+    
+    return searchFields.some(field => field.toLowerCase().includes(term))
   })
 
+  // Counts sobre orders (ya filtrados por status si aplica)
   const counts = {
     all: orders?.length || 0,
     pending: orders?.filter((o: any) => o.status === 'pending').length || 0,
@@ -38,6 +58,8 @@ export default async function LandingOrdersPage({
     in_production: orders?.filter((o: any) => o.status === 'in_production').length || 0,
     shipped: orders?.filter((o: any) => o.status === 'shipped').length || 0,
     delivered: orders?.filter((o: any) => o.status === 'delivered').length || 0,
+    cancelled: orders?.filter((o: any) => o.status === 'cancelled').length || 0,
+    refunded: orders?.filter((o: any) => o.status === 'refunded').length || 0,
   }
 
   const statusColors: Record<string, { bg: string; text: string }> = {
@@ -65,7 +87,10 @@ export default async function LandingOrdersPage({
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>🛒 Pedidos Landings</h1>
-          <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>{counts.all} pedidos en total</p>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+            {counts.all} pedidos en total · {filtered.length} mostrados
+            {q && ` (filtrado por "${q}")`}
+          </p>
         </div>
       </header>
 
@@ -78,11 +103,16 @@ export default async function LandingOrdersPage({
           { key: 'in_production', label: 'En Prod.', count: counts.in_production },
           { key: 'shipped', label: 'Enviados', count: counts.shipped },
           { key: 'delivered', label: 'Entregados', count: counts.delivered },
+          { key: 'cancelled', label: 'Cancelados', count: counts.cancelled },
+          { key: 'refunded', label: 'Reembolsados', count: counts.refunded },
         ].map(opt => {
           const isActive = (status || 'all') === opt.key
-          const href = opt.key === 'all'
-            ? (q ? `/admin/landings/orders?q=${encodeURIComponent(q)}` : '/admin/landings/orders')
-            : (q ? `/admin/landings/orders?status=${opt.key}&q=${encodeURIComponent(q)}` : `/admin/landings/orders?status=${opt.key}`)
+          const baseHref = '/admin/landings/orders'
+          const searchParams = new URLSearchParams()
+          if (opt.key !== 'all') searchParams.set('status', opt.key)
+          if (q) searchParams.set('q', q)
+          const href = searchParams.toString() ? `${baseHref}?${searchParams.toString()}` : baseHref
+          
           return (
             <Link key={opt.key} href={href}
               style={{
@@ -109,10 +139,10 @@ export default async function LandingOrdersPage({
 
       {/* Search */}
       <form method="GET" action="/admin/landings/orders" style={{ marginBottom: 20 }}>
-        {status && <input type="hidden" name="status" value={status} />}
+        {activeStatus && <input type="hidden" name="status" value={activeStatus} />}
         <div style={{ display: 'flex', gap: 8 }}>
           <input type="text" name="q" defaultValue={q ?? ''}
-            placeholder="Buscar por nombre, folio o teléfono..."
+            placeholder="Buscar por cliente, folio, teléfono, producto, tracking o landing..."
             style={{
               flex: 1, padding: '10px 16px',
               border: '1.5px solid #e2e8f0',
@@ -125,7 +155,7 @@ export default async function LandingOrdersPage({
             }}>
             Buscar
           </button>
-          {(q || status) && (
+          {(q || activeStatus) && (
             <a href="/admin/landings/orders"
               style={{
                 background: '#f1f5f9', color: '#64748b',
@@ -144,7 +174,7 @@ export default async function LandingOrdersPage({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['Folio', 'Cliente', 'Producto', 'Total', 'Estado', 'Pago', 'Fecha', 'Acciones'].map(h => (
+                {['Folio', 'Cliente', 'Landing / Producto', 'Total', 'Estado', 'Pago', 'Tracking', 'Fecha', 'Acciones'].map(h => (
                   <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
                     {h}
                   </th>
@@ -154,8 +184,10 @@ export default async function LandingOrdersPage({
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-                    No se encontraron pedidos
+                  <td colSpan={9} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>📭</div>
+                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 4 }}>No se encontraron pedidos</div>
+                    <div>{q ? 'Intenta con otros términos de búsqueda' : 'Los pedidos aparecerán aquí'}</div>
                   </td>
                 </tr>
               ) : (
@@ -171,15 +203,31 @@ export default async function LandingOrdersPage({
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{order.name}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>{order.phone}</div>
+                        {order.email && (
+                          <div style={{ fontSize: 10, color: '#94a3b8' }}>{order.email}</div>
+                        )}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontSize: 12, color: '#475569' }}>{order.product_name || '—'}</div>
-                        {order.landing && (
-                          <div style={{ fontSize: 10, color: '#94a3b8' }}>/lp/{order.landing.slug}</div>
+                        {order.landing ? (
+                          <>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>
+                              {order.landing.name}
+                            </div>
+                            <div style={{ fontSize: 10, color: '#94a3b8' }}>/lp/{order.landing.slug}</div>
+                          </>
+                        ) : (
+                          <div style={{ fontSize: 12, color: '#94a3b8' }}>—</div>
+                        )}
+                        {order.product_name && (
+                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{order.product_name}</div>
+                        )}
+                        {order.quantity > 1 && (
+                          <div style={{ fontSize: 10, color: '#94a3b8' }}>x{order.quantity}</div>
                         )}
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
                         ${order.total?.toFixed(2) || '0.00'}
+                        <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>{order.currency || 'USD'}</div>
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <span style={{
@@ -195,27 +243,54 @@ export default async function LandingOrdersPage({
                           color: order.payment_status === 'paid' ? '#10b981' : order.payment_status === 'partial' ? '#f59e0b' : '#94a3b8',
                           textTransform: 'uppercase',
                         }}>
-                          {order.payment_status}
+                          {order.payment_status || 'pending'}
                         </span>
+                        {order.payment_method && (
+                          <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>{order.payment_method}</div>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        {order.tracking_number ? (
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{order.tracking_number}</div>
+                            {order.tracking_url && (
+                              <a href={order.tracking_url} target="_blank" style={{ fontSize: 10, color: '#2563eb', textDecoration: 'none' }}>
+                                Seguir →
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 11, color: '#94a3b8' }}>—</span>
+                        )}
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                        {new Date(order.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+                        {new Date(order.created_at).toLocaleDateString('es-EC', { 
+                          day: '2-digit', 
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                        <div style={{ fontSize: 10, color: '#cbd5e1' }}>
+                          {new Date(order.created_at).toLocaleTimeString('es-EC', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <Link href={`/seguimiento/${order.folio}`} target="_blank"
+                          <Link href={`/admin/landings/orders/${order.id}`}
                             style={{
                               fontSize: 11, color: '#2563eb', background: '#eff6ff',
                               padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
                             }}>
-                            👁️ Ver
+                            ✏️ Editar
                           </Link>
-                          <Link href={`/admin/landings/orders/${order.id}`}
+                          <Link href={`/seguimiento/pedido/${order.folio}`} target="_blank"
                             style={{
-                              fontSize: 11, color: '#475569', background: '#f1f5f9',
+                              fontSize: 11, color: '#0f172a', background: '#f1f5f9',
                               padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
                             }}>
-                            ✏️ Editar
+                            👁️ Ver
                           </Link>
                         </div>
                       </td>

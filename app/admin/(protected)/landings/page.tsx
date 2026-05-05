@@ -1,61 +1,115 @@
-// app/admin/landings/page.tsx
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LandingStats } from '@/types/landing'
-import { Card, CardBody, Badge, EmptyState, COLORS, fmtMoney, relTime } from '@/components/DesignSystem'
+import { COLORS } from '@/components/DesignSystem'
 
-export const metadata = { title: 'Landing Pages — Artia Admin' }
+const statusColors: Record<string, { bg: string; text: string; border: string }> = {
+  active:   { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
+  draft:    { bg: '#f1f5f9', text: '#64748b', border: '#e2e8f0' },
+  paused:   { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
+  archived: { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+}
 
-export default async function LandingsPage({
-  searchParams,
+export default function LandingsPageClient({
+  landings: initialLandings,
+  counts: initialCounts,
+  status,
+  q,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>
+  landings: LandingStats[]
+  counts: Record<string, number>
+  status?: string
+  q?: string
 }) {
-  const { status, q } = await searchParams
-  const supabase = await createClient()
+  const router = useRouter()
+  const [landings, setLandings] = useState<LandingStats[]>(initialLandings)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
-  // Get stats from view
-  let query = supabase.from('landing_stats').select('*').order('created_at', { ascending: false })
-
-  if (status && status !== 'all') {
-    query = query.eq('status', status)
-  }
-
-  const { data: landings } = await query
-
-  // Filter by search
-  const filtered = (landings || []).filter((l: LandingStats) => {
-    if (!q) return true
-    const term = q.toLowerCase()
-    return l.name?.toLowerCase().includes(term) || l.slug?.toLowerCase().includes(term)
-  })
-
-  // Counts
   const counts = {
-    all: landings?.length || 0,
-    active: landings?.filter((l: LandingStats) => l.status === 'active').length || 0,
-    draft: landings?.filter((l: LandingStats) => l.status === 'draft').length || 0,
-    paused: landings?.filter((l: LandingStats) => l.status === 'paused').length || 0,
-    archived: landings?.filter((l: LandingStats) => l.status === 'archived').length || 0,
+    all: initialCounts.all,
+    active: initialCounts.active,
+    draft: initialCounts.draft,
+    paused: initialCounts.paused,
+    archived: initialCounts.archived,
   }
 
-  const statusColors: Record<string, { bg: string; text: string; border: string }> = {
-    active: { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
-    draft: { bg: '#f1f5f9', text: '#64748b', border: '#e2e8f0' },
-    paused: { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
-    archived: { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+  const handleDelete = async (id: string) => {
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/admin/landings/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setLandings(prev => prev.filter(l => l.id !== id))
+        setConfirmId(null)
+        router.refresh()
+      } else {
+        const err = await res.json()
+        alert(`Error al eliminar: ${err.error || 'Error desconocido'}`)
+      }
+    } catch {
+      alert('Error de conexión al eliminar la landing')
+    } finally {
+      setDeletingId(null)
+    }
   }
+
+  const totalRevenue = landings.reduce((s, l) => s + (l.revenue_total || 0), 0)
 
   return (
     <div style={{ maxWidth: 1200 }}>
       <style>{GLOBAL_STYLES}</style>
+
+      {/* Delete Confirmation Modal */}
+      {confirmId && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 32px',
+            maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+              ⚠️ Eliminar Landing Page
+            </h3>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px', lineHeight: 1.6 }}>
+              Esta acción eliminará la landing y todas sus variantes relacionadas. Los pedidos existentes no serán afectados. <strong>Esta acción no se puede deshacer.</strong>
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmId(null)}
+                style={{
+                  padding: '9px 18px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+                  background: '#f8fafc', color: '#64748b', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}>
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(confirmId)}
+                disabled={deletingId === confirmId}
+                style={{
+                  padding: '9px 18px', borderRadius: 8, border: 'none',
+                  background: '#ef4444', color: '#fff', fontWeight: 700, fontSize: 13,
+                  cursor: deletingId === confirmId ? 'not-allowed' : 'pointer',
+                  opacity: deletingId === confirmId ? 0.7 : 1,
+                }}>
+                {deletingId === confirmId ? '⏳ Eliminando...' : '🗑️ Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Landing Pages</h1>
           <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>
-            {counts.all} landings · {counts.active} activas · ${filtered.reduce((s: number, l: LandingStats) => s + (l.revenue_total || 0), 0).toFixed(2)} revenue
+            {counts.all} landings · {counts.active} activas · ${totalRevenue.toFixed(2)} revenue
           </p>
         </div>
         <Link href="/admin/landings/nuevo"
@@ -138,10 +192,14 @@ export default async function LandingsPage({
 
       {/* Landings Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-        {filtered.length === 0 ? (
-          <EmptyState icon="🎯" title="No se encontraron landings" subtitle={q ? 'Intenta con otros términos' : 'Crea tu primera landing page'} />
+        {landings.length === 0 ? (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#475569', marginBottom: 4 }}>No se encontraron landings</div>
+            <div style={{ fontSize: 13 }}>{q ? 'Intenta con otros términos' : 'Crea tu primera landing page'}</div>
+          </div>
         ) : (
-          filtered.map((landing: LandingStats) => {
+          landings.map((landing: LandingStats) => {
             const sc = statusColors[landing.status] || statusColors.draft
             return (
               <div key={landing.id}
@@ -200,8 +258,10 @@ export default async function LandingsPage({
                     </div>
                     <div style={{ height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
                       <div style={{
-                        height: '100%', width: `${Math.min((landing.conversions_count / Math.max(landing.views_count, 1)) * 100 * 20, 100)}%`,
-                        background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 3, transition: 'width 0.5s',
+                        height: '100%',
+                        width: `${Math.min((landing.conversions_count / Math.max(landing.views_count, 1)) * 100 * 20, 100)}%`,
+                        background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 3,
+                        transition: 'width 0.5s',
                       }} />
                     </div>
                   </div>
@@ -216,24 +276,32 @@ export default async function LandingsPage({
                       }}>
                       👁️ Ver
                     </Link>
-                    {/* DESPUÉS (CORREGIDO): */}
-                    
-<Link href={`/admin/landings/${landing.id}/editar`}
-  style={{
-    flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
-    background: '#f8fafc', color: '#475569', textDecoration: 'none',
-    fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
-  }}>
-  ✏️ Editar
-</Link>
-<Link href={`/admin/landings/${landing.id}/stats`}
-  style={{
-    flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
-    background: '#f8fafc', color: '#475569', textDecoration: 'none',
-    fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
-  }}>
-  📊 Stats
-</Link>
+                    <Link href={`/admin/landings/${landing.id}/editar`}
+                      style={{
+                        flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
+                        background: '#f8fafc', color: '#475569', textDecoration: 'none',
+                        fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
+                      }}>
+                      ✏️ Editar
+                    </Link>
+                    <Link href={`/admin/landings/${landing.id}/stats`}
+                      style={{
+                        flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
+                        background: '#f8fafc', color: '#475569', textDecoration: 'none',
+                        fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
+                      }}>
+                      📊 Stats
+                    </Link>
+                    <button
+                      onClick={() => setConfirmId(landing.id)}
+                      style={{
+                        padding: '8px 12px', borderRadius: 8,
+                        background: '#fff5f5', color: '#dc2626',
+                        fontSize: 12, fontWeight: 700, border: '0.5px solid #fecaca',
+                        cursor: 'pointer',
+                      }}>
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>

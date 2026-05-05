@@ -11,10 +11,10 @@ export async function DELETE(
 
   const supabase = await createClient()
 
-  // Delete variants first (if table exists)
+  // Delete variants first (cascades from FK, but explicit for safety)
   await supabase.from('landing_variants').delete().eq('landing_id', id)
 
-  const { error } = await supabase.from('landing_pages').delete().eq('id', id)
+  const { error } = await supabase.from('landings').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })
@@ -30,7 +30,7 @@ export async function PATCH(
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from('landing_pages')
+    .from('landings')
     .update({ ...body, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
