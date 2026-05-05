@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioSemana.toISOString()),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioMes.toISOString()),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioMesAnt.toISOString()).lt('created_at', inicioMes.toISOString()),
-    supabase.from('leads').select('id, folio, nombre, email, servicio, estado, created_at').order('created_at', { ascending: false }).limit(5),
+    supabase.from('leads').select('id, folio, nombre, email, servicio, estado, created_at').order('created_at', { ascending: false }).limit(10),
     supabase.from('email_templates').select('id, name, updated_at').order('updated_at', { ascending: false }).limit(3),
     supabase.from('email_sends').select('*', { count: 'exact', head: true }),
     supabase.from('leads').select('estado'),

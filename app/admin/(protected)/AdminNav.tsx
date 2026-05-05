@@ -25,6 +25,8 @@ import {
   Bell,
   Plus,
   HelpCircle,
+  Mail,
+  MailOpen,
 } from 'lucide-react'
 
 // ─── NAV STRUCTURE ───────────────────────────────────────────────
@@ -84,8 +86,13 @@ const NAV_ITEMS: NavGroup[] = [
   },
   {
     href: '/admin/imagenes',
-    label: 'Archivos',
+    label: 'Media-fotos',
     icon: <ImageIcon size={18} />,
+  },
+  {
+    href: '/admin/emails',
+    label: 'Email',
+    icon: <MailOpen size={18} />,
   },
   {
     href: '/admin/reportes',
