@@ -178,30 +178,42 @@ export default async function AdminDashboard() {
                     const ec = ESTADO_COLORS[lead.estado ?? 'nuevo'] ?? ESTADO_COLORS.nuevo
                     const href = lead.folio ? `/admin/cliente/${lead.folio}` : `/admin/cliente/${lead.id}`
                     return (
-                      <tr key={lead.id} className="table-row-clickable" onClick={() => window.location.href = href}>
+                      <tr key={lead.id} className="table-row-clickable">
                         <td>
-                          <div className="avatar" style={{ background: avatarColor(lead.nombre) }}>
-                            {initials(lead.nombre)}
-                          </div>
+                          <Link href={href} className="row-link">
+                            <div className="avatar" style={{ background: avatarColor(lead.nombre) }}>
+                              {initials(lead.nombre)}
+                            </div>
+                          </Link>
                         </td>
                         <td>
-                          <div className="cell-name">{lead.nombre}</div>
-                          {lead.email && <div className="cell-email">{lead.email}</div>}
+                          <Link href={href} className="row-link">
+                            <div className="cell-name">{lead.nombre}</div>
+                            {lead.email && <div className="cell-email">{lead.email}</div>}
+                          </Link>
                         </td>
-                        <td className="cell-service">{lead.servicio ?? '—'}</td>
-                        <td>
-                          <span className="status-badge" style={{ background: ec.bg, color: ec.text }}>
-                            <span className="status-dot" style={{ background: ec.dot }} />
-                            {ec.label}
-                          </span>
+                        <td className="cell-service">
+                          <Link href={href} className="row-link">{lead.servicio ?? '—'}</Link>
                         </td>
                         <td>
-                          {lead.folio ? (
-                            <span className="folio-badge">{lead.folio}</span>
-                          ) : <span className="text-muted">—</span>}
+                          <Link href={href} className="row-link">
+                            <span className="status-badge" style={{ background: ec.bg, color: ec.text }}>
+                              <span className="status-dot" style={{ background: ec.dot }} />
+                              {ec.label}
+                            </span>
+                          </Link>
+                        </td>
+                        <td>
+                          <Link href={href} className="row-link">
+                            {lead.folio ? (
+                              <span className="folio-badge">{lead.folio}</span>
+                            ) : <span className="text-muted">—</span>}
+                          </Link>
                         </td>
                         <td className="cell-date">
-                          {new Date(lead.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+                          <Link href={href} className="row-link">
+                            {new Date(lead.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+                          </Link>
                         </td>
                       </tr>
                     )
@@ -731,7 +743,7 @@ const STYLES = `
     white-space: nowrap;
   }
   .data-table td {
-    padding: 14px 16px;
+    padding: 0;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
   }
@@ -742,16 +754,25 @@ const STYLES = `
   /* ─── FILA CLICKEABLE ─── */
   .table-row-clickable {
     transition: background .15s ease;
-    cursor: pointer;
   }
   .table-row-clickable:hover {
-    background: #f8fafc !important;
+    background: #f8fafc;
   }
   .table-row-clickable:hover td {
     background: transparent;
   }
-  .table-row-clickable:active {
-    background: #f1f5f9 !important;
+  .row-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+    height: 100%;
+  }
+  .row-link:hover {
+    color: inherit;
   }
 
   .avatar {
@@ -786,6 +807,9 @@ const STYLES = `
     white-space: nowrap;
     font-size: 12px;
   }
+  .cell-service .row-link {
+    justify-content: flex-start;
+  }
   .status-badge {
     display: inline-flex;
     align-items: center;
@@ -819,6 +843,9 @@ const STYLES = `
     font-size: 12px;
     font-family: 'SF Mono', Monaco, monospace;
     font-variant-numeric: tabular-nums;
+  }
+  .cell-date .row-link {
+    justify-content: flex-start;
   }
   .text-muted {
     color: #94a3b8;
@@ -1037,6 +1064,9 @@ const STYLES = `
       font-size: 12px;
     }
     .data-table th, .data-table td {
+      padding: 0;
+    }
+    .row-link {
       padding: 10px 12px;
     }
     .cell-service, .cell-email {
