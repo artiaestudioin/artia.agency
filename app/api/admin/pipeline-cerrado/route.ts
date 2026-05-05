@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         service: 'gmail',
         auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
       })
-      const portalUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artiaagency.vercel.app'}/client/${access_code}`
+      const portalUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artiaagency.vercel.app'}/seguimiento/${access_code}`
       await transporter.sendMail({
         from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
         to: lead.email,

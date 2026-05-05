@@ -203,7 +203,7 @@ export default async function LandingOrdersPage({
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <Link href={`/client/${order.folio}`} target="_blank"
+                          <Link href={`/seguimiento/${order.folio}`} target="_blank"
                             style={{
                               fontSize: 11, color: '#2563eb', background: '#eff6ff',
                               padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
