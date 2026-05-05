@@ -34,6 +34,7 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   const [uploadError, setUploadError]   = useState('')
   const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   
   const [newForm, setNewForm]   = useState({ 
     name: '', 
@@ -41,7 +42,15 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     event_date: '',
     cover_image: null as File | null 
   })
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    event_date: '',
+    cover_image: null as File | null,
+    cover_url: null as string | null,
+  })
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
   const [uploadingCover, setUploadingCover] = useState(false)
   
   const [saving, setSaving]     = useState(false)
@@ -80,7 +89,7 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     await uploadFiles(Array.from(e.dataTransfer.files))
   }, [selected])
 
-  // ─── SUBIR ARCHIVO VIA API /api/upload (usa SERVICE_ROLE) ───
+  // ─── SUBIR ARCHIVO VIA API /api/upload ───
   async function uploadToStorage(file: File, projectId: string): Promise<{ publicUrl: string; fileRecord: any } | null> {
     try {
       const formData = new FormData()
@@ -109,15 +118,12 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     }
   }
 
-  // ─── SUBIR COVER VIA API /api/upload (sin projectId aún) ───
+  // ─── SUBIR COVER (isCover=true, no projectId) ───
   async function uploadCover(file: File): Promise<string | null> {
     try {
-      // Para cover usamos un projectId temporal, luego tu API guarda en 'projects' bucket
-      // Como no hay projectId aún, subimos directo a storage vía una ruta temporal
-      // Tu API /api/upload requiere projectId, así que usamos 'covers' como temporal
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('projectId', 'covers') // carpeta temporal
+      formData.append('isCover', 'true')
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -131,10 +137,38 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
       }
 
       const data = await res.json()
-      return data.file.file_url
+      return data.publicUrl
 
     } catch (e) {
       console.error('Error uploading cover:', e)
+      return null
+    }
+  }
+
+  // ─── SUBIR COVER PARA EDICIÓN (con projectId existente) ───
+  async function uploadCoverForEdit(file: File, projectId: string): Promise<string | null> {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('projectId', projectId)
+      formData.append('isCover', 'true')
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('Cover edit upload error:', err)
+        return null
+      }
+
+      const data = await res.json()
+      return data.publicUrl
+
+    } catch (e) {
+      console.error('Error uploading cover for edit:', e)
       return null
     }
   }
@@ -187,12 +221,13 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   }
 
   async function updateStatus(projectId: string, newStatus: string) {
-    const res = await fetch('/api/admin/projects/status', {
+    const res = await fetch('/api/admin/projects', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projectId, status: newStatus }),
     })
     if (res.ok) {
+      const data = await res.json()
       setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus } : p))
       if (selected?.id === projectId) setSelected(s => s ? { ...s, status: newStatus } : s)
       showMsg('Estado actualizado')
@@ -231,7 +266,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     try {
       let coverUrl = null
       
-      // Si hay imagen de portada, subirla primero
       if (newForm.cover_image) {
         setUploadProgress('Subiendo foto de portada...')
         coverUrl = await uploadCover(newForm.cover_image)
@@ -244,7 +278,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
         }
       }
 
-      // Crear proyecto
       const res = await fetch('/api/admin/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -264,6 +297,75 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
         setNewForm({ name: '', description: '', event_date: '', cover_image: null })
         setCoverPreview(null)
         showMsg('Proyecto creado ✓')
+      } else {
+        showMsg(data.error ?? 'Error', false)
+      }
+    } finally {
+      setSaving(false)
+      setUploadingCover(false)
+      setUploadProgress('')
+    }
+  }
+
+  // ─── ABRIR MODAL EDICIÓN ───
+  function openEditModal(p: Project) {
+    setEditForm({
+      name: p.name,
+      description: p.description ?? '',
+      event_date: p.event_date ?? '',
+      cover_image: null,
+      cover_url: p.cover_url ?? null,
+    })
+    setEditCoverPreview(p.cover_url ?? null)
+    setShowEditModal(true)
+  }
+
+  // ─── GUARDAR EDICIÓN ───
+  async function saveEdit() {
+    if (!selected || !editForm.name.trim()) return
+    
+    setSaving(true)
+    setUploadingCover(true)
+    
+    try {
+      let coverUrl = editForm.cover_url
+      
+      // Si hay nueva imagen de portada, subirla
+      if (editForm.cover_image) {
+        setUploadProgress('Subiendo nueva foto de portada...')
+        const newCoverUrl = await uploadCoverForEdit(editForm.cover_image, selected.id)
+        
+        if (!newCoverUrl) {
+          showMsg('Error subiendo foto de portada', false)
+          setSaving(false)
+          setUploadingCover(false)
+          return
+        }
+        coverUrl = newCoverUrl
+      }
+
+      const res = await fetch('/api/admin/projects', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: selected.id,
+          name: editForm.name,
+          description: editForm.description,
+          event_date: editForm.event_date,
+          cover_url: coverUrl,
+        }),
+      })
+      
+      const data = await res.json()
+      
+      if (res.ok && data.project) {
+        const updated = { ...selected, ...data.project, cover_url: coverUrl }
+        setProjects(prev => prev.map(p => p.id === selected.id ? updated : p))
+        setSelected(updated)
+        setShowEditModal(false)
+        setEditForm({ name: '', description: '', event_date: '', cover_image: null, cover_url: null })
+        setEditCoverPreview(null)
+        showMsg('Proyecto actualizado ✓')
       } else {
         showMsg(data.error ?? 'Error', false)
       }
@@ -379,6 +481,10 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
                   style={{ background: '#eff6ff', color: '#2552ca', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', border: '0.5px solid #bfdbfe' }}>
                   Portal ↗
                 </a>
+                <button onClick={() => openEditModal(selected)}
+                  style={{ background: '#f0fdf4', color: '#15803d', border: '0.5px solid #bbf7d0', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  ✏️ Editar
+                </button>
                 <button onClick={() => deleteProject(selected.id, selected.name)} disabled={deletingProject}
                   style={{ background: '#fef2f2', color: '#ef4444', border: '0.5px solid #fecaca', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {deletingProject ? '…' : '🗑 Eliminar'}
@@ -533,32 +639,28 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
         </div>
       )}
 
-      {/* ═══ MODAL NUEVO PROYECTO CON COVER ═══ */}
+      {/* ═══ MODAL NUEVO PROYECTO ═══ */}
       {showNewModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440, maxHeight: '90vh', overflow: 'auto' }}>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#00113a', margin: '0 0 20px' }}>Nuevo proyecto</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Nombre */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Nombre *</label>
                 <input value={newForm.name} onChange={e => setNewForm(p => ({ ...p, name: e.target.value }))} placeholder="ej: Boda García — Fotografía" style={inp} />
               </div>
               
-              {/* Descripción */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Descripción</label>
                 <textarea value={newForm.description} onChange={e => setNewForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
               
-              {/* Fecha */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Fecha del evento</label>
                 <input type="date" value={newForm.event_date} onChange={e => setNewForm(p => ({ ...p, event_date: e.target.value }))} style={inp} />
               </div>
               
-              {/* ═══ FOTO DE PORTADA ═══ */}
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>
                   Foto de portada
@@ -604,6 +706,90 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
                 setShowNewModal(false)
                 setNewForm({ name: '', description: '', event_date: '', cover_image: null })
                 setCoverPreview(null)
+              }}
+                style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, padding: '12px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL EDITAR PROYECTO ═══ */}
+      {showEditModal && selected && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440, maxHeight: '90vh', overflow: 'auto' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#00113a', margin: '0 0 20px' }}>Editar proyecto</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Nombre *</label>
+                <input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} placeholder="ej: Boda García — Fotografía" style={inp} />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Descripción</label>
+                <textarea value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical', fontFamily: 'inherit' }} />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>Fecha del evento</label>
+                <input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} style={inp} />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 6 }}>
+                  Foto de portada
+                </label>
+                
+                {/* Cover actual */}
+                {editCoverPreview && !editForm.cover_image && (
+                  <div style={{ marginBottom: 8, borderRadius: 8, overflow: 'hidden', height: 120, border: '1px solid #e2e8f0' }}>
+                    <img src={editCoverPreview} alt="Cover actual" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+                
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0] ?? null
+                    setEditForm(p => ({ ...p, cover_image: file }))
+                    if (file) {
+                      setEditCoverPreview(URL.createObjectURL(file))
+                    }
+                  }}
+                  style={{ fontSize: 12, width: '100%' }}
+                />
+                
+                {/* Nueva preview */}
+                {editForm.cover_image && (
+                  <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', height: 120, border: '1px solid #e2e8f0' }}>
+                    <img src={editCoverPreview ?? ''} alt="Nueva preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button onClick={saveEdit} disabled={saving || !editForm.name.trim() || uploadingCover}
+                style={{ 
+                  flex: 1, 
+                  background: saving || uploadingCover ? '#93c5fd' : '#00113a', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  padding: '12px', 
+                  fontSize: 13, 
+                  fontWeight: 700, 
+                  cursor: saving || uploadingCover ? 'not-allowed' : 'pointer' 
+                }}>
+                {uploadingCover ? 'Subiendo cover...' : saving ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+              <button onClick={() => {
+                setShowEditModal(false)
+                setEditForm({ name: '', description: '', event_date: '', cover_image: null, cover_url: null })
+                setEditCoverPreview(null)
               }}
                 style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, padding: '12px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Cancelar

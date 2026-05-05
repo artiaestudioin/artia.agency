@@ -34,6 +34,35 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, project })
 }
 
+// PATCH /api/admin/projects — editar proyecto
+export async function PATCH(req: NextRequest) {
+  const supabase = getAdmin()
+  const { projectId, name, description, event_date, lead_id, cover_url, status } = await req.json()
+  
+  if (!projectId) return NextResponse.json({ error: 'projectId requerido' }, { status: 400 })
+
+  const updateData: any = {}
+  if (name !== undefined) updateData.name = name.trim()
+  if (description !== undefined) updateData.description = description
+  if (event_date !== undefined) updateData.event_date = event_date || null
+  if (lead_id !== undefined) updateData.lead_id = lead_id || null
+  if (cover_url !== undefined) updateData.cover_url = cover_url
+  if (status !== undefined) updateData.status = status
+
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 })
+  }
+
+  const { data: project, error } = await supabase
+    .from('projects')
+    .update(updateData)
+    .eq('id', projectId)
+    .select().single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true, project })
+}
+
 // DELETE /api/admin/projects — eliminar proyecto y sus archivos
 export async function DELETE(req: NextRequest) {
   const supabase = getAdmin()

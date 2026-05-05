@@ -9,7 +9,7 @@ type Installment = {
   amount: string
   payment_date: string
   status: 'pagado' | 'pendiente' | 'vencido'
-  payment_method?: string        // ← RESTAURADO
+  payment_method?: string
   receipt_url?: string | null
   payment_number: number
 }
@@ -95,12 +95,12 @@ function isVencida(inst: { status: string; payment_date?: string | null }): bool
 }
 
 /**
- * Derives payment_status from installments vs contract_value.
+ * Derives payment_status from actual balances — FIXED:
  * - any overdue installment                        → 'vencido'
- * - all paid                                       → 'pagado'
- * - partially paid                                 → 'parcial'
- * - contract ≠ sum of installments, nothing paid   → 'pendiente'
- * - nothing registered                             → 'pendiente'
+ * - total_paid >= contract_value                   → 'pagado'
+ * - total_paid > 0 && total_paid < contract_value → 'parcial'
+ * - total_paid === 0 && contract_value > 0         → 'pendiente'
+ * - no contract                                    → 'sin_contrato'
  */
 function computePaymentStatus(parent: PaymentParent): string {
   const insts = parent.installments
@@ -108,15 +108,16 @@ function computePaymentStatus(parent: PaymentParent): string {
 
   const normalised = insts.map(i => ({ ...i, status: isVencida(i) ? 'vencido' as const : i.status }))
   const contractVal = parent.contract_value || 0
-  const sumInsts    = normalised.reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
-  const totalPagado = normalised.filter(i => i.status === 'pagado').reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
-  const anyVencido  = normalised.some(i => i.status === 'vencido')
+  const totalPagado = normalised
+    .filter(i => i.status === 'pagado')
+    .reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
+  const anyVencido = normalised.some(i => i.status === 'vencido')
 
   if (anyVencido) return 'vencido'
-  if (totalPagado >= contractVal && Math.abs(contractVal - sumInsts) < 0.01) return 'pagado'
+  if (totalPagado >= contractVal && contractVal > 0) return 'pagado'
   if (totalPagado > 0) return 'parcial'
-  if (Math.abs(contractVal - sumInsts) > 0.01 && totalPagado === 0) return 'pendiente'
-  return 'pendiente'
+  if (contractVal > 0) return 'pendiente'
+  return 'sin_contrato'
 }
 
 // ─── Component ─────────────────────────────────────────────────────
@@ -174,14 +175,14 @@ export default function FinanzasClient({
     )
   }, [mounted, editPay, hoy.fecha])
 
-  // ─── Computed ──────────────────────────────────────────────────
+  // ─── Computed — FIXED: pending = contract - paid ─────────────────
 
   const stats = useMemo(() => {
     const totalContratos = payments.reduce((s, p) => s + (p.contract_value || 0), 0)
     const totalPagado = payments.reduce((s, p) =>
       s + p.installments.filter(i => i.status === 'pagado').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0), 0)
-    const totalPendiente = payments.reduce((s, p) =>
-      s + p.installments.filter(i => i.status !== 'pagado').reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0), 0)
+    // FIXED: pending = contract_value - paid (NOT sum of non-paid installments)
+    const totalPendiente = Math.max(0, totalContratos - totalPagado)
     const clientesActivos = new Set(payments.map(p => p.lead_id)).size
     return { totalContratos, totalPagado, totalPendiente, clientesActivos }
   }, [payments])
@@ -380,7 +381,8 @@ async function exportarExcel() {
       const pagado = p.installments
         .filter(i => i.status === 'pagado')
         .reduce((s, i) => s + (parseFloat(i.amount as any) || 0), 0)
-      const pendiente = (p.contract_value || 0) - pagado
+      // FIXED: pending = contract - paid
+      const pendiente = Math.max(0, (p.contract_value || 0) - pagado)
       const pct = p.contract_value > 0 ? Math.round((pagado / p.contract_value) * 100) : 0
       const todasPagadas = p.installments.length > 0 && p.installments.every(i => i.status === 'pagado')
       const algunaVencida = p.installments.some(
@@ -599,9 +601,10 @@ async function exportarExcel() {
       })
     }).join('')
 
+    // FIXED: pending = contract - paid
     const totalPagado    = payments.reduce((s, p) => s + p.installments.filter(i => i.status === 'pagado').reduce((ss, i) => ss + (parseFloat(i.amount as any) || 0), 0), 0)
     const totalContrato  = payments.reduce((s, p) => s + (p.contract_value || 0), 0)
-    const totalPendiente = totalContrato - totalPagado
+    const totalPendiente = Math.max(0, totalContrato - totalPagado)
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -932,7 +935,7 @@ async function exportarExcel() {
                       </div>
                     </div>
 
-                    {/* Estado + TIPO DE PAGO (RESTAURADO) */}
+                    {/* Estado + TIPO DE PAGO */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                       <div>
                         <label style={lbl}>Estado</label>
@@ -1247,7 +1250,7 @@ async function exportarExcel() {
                             )}
                           </td>
 
-                          {/* Descripción — columna restaurada */}
+                          {/* Descripción */}
                           <td style={{ padding: '11px 10px', verticalAlign: 'top', maxWidth: 160 }}>
                             <div style={{
                               fontSize: '0.78rem', color: '#475569',

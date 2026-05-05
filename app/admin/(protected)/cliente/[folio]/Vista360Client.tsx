@@ -140,15 +140,19 @@ function isVencida(inst: { status: string; payment_date?: string }): boolean {
 }
 
 /**
- * Core financial logic:
+ * Core financial logic — FIXED:
  * – Normalises installment statuses (pending + past due → vencido)
- * – Derives payment_status from sums vs contract_value
- *   • total contract ≠ sum of payments AND nothing paid → 'pendiente'
- *   • any overdue installment                           → 'vencido'
- *   • all paid                                          → 'pagado'
- *   • partially paid                                    → 'parcial'
+ * – Pending = contract_value - total_paid (NOT sum of pending installments)
+ * – Only warns when sum of installments > contract_value (overpayment)
+ * – Derives payment_status from actual balances:
+ *   • total_paid >= contract_value              → 'pagado'
+ *   • any overdue installment                   → 'vencido'
+ *   • total_paid > 0 && total_paid < contract → 'parcial'
+ *   • total_paid === 0 && contract > 0          → 'pendiente'
+ *   • no contract                               → 'sin_contrato'
  */
 function computeFinancials(parents: PaymentParent[]) {
+  // Normalize statuses: auto-mark overdue pending installments as vencido
   const normalized = parents.map(p => ({
     ...p,
     installments: p.installments.map(i => ({
@@ -158,10 +162,15 @@ function computeFinancials(parents: PaymentParent[]) {
   }))
 
   const totalContrato  = normalized.reduce((s, p) => s + (p.contract_value || 0), 0)
+  
+  // Total paid = sum of all installments with status 'pagado'
   const totalPagado    = normalized.reduce((s, p) =>
     s + p.installments.filter(i => i.status === 'pagado').reduce((ss, i) => ss + (parseFloat(i.amount as string) || 0), 0), 0)
-  const totalPendiente = normalized.reduce((s, p) =>
-    s + p.installments.filter(i => i.status === 'pendiente').reduce((ss, i) => ss + (parseFloat(i.amount as string) || 0), 0), 0)
+
+  // Total pending = contract_value - total_paid (can be negative if overpaid)
+  const totalPendiente = totalContrato - totalPagado
+
+  // Total vencido = sum of installments with status 'vencido'
   const totalVencido   = normalized.reduce((s, p) =>
     s + p.installments.filter(i => i.status === 'vencido').reduce((ss, i) => ss + (parseFloat(i.amount as string) || 0), 0), 0)
 
@@ -174,23 +183,25 @@ function computeFinancials(parents: PaymentParent[]) {
   const cuotasVencidas  = allInsts.filter(i => i.status === 'vencido').length
   const totalCuotas     = allInsts.length
 
+  // Progress = paid / contract (0-100%)
   const pctProgreso = totalContrato > 0 ? Math.min((totalPagado / totalContrato) * 100, 100) : 0
 
+  // Sum of all installment amounts (for overpayment validation only)
   const sumOfInstallments = allInsts.reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
-  const discrepancy       = Math.abs(totalContrato - sumOfInstallments) > 0.01
+  
+  // Only flag as discrepancy when installments sum EXCEEDS contract (overpayment)
+  const discrepancy = sumOfInstallments > totalContrato + 0.01
 
-  // Derive payment_status
+  // Derive payment_status from actual balances
   let paymentStatus: string
   if (totalContrato === 0) {
     paymentStatus = 'sin_contrato'
   } else if (totalVencido > 0) {
     paymentStatus = 'vencido'         // overdue takes priority
-  } else if (totalPagado >= totalContrato && !discrepancy) {
+  } else if (totalPagado >= totalContrato) {
     paymentStatus = 'pagado'
   } else if (totalPagado > 0) {
     paymentStatus = 'parcial'
-  } else if (discrepancy && totalPagado === 0) {
-    paymentStatus = 'pendiente'       // contract ≠ sum of payments, nothing paid
   } else {
     paymentStatus = 'pendiente'
   }
@@ -524,12 +535,12 @@ export default function Vista360Client({
           <Link href="/admin/finanzas" style={{ fontSize: 11, color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>Ver en Finanzas →</Link>
         </div>
 
-        {/* Discrepancy warning */}
+        {/* Discrepancy warning — ONLY when installments exceed contract (overpayment) */}
         {dashboard.discrepancy && dashboard.totalContrato > 0 && (
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>⚠️</span>
             <span style={{ fontSize: 12, color: '#92400e', fontWeight: 600 }}>
-              El valor del contrato ({fmtMoney(dashboard.totalContrato)}) no coincide con la suma de cuotas ({fmtMoney(dashboard.totalPagado + dashboard.totalPendiente + dashboard.totalVencido)}). Revisa los montos.
+              La suma de cuotas ({fmtMoney(dashboard.totalPagado + dashboard.totalPendiente + dashboard.totalVencido)}) supera el valor del contrato ({fmtMoney(dashboard.totalContrato)}). Revisa los montos.
             </span>
           </div>
         )}
@@ -539,7 +550,7 @@ export default function Vista360Client({
           {[
             { label: 'Valor contrato', value: fmtMoneyCompact(dashboard.totalContrato), sub: fmtMoney(dashboard.totalContrato), accent: '#0f172a' },
             { label: 'Cobrado',        value: fmtMoneyCompact(dashboard.totalPagado),   sub: `${dashboard.cuotasPagadas} cuotas`,    accent: '#10b981' },
-            { label: 'Pendiente',      value: fmtMoneyCompact(dashboard.totalPendiente),sub: `${dashboard.cuotasPendientes} cuotas`, accent: '#f59e0b' },
+            { label: 'Pendiente',      value: fmtMoneyCompact(Math.max(0, dashboard.totalPendiente)), sub: `${dashboard.cuotasPendientes} cuotas`, accent: '#f59e0b' },
             { label: 'Vencido',        value: fmtMoneyCompact(dashboard.totalVencido),  sub: `${dashboard.cuotasVencidas} cuotas`,   accent: '#ef4444' },
           ].map(k => (
             <div key={k.label} style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', position: 'relative', overflow: 'hidden' }}>

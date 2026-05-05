@@ -10,9 +10,13 @@ const ESTADO_COLORS: Record<string, { bg: string; text: string; dot: string; lab
   perdido:    { bg: '#fef2f2', text: '#991b1b', dot: '#ef4444', label: 'Perdido'     },
 }
 
+const LOGO_LIGHT = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/logo%20artia%20azul.png'
+const LOGO_DARK  = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png'
+
 function initials(name: string) {
   return name.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
 }
+
 function avatarColor(name: string) {
   const c = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6']
   let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % c.length
@@ -31,7 +35,6 @@ export default async function AdminDashboard() {
   const inicioMes = new Date(Date.now() - 30 * 86400000)
   const inicioMesAnt = new Date(Date.now() - 60 * 86400000)
 
-  // NUEVO MODELO: payment_parents + payment_installments
   const [
     { count: totalLeads },
     { count: leadsHoy },
@@ -49,11 +52,10 @@ export default async function AdminDashboard() {
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioSemana.toISOString()),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioMes.toISOString()),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', inicioMesAnt.toISOString()).lt('created_at', inicioMes.toISOString()),
-    supabase.from('leads').select('id, folio, nombre, email, servicio, estado, created_at').order('created_at', { ascending: false }).limit(12),
+    supabase.from('leads').select('id, folio, nombre, email, servicio, estado, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('email_templates').select('id, name, updated_at').order('updated_at', { ascending: false }).limit(3),
     supabase.from('email_sends').select('*', { count: 'exact', head: true }),
     supabase.from('leads').select('estado'),
-    // NUEVO: payment_parents con installments anidados
     supabase.from('payment_parents').select(`
       id, lead_id, contract_value, description, payment_month, status, created_at,
       installments:payment_installments (id, amount, status, payment_date, payment_number),
@@ -61,7 +63,6 @@ export default async function AdminDashboard() {
     `),
   ])
 
-  // Pipeline
   const pipeline = Object.keys(ESTADO_COLORS).map(k => ({
     estado: k, ...ESTADO_COLORS[k],
     count: (estadoData ?? []).filter((r: any) => r.estado === k).length,
@@ -71,12 +72,10 @@ export default async function AdminDashboard() {
   const mesChange = leadsMesAnterior && leadsMesAnterior > 0
     ? Math.round(((leadsMes ?? 0) - leadsMesAnterior) / leadsMesAnterior * 100) : null
 
-  // NUEVO: Widget financiero con payment_parents
   const totalFacturado = (paymentParents ?? []).reduce((s: number, p: any) => s + (p.contract_value || 0), 0)
   const totalPagado = (paymentParents ?? []).reduce((s: number, p: any) => 
     s + (p.installments ?? []).filter((i: any) => i.status === 'pagado').reduce((sum: number, i: any) => sum + (Number(i.amount) || 0), 0), 0)
   const totalPendiente = totalFacturado - totalPagado
-  const contratosActivos = (paymentParents ?? []).filter((p: any) => p.status === 'activo').length
 
   const fecha = ahora.toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' })
   const hora = ahora.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
@@ -87,13 +86,30 @@ export default async function AdminDashboard() {
 
       {/* Header */}
       <header className="dashboard-header">
-        <div>
-          <div className="status-badge">
-            <span className="pulse-dot" />
-            <span>Sistema activo</span>
+        <div className="header-branding">
+          <div className="logo-wrapper">
+            <img 
+              src={LOGO_LIGHT} 
+              alt="Artia Agency" 
+              className="logo-light" 
+              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
+            />
+            <img 
+              src={LOGO_DARK} 
+              alt="Artia Agency" 
+              className="logo-dark" 
+              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
+            />
+            <span className="crm-tag">CRM</span>
           </div>
-          <h1>Dashboard</h1>
-          <p>{fecha} · {hora}</p>
+          <div className="header-meta">
+            <div className="status-badge">
+              <span className="pulse-dot" />
+              <span>Sistema activo</span>
+            </div>
+            <h1>Dashboard</h1>
+            <p>{fecha} · {hora}</p>
+          </div>
         </div>
         <div className="header-actions">
           <Link href="/admin/leads" className="btn-secondary">👥 Leads</Link>
@@ -103,47 +119,47 @@ export default async function AdminDashboard() {
         </div>
       </header>
 
-      {/* KPI Grid */}
+      {/* KPI Grid - Rediseñado: más ancho, centrado, mejor distribución */}
       <section className="kpi-grid">
         <KPICard label="Leads hoy" value={leadsHoy ?? 0} icon="📩" accent="#6366f1" />
-        <KPICard label="Semana" value={leadsSemana ?? 0} icon="📈" accent="#8b5cf6" hero />
-        <KPICard label="Mes" value={leadsMes ?? 0} icon="📅" accent="#3b82f6"
+        <KPICard label="Esta semana" value={leadsSemana ?? 0} icon="📈" accent="#8b5cf6" hero />
+        <KPICard label="Este mes" value={leadsMes ?? 0} icon="📅" accent="#3b82f6"
           change={mesChange !== null ? `${mesChange >= 0 ? '+' : ''}${mesChange}%` : undefined}
           changePositive={mesChange !== null ? mesChange >= 0 : undefined} />
-        <KPICard label="Total" value={totalLeads ?? 0} icon="👥" accent="#10b981" />
-        <KPICard label="Emails env." value={totalEmails ?? 0} icon="✉️" accent="#f59e0b" />
+        <KPICard label="Total acumulado" value={totalLeads ?? 0} icon="👥" accent="#10b981" />
+        <KPICard label="Emails enviados" value={totalEmails ?? 0} icon="✉️" accent="#f59e0b" />
         
-        {/* NUEVO: KPI Financiero */}
+        {/* KPI Financiero */}
         <div className="kpi-card kpi-finance">
           <div className="kpi-finance-header">
-            <span>💵</span>
-            <div>
+            <span className="kpi-finance-icon">💵</span>
+            <div className="kpi-finance-main">
               <div className="kpi-finance-value">{fmtMoney(totalFacturado)}</div>
               <div className="kpi-finance-label">Facturado total</div>
             </div>
           </div>
           <div className="kpi-finance-detail">
             <span className="text-success">{fmtMoney(totalPagado)} pagado</span>
-            {totalPendiente > 0 && <span className="text-warning">+{fmtMoney(totalPendiente)} pendiente</span>}
+            {totalPendiente > 0 && <span className="text-warning">{fmtMoney(totalPendiente)} pendiente</span>}
           </div>
           <div className="kpi-finance-progress">
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${totalFacturado > 0 ? (totalPagado / totalFacturado) * 100 : 0}%` }} />
             </div>
-            <span>{totalFacturado > 0 ? Math.round((totalPagado / totalFacturado) * 100) : 0}% cobrado</span>
+            <span className="progress-text">{totalFacturado > 0 ? Math.round((totalPagado / totalFacturado) * 100) : 0}% cobrado</span>
           </div>
         </div>
       </section>
 
       {/* Main Content */}
       <div className="main-grid">
-        {/* Leads Table */}
+        {/* Leads Table - Máximo 5 registros, fila clickeable completa */}
         <section className="card leads-card">
           <div className="card-header">
             <div className="card-title">
               <div className="title-bar" style={{ background: 'linear-gradient(#6366f1, #8b5cf6)' }} />
               <span>Leads recientes</span>
-              {ultimosLeads && <span className="badge">{ultimosLeads.length}</span>}
+              {ultimosLeads && <span className="badge">{ultimosLeads.length} de {totalLeads ?? 0}</span>}
             </div>
             <Link href="/admin/leads" className="link-btn">Ver todos →</Link>
           </div>
@@ -160,8 +176,9 @@ export default async function AdminDashboard() {
                 <tbody>
                   {ultimosLeads.map((lead: any) => {
                     const ec = ESTADO_COLORS[lead.estado ?? 'nuevo'] ?? ESTADO_COLORS.nuevo
+                    const href = lead.folio ? `/admin/cliente/${lead.folio}` : `/admin/cliente/${lead.id}`
                     return (
-                      <tr key={lead.id} className="table-row-hover">
+                      <tr key={lead.id} className="table-row-clickable" onClick={() => window.location.href = href}>
                         <td>
                           <div className="avatar" style={{ background: avatarColor(lead.nombre) }}>
                             {initials(lead.nombre)}
@@ -180,9 +197,7 @@ export default async function AdminDashboard() {
                         </td>
                         <td>
                           {lead.folio ? (
-                            <Link href={`/admin/cliente/${lead.folio}`} className="folio-link">
-                              {lead.folio}
-                            </Link>
+                            <span className="folio-badge">{lead.folio}</span>
                           ) : <span className="text-muted">—</span>}
                         </td>
                         <td className="cell-date">
@@ -199,7 +214,7 @@ export default async function AdminDashboard() {
           </div>
         </section>
 
-        {/* Sidebar */}
+        {/* Sidebar - Reorganizado: Pipeline, Acciones, Buscar Folio */}
         <aside className="sidebar">
           {/* Pipeline */}
           <section className="card">
@@ -233,7 +248,7 @@ export default async function AdminDashboard() {
             <div className="card-header">
               <div className="card-title">
                 <div className="title-bar" style={{ background: 'linear-gradient(#6366f1, #8b5cf6)' }} />
-                <span>Acciones</span>
+                <span>Acciones rápidas</span>
               </div>
             </div>
             <div className="actions-list">
@@ -250,39 +265,46 @@ export default async function AdminDashboard() {
               ))}
             </div>
           </section>
+
+          {/* Buscar Folio - Reubicado al sidebar */}
+          <section className="card">
+            <div className="card-header">
+              <div className="card-title">
+                <div className="title-bar" style={{ background: 'linear-gradient(#10b981, #3b82f6)' }} />
+                <span>Buscar folio</span>
+              </div>
+            </div>
+            <div className="card-body">
+              <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>Accede directamente a cualquier lead por su número de folio.</p>
+              <form method="GET" action="/admin/cliente" className="search-form">
+                <input name="folio" placeholder="Ej: ART-2024-001" className="search-input" />
+                <button type="submit" className="search-btn">→</button>
+              </form>
+            </div>
+          </section>
         </aside>
       </div>
 
       {/* Bottom Row */}
       <div className="bottom-grid">
-        {/* Buscar Folio */}
+        {/* Plantillas recientes */}
         <section className="card">
           <div className="card-header">
             <div className="card-title">
-              <div className="title-bar" style={{ background: 'linear-gradient(#10b981, #3b82f6)' }} />
-              <span>Buscar folio</span>
+              <div className="title-bar" style={{ background: 'linear-gradient(#ec4899, #8b5cf6)' }} />
+              <span>Plantillas recientes</span>
             </div>
+            <Link href="/admin/emails" className="link-btn">Ver todas →</Link>
           </div>
-          <div className="card-body">
-            <p className="text-muted">Accede a cualquier lead por su folio.</p>
-            <form method="GET" action="/admin/cliente" className="search-form">
-              <input name="folio" placeholder="ASMKT-0381" className="search-input" />
-              <button type="submit" className="search-btn">→</button>
-            </form>
-            <div className="templates-section">
-              <div className="templates-header">
-                <span>Plantillas recientes</span>
-                <Link href="/admin/emails">Ver todas →</Link>
-              </div>
-              {templates && templates.length > 0 ? templates.map((t: any) => (
-                <Link key={t.id} href={`/admin/emails/${t.id}`} className="template-link">
-                  <div>{t.name}</div>
-                  <div className="template-date">
-                    {new Date(t.updated_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </div>
-                </Link>
-              )) : <p className="text-muted">Sin plantillas aún.</p>}
-            </div>
+          <div className="card-body" style={{ paddingTop: 8 }}>
+            {templates && templates.length > 0 ? templates.map((t: any) => (
+              <Link key={t.id} href={`/admin/emails/${t.id}`} className="template-link">
+                <div className="template-name">{t.name}</div>
+                <div className="template-date">
+                  {new Date(t.updated_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </div>
+              </Link>
+            )) : <p className="text-muted">Sin plantillas aún.</p>}
           </div>
         </section>
 
@@ -300,37 +322,83 @@ function KPICard({ label, value, icon, accent, hero, change, changePositive }: {
   return (
     <div className={`kpi-card ${hero ? 'kpi-hero' : ''}`} style={{ '--accent': accent } as any}>
       {hero && <div className="kpi-hero-glow" />}
-      <div className="kpi-header">
-        <span className="kpi-icon">{icon}</span>
+      <div className="kpi-content">
+        <div className="kpi-icon-wrapper">
+          <span className="kpi-icon">{icon}</span>
+        </div>
+        <div className="kpi-data">
+          <div className="kpi-value" style={{ color: hero ? accent : '#0f172a' }}>{value}</div>
+          <div className="kpi-label">{label}</div>
+        </div>
         {change && (
           <span className={`kpi-change ${changePositive ? 'positive' : 'negative'}`}>
             {change}
           </span>
         )}
       </div>
-      <div className="kpi-value" style={{ color: hero ? accent : '#0f172a' }}>{value}</div>
-      <div className="kpi-label">{label}</div>
     </div>
   )
 }
 
 const STYLES = `
-  .dashboard-container { font-family: 'Inter', system-ui, sans-serif; }
+  .dashboard-container { 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    max-width: 1400px;
+    margin: 0 auto;
+  }
   
-  /* Header */
+  /* ─── Header & Branding ─── */
   .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     flex-wrap: wrap;
+    gap: 20px;
+  }
+  .header-branding {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
+  }
+  .logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  .logo-wrapper img {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .logo-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .logo-light { display: none; }
+    .logo-dark { display: block; }
+  }
+  .crm-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding: 3px 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+  .header-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   .status-badge {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
   }
   .status-badge span:last-child {
     font-family: monospace;
@@ -338,133 +406,168 @@ const STYLES = `
     letter-spacing: 3px;
     text-transform: uppercase;
     color: #64748b;
+    font-weight: 600;
   }
   .pulse-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #22c55e;
     animation: pulseDot 2s ease-in-out infinite;
   }
   @keyframes pulseDot {
     0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
-    50% { opacity: .7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    50% { opacity: .7; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
   }
   .dashboard-header h1 {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 800;
     color: #0f172a;
-    margin: 0 0 2px;
-    letter-spacing: -0.5px;
+    margin: 0;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
   }
   .dashboard-header p {
-    margin: 0;
-    font-size: 12px;
+    margin: 4px 0 0;
+    font-size: 13px;
     color: #94a3b8;
     text-transform: capitalize;
+    font-weight: 500;
   }
   .header-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
   }
   .btn-primary, .btn-secondary {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
-    border-radius: 9px;
+    padding: 9px 18px;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
-    transition: all .18s;
+    transition: all .2s;
     cursor: pointer;
+    border: none;
   }
   .btn-primary {
     background: #0f172a;
     color: #fff;
   }
-  .btn-primary:hover { background: #1e293b; }
+  .btn-primary:hover { 
+    background: #1e293b; 
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.2);
+  }
   .btn-secondary {
     background: #fff;
     color: #374151;
     border: 1px solid #e2e8f0;
   }
-  .btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+  .btn-secondary:hover { 
+    background: #f8fafc; 
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
 
-  /* KPI Grid */
+  /* ─── KPI Grid ─── */
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 16px;
+    margin-bottom: 28px;
   }
   @media (max-width: 1200px) {
     .kpi-grid { grid-template-columns: repeat(3, 1fr); }
   }
   @media (max-width: 768px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   }
   
   .kpi-card {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 18px 20px;
+    border-radius: 16px;
+    padding: 20px;
     position: relative;
     overflow: hidden;
-    transition: transform .18s, box-shadow .18s;
+    transition: transform .2s, box-shadow .2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 120px;
   }
   .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,.09);
+    box-shadow: 0 12px 32px rgba(0,0,0,.08);
+    border-color: #cbd5e1;
   }
   .kpi-hero {
-    background: linear-gradient(135deg, var(--accent)18, var(--accent)0a);
-    border-color: var(--accent)30;
+    background: linear-gradient(135deg, var(--accent)08, var(--accent)04);
+    border-color: var(--accent)25;
   }
   .kpi-hero-glow {
     position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 90px;
-    height: 90px;
+    top: -40px;
+    right: -40px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    background: var(--accent)10;
+    background: var(--accent)08;
+    pointer-events: none;
   }
-  .kpi-header {
+  .kpi-content {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .kpi-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .kpi-hero .kpi-icon-wrapper {
+    background: var(--accent)12;
   }
   .kpi-icon {
-    font-size: 16px;
-    background: #f8fafc;
-    padding: 5px 6px;
-    border-radius: 7px;
+    font-size: 20px;
+    line-height: 1;
   }
-  .kpi-hero .kpi-icon {
-    background: var(--accent)15;
+  .kpi-data {
+    flex: 1;
+    min-width: 0;
   }
   .kpi-value {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 3px;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 6px;
   }
   .kpi-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: #94a3b8;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
   }
   .kpi-change {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    margin-left: auto;
   }
   .kpi-change.positive {
     color: #16a34a;
@@ -475,25 +578,30 @@ const STYLES = `
     background: #fef2f2;
   }
 
-  /* KPI Finance */
+  /* ─── KPI Finance ─── */
   .kpi-finance {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
     border-color: #bbf7d0;
   }
   .kpi-finance-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 14px;
+    margin-bottom: 14px;
   }
-  .kpi-finance-header > span:first-child {
-    font-size: 20px;
+  .kpi-finance-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+  .kpi-finance-main {
+    flex: 1;
   }
   .kpi-finance-value {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
     color: #10b981;
     letter-spacing: -0.5px;
+    line-height: 1.2;
   }
   .kpi-finance-label {
     font-size: 11px;
@@ -501,42 +609,46 @@ const STYLES = `
     color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-top: 2px;
   }
   .kpi-finance-detail {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 11px;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    flex-wrap: wrap;
   }
-  .text-success { color: #10b981; font-weight: 600; }
-  .text-warning { color: #d97706; font-weight: 600; }
+  .text-success { color: #10b981; font-weight: 700; }
+  .text-warning { color: #d97706; font-weight: 700; }
   .kpi-finance-progress {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
-  .kpi-finance-progress > span {
-    font-size: 10px;
+  .progress-text {
+    font-size: 11px;
     color: #94a3b8;
     font-weight: 600;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Main Grid */
+  /* ─── Main Grid ─── */
   .main-grid {
     display: grid;
     grid-template-columns: 1fr 320px;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: start;
   }
   @media (max-width: 1024px) {
     .main-grid { grid-template-columns: 1fr; }
   }
 
-  /* Cards */
+  /* ─── Cards ─── */
   .card {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 16px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03);
     overflow: hidden;
@@ -549,162 +661,188 @@ const STYLES = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 18px 14px;
+    padding: 18px 20px 16px;
     border-bottom: 1px solid #f1f5f9;
   }
   .card-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 10px;
+    font-size: 15px;
     font-weight: 700;
     color: #0f172a;
   }
   .title-bar {
-    width: 3px;
-    height: 18px;
+    width: 4px;
+    height: 20px;
     border-radius: 2px;
+    flex-shrink: 0;
   }
   .badge {
     font-size: 11px;
-    color: #94a3b8;
+    color: #64748b;
     background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
     font-weight: 600;
   }
   .link-btn {
-    font-size: 11px;
+    font-size: 12px;
     color: #6366f1;
     text-decoration: none;
     font-weight: 700;
-    background: rgba(99,102,241,.07);
-    padding: 5px 11px;
-    border-radius: 7px;
-    border: 1px solid rgba(99,102,241,.18);
-    transition: all .18s;
+    background: rgba(99,102,241,.08);
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(99,102,241,.15);
+    transition: all .2s;
+    white-space: nowrap;
   }
   .link-btn:hover {
-    background: rgba(99,102,241,.13);
+    background: rgba(99,102,241,.14);
+    border-color: rgba(99,102,241,.25);
   }
   .card-body {
-    padding: 0 18px 18px;
+    padding: 16px 20px 20px;
   }
 
-  /* Table */
+  /* ─── Table ─── */
   .table-wrapper {
     overflow-x: auto;
   }
   .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
   }
   .data-table thead tr {
-    background: #f8fafc;
+    background: #fafbff;
   }
   .data-table th {
-    padding: 10px 14px;
+    padding: 12px 16px;
     text-align: left;
     font-size: 10px;
     font-weight: 700;
     color: #94a3b8;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
     border-bottom: 1px solid #e2e8f0;
     white-space: nowrap;
   }
   .data-table td {
-    padding: 11px 14px;
+    padding: 14px 16px;
     border-bottom: 1px solid #f1f5f9;
-    white-space: nowrap;
+    vertical-align: middle;
   }
-  .table-row-hover {
-    transition: background .12s;
+  .data-table tbody tr:last-child td {
+    border-bottom: none;
   }
-  .table-row-hover:hover {
-    background: #fafbff !important;
+  
+  /* ─── FILA CLICKEABLE ─── */
+  .table-row-clickable {
+    transition: background .15s ease;
+    cursor: pointer;
   }
+  .table-row-clickable:hover {
+    background: #f8fafc !important;
+  }
+  .table-row-clickable:hover td {
+    background: transparent;
+  }
+  .table-row-clickable:active {
+    background: #f1f5f9 !important;
+  }
+
   .avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     color: #fff;
+    flex-shrink: 0;
   }
   .cell-name {
-    font-weight: 600;
+    font-weight: 700;
     color: #0f172a;
     font-size: 13px;
+    line-height: 1.3;
   }
   .cell-email {
     font-size: 11px;
     color: #94a3b8;
-    margin-top: 1px;
+    margin-top: 2px;
+    font-weight: 500;
   }
   .cell-service {
-    color: #64748b;
-    max-width: 150px;
+    color: #475569;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
   }
   .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 10px;
+    gap: 6px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
   }
   .status-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
+    flex-shrink: 0;
   }
-  .folio-link {
-    font-family: monospace;
+  .folio-badge {
+    font-family: 'SF Mono', Monaco, monospace;
     font-size: 11px;
     color: #6366f1;
     background: rgba(99,102,241,.08);
-    border: 1px solid rgba(99,102,241,.2);
-    padding: 3px 8px;
-    border-radius: 5px;
-    text-decoration: none;
+    border: 1px solid rgba(99,102,241,.18);
+    padding: 4px 10px;
+    border-radius: 6px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
   }
   .cell-date {
     color: #94a3b8;
-    font-size: 11px;
-    font-family: monospace;
+    font-size: 12px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-variant-numeric: tabular-nums;
   }
   .text-muted {
     color: #94a3b8;
+    font-size: 13px;
   }
 
-  /* Sidebar */
+  /* ─── Sidebar ─── */
   .sidebar {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
   }
 
-  /* Pipeline */
+  /* ─── Pipeline ─── */
   .pipeline-list {
-    padding: 0 18px 18px;
+    padding: 0 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
   .pipeline-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
   .pipeline-info {
     display: flex;
@@ -714,19 +852,19 @@ const STYLES = `
   .pipeline-label {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 13px;
     font-weight: 600;
     color: #374151;
   }
   .pipeline-count {
-    font-size: 12px;
-    font-weight: 700;
-    color: #6b7280;
-    font-family: monospace;
+    font-size: 13px;
+    font-weight: 800;
+    color: #64748b;
+    font-family: 'SF Mono', Monaco, monospace;
   }
   .progress-bar {
-    height: 5px;
+    height: 6px;
     background: #f1f5f9;
     border-radius: 99px;
     overflow: hidden;
@@ -734,149 +872,157 @@ const STYLES = `
   .progress-fill {
     height: 100%;
     border-radius: 99px;
-    transition: width 0.5s ease;
-    min-width: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 2px;
   }
 
-  /* Actions */
+  /* ─── Actions ─── */
   .actions-list {
-    padding: 0 18px 18px;
+    padding: 0 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
   }
   .action-link {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 9px 11px;
-    border-radius: 8px;
-    background: var(--accent)07;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--accent)06;
     border: 1px solid var(--accent)12;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--accent);
     text-decoration: none;
-    transition: opacity .15s, transform .15s;
+    transition: all .2s;
   }
   .action-link:hover {
-    opacity: 0.82;
-    transform: translateX(2px);
+    background: var(--accent)10;
+    transform: translateX(3px);
+    border-color: var(--accent)25;
+  }
+  .action-link span {
+    font-size: 16px;
+    line-height: 1;
   }
 
-  /* Bottom Grid */
-  .bottom-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-  }
-  @media (max-width: 1024px) {
-    .bottom-grid { grid-template-columns: 1fr; }
-  }
-
-  /* Search Form */
+  /* ─── Search Form (Sidebar) ─── */
   .search-form {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
   }
   .search-input {
     flex: 1;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
     color: #0f172a;
     background: #f8fafc;
     outline: none;
-    font-family: monospace;
-    letter-spacing: 0.5px;
+    font-family: 'SF Mono', Monaco, monospace;
+    letter-spacing: 0.3px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.08);
+  }
+  .search-input::placeholder {
+    color: #94a3b8;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .search-btn {
     background: #6366f1;
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 0 14px;
-    font-size: 12px;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
+    transition: background .2s, transform .1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-btn:hover {
+    background: #4f46e5;
+  }
+  .search-btn:active {
+    transform: scale(0.96);
   }
 
-  /* Templates */
-  .templates-section {
-    border-top: 1px solid #f1f5f9;
-    margin-top: 16px;
-    padding-top: 14px;
+  /* ─── Bottom Grid ─── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
   }
-  .templates-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    align-items: center;
+  @media (max-width: 1024px) {
+    .bottom-grid { grid-template-columns: 1fr; }
   }
-  .templates-header span {
-    font-size: 13px;
-    font-weight: 700;
-    color: #0f172a;
-  }
-  .templates-header a {
-    font-size: 11px;
-    color: #6366f1;
-    text-decoration: none;
-    font-weight: 600;
-  }
+
+  /* ─── Templates ─── */
   .template-link {
     display: block;
-    padding: 9px 11px;
-    border-radius: 7px;
+    padding: 12px 14px;
+    border-radius: 10px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     text-decoration: none;
-    margin-bottom: 6px;
-    transition: background .15s;
+    margin-bottom: 8px;
+    transition: all .2s;
   }
   .template-link:hover {
     background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateX(2px);
   }
-  .template-link div:first-child {
-    font-weight: 600;
-    font-size: 12px;
+  .template-link:last-child {
+    margin-bottom: 0;
+  }
+  .template-name {
+    font-weight: 700;
+    font-size: 13px;
     color: #0f172a;
+    margin-bottom: 4px;
   }
   .template-date {
-    font-size: 10px;
+    font-size: 11px;
     color: #94a3b8;
-    margin-top: 2px;
-    font-family: monospace;
+    font-family: 'SF Mono', Monaco, monospace;
   }
 
-  /* Empty State */
+  /* ─── Empty State ─── */
   .empty-state {
-    padding: 48px 24px;
+    padding: 56px 24px;
     text-align: center;
     color: #94a3b8;
     font-size: 14px;
+    font-weight: 500;
   }
 
-  /* Responsive */
+  /* ─── Responsive ─── */
   @media (max-width: 768px) {
     .dashboard-header {
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
     .header-actions {
       width: 100%;
     }
-    .header-actions a, .header-actions button {
+    .header-actions a {
       flex: 1;
       justify-content: center;
     }
     .kpi-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
     }
     .kpi-value {
-      font-size: 22px;
+      font-size: 26px;
     }
     .main-grid {
       grid-template-columns: 1fr;
@@ -891,10 +1037,10 @@ const STYLES = `
       font-size: 12px;
     }
     .data-table th, .data-table td {
-      padding: 8px 10px;
+      padding: 10px 12px;
     }
     .cell-service, .cell-email {
-      max-width: 100px;
+      max-width: 120px;
     }
   }
 `

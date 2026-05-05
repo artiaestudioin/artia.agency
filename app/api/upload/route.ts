@@ -9,15 +9,15 @@ function getAdminClient() {
   )
 }
 
-// ─── PROJECT FILES (existente) ────────────────────────────────────
+// ─── PROJECT FILES ────────────────────────────────────────────────
 
 async function handleProjectFileUpload(req: NextRequest, supabase: ReturnType<typeof getAdminClient>) {
   const formData = await req.formData()
   const file = formData.get('file') as File | null
   const projectId = formData.get('projectId') as string | null
+  const isCover = formData.get('isCover') === 'true'
 
   if (!file) return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
-  if (!projectId) return NextResponse.json({ error: 'projectId requerido' }, { status: 400 })
 
   if (file.size > 50 * 1024 * 1024) {
     return NextResponse.json({ error: 'Archivo demasiado grande (máx 50MB)' }, { status: 400 })
@@ -26,7 +26,17 @@ async function handleProjectFileUpload(req: NextRequest, supabase: ReturnType<ty
   const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
   const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
   const fileName = `${baseName}_${Date.now()}_${uuidv4().slice(0, 8)}.${ext}`
-  const path = `project-${projectId}/${fileName}`
+
+  // Si es cover sin projectId, usar carpeta covers/
+  // Si es cover con projectId, usar project-{id}/cover/
+  // Si es archivo normal, usar project-{id}/
+  let path: string
+  if (isCover) {
+    path = projectId ? `project-${projectId}/cover/${fileName}` : `covers/${fileName}`
+  } else {
+    if (!projectId) return NextResponse.json({ error: 'projectId requerido para archivos de proyecto' }, { status: 400 })
+    path = `project-${projectId}/${fileName}`
+  }
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -46,22 +56,28 @@ async function handleProjectFileUpload(req: NextRequest, supabase: ReturnType<ty
 
   const { data: { publicUrl } } = supabase.storage.from('projects').getPublicUrl(path)
 
-  const { data: fileRecord, error: dbError } = await supabase
-    .from('project_files')
-    .insert([{
-      project_id: projectId,
-      file_url: publicUrl,
-      file_name: file.name,
-      file_type: file.type,
-      file_size: file.size,
-    }])
-    .select().single()
+  // Solo guardar en DB si es archivo de proyecto (no cover suelto)
+  if (!isCover && projectId) {
+    const { data: fileRecord, error: dbError } = await supabase
+      .from('project_files')
+      .insert([{
+        project_id: projectId,
+        file_url: publicUrl,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+      }])
+      .select().single()
 
-  if (dbError) {
-    return NextResponse.json({ error: `Error en DB: ${dbError.message}` }, { status: 500 })
+    if (dbError) {
+      return NextResponse.json({ error: `Error en DB: ${dbError.message}` }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, file: fileRecord, publicUrl })
   }
 
-  return NextResponse.json({ ok: true, file: fileRecord })
+  // Cover: solo devolver URL, no guardar en project_files
+  return NextResponse.json({ ok: true, publicUrl, path, isCover: true })
 }
 
 async function handleProjectFileDelete(req: NextRequest, supabase: ReturnType<typeof getAdminClient>) {
@@ -80,7 +96,7 @@ async function handleProjectFileDelete(req: NextRequest, supabase: ReturnType<ty
   return NextResponse.json({ ok: true })
 }
 
-// ─── PAYMENT RECEIPTS (nuevo) ─────────────────────────────────────
+// ─── PAYMENT RECEIPTS ─────────────────────────────────────────────
 
 async function handlePaymentReceiptUpload(req: NextRequest, supabase: ReturnType<typeof getAdminClient>) {
   const formData = await req.formData()
@@ -142,9 +158,9 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = getAdminClient()
     const formData = await req.clone().formData()
-    const hasProjectId = formData.has('projectId')
+    const hasProjectId = formData.has('projectId') || formData.has('isCover')
 
-    if (hasProjectId) {
+    if (hasProjectId || formData.get('isCover') === 'true') {
       return handleProjectFileUpload(req, supabase)
     } else {
       return handlePaymentReceiptUpload(req, supabase)
