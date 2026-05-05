@@ -98,6 +98,8 @@ const NAV_ITEMS: NavGroup[] = [
     icon: <Sparkles size={18} />,
   },
 ]
+const LOGO_LIGHT = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/logo%20artia%20azul.png'
+const LOGO_DARK  = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png'
 
 // ─── COMPONENT ───────────────────────────────────────────────────
 export default function AdminNav({ email }: { email: string }) {
@@ -111,53 +113,21 @@ export default function AdminNav({ email }: { email: string }) {
     if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
   }
-
+  const logo = dark ? LOGO_DARK : LOGO_LIGHT
   const initials = email.slice(0, 2).toUpperCase()
   const username = email.split('@')[0]
 
   const SidebarContent = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      padding: '20px 12px',
-      gap: 4,
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '16px 12px', gap: 2 }}>
       {/* Logo */}
-      <a
-        href="/admin"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 12px',
-          marginBottom: 20,
-          textDecoration: 'none',
-        }}
-      >
-        <div style={{
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontWeight: 800,
-          fontSize: 15,
-          flexShrink: 0,
-        }}>
-          A
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', letterSpacing: '-0.3px' }}>
-            ARTIA
-          </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, letterSpacing: '0.5px' }}>
-            CRM
-          </div>
-        </div>
+      <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', marginBottom: 18, textDecoration: 'none' }}>
+        <img
+          src={logo}
+          alt="Artia CRM"
+          style={{ height: 28, width: 'auto', objectFit: 'contain', maxWidth: 110 }}
+          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+        />
+        <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>CRM</span>
       </a>
 
       {/* Nav Items */}
@@ -432,22 +402,8 @@ export default function AdminNav({ email }: { email: string }) {
           padding: '0 16px',
         }}
       >
-        <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-          <div style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'linear-gradient(135deg, #667eea, #764ba2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: 800,
-            fontSize: 13,
-          }}>A</div>
-          <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
-            ARTIA <span style={{ color: '#7c3aed', fontWeight: 400 }}>CRM</span>
-          </span>
+        <a href="/admin" style={{ textDecoration: 'none' }}>
+          <img src={logo} alt="Artia" style={{ height: 24, width: 'auto', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </a>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
