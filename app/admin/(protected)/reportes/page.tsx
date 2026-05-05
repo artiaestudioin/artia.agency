@@ -14,6 +14,8 @@ export default async function ReportesPage() {
     { data: leads },
     { data: rawProjects },
     { data: emails },
+    { data: landings },
+    { data: orders },
   ] = await Promise.all([
     supabase.from('payment_parents').select(`
       id, lead_id, contract_value, description, payment_month, status, created_at,
@@ -21,9 +23,18 @@ export default async function ReportesPage() {
       lead:lead_id(nombre, folio, servicio)
     `).order('created_at', { ascending: false }),
     supabase.from('payments').select('method').order('created_at', { ascending: false }),
-    supabase.from('leads').select('id, nombre, folio, servicio, estado, estimated_value, created_at').order('created_at', { ascending: false }),
+    supabase.from('leads').select('id, nombre, folio, servicio, estado, estimated_value, created_at,payment_status').order('created_at', { ascending: false }),
     supabase.from('projects').select('id, name, status, event_date, created_at, lead:lead_id(nombre, folio)').order('created_at', { ascending: false }),
     supabase.from('email_sends').select('id, to_email, template_name, sent_at, opened').order('sent_at', { ascending: false }).limit(1000),
+    supabase.from('landing_pages')
+      .select('id, title, status, created_at, views:landing_views(count)')
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('landing_orders')
+      .select('id, landing_id, amount, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(200),
   ]);
 
   if (errorP) console.error("❌ ERROR PAGOS:", errorP.message);
@@ -66,9 +77,12 @@ console.log("DATOS ENVIADOS AL CLIENTE:", JSON.stringify(payments[0], null, 2));
         leads={leads || []}
         projects={projects}
         emails={emails || []}
+        landings={landings ?? []}
+        orders={orders ?? []}
         paymentMethods={paymentMethodsData || []}
+        
         posthog={posthog}        // ← AGREGAR
-  sentry={sentry}          // ← AGREGAR
+        sentry={sentry}          // ← AGREGAR
       />
 
       {/* 2. Sección de Analítica s (Tus nuevos widgets) */}

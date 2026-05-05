@@ -1,74 +1,41 @@
-// app/api/admin/landings/[id]/route.ts
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-export async function GET(
-  request: Request,
+/** DELETE /api/admin/landings/[id] — delete landing page and its variants */
+export async function DELETE(
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
+
   const supabase = await createClient()
 
-  // 🔒 VERIFICACIÓN DE SESIÓN
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-  }
+  // Delete variants first (if table exists)
+  await supabase.from('landing_variants').delete().eq('landing_id', id)
 
-  const { data, error } = await supabase
-    .from('landings')
-    .select('*, variants:landings!parent_id(*)')
-    .eq('id', id)
-    .single()
-
+  const { error } = await supabase.from('landing_pages').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ landing: data })
+
+  return NextResponse.json({ ok: true })
 }
 
+/** PATCH /api/admin/landings/[id] — update landing page */
 export async function PATCH(
-  request: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
+  const { id }  = await params
+  const body    = await req.json()
   const supabase = await createClient()
-  
-  // 🔒 VERIFICACIÓN DE SESIÓN
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión para editar.' }, { status: 401 })
-  }
-
-  const body = await request.json()
 
   const { data, error } = await supabase
-    .from('landings')          // ← tabla LANDINGS, no landing_orders
-    .update(body)
+    .from('landing_pages')
+    .update({ ...body, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ landing: data })
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  const supabase = await createClient()
-
-  // 🔒 VERIFICACIÓN DE SESIÓN
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión para eliminar.' }, { status: 401 })
-  }
-
-  const { error } = await supabase
-    .from('landings')          // ← tabla LANDINGS, no landing_orders
-    .delete()
-    .eq('id', id)
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
 }

@@ -10,7 +10,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const { q, estado } = await searchParams
   const supabase = await createClient()
 
-  let query = supabase.from('leads').select('id, folio, nombre, email, telefono, servicio, estado, payment_status, estimated_value, created_at').order('created_at', { ascending: false })
+  let query = supabase
+    .from('leads')
+    .select('id, folio, nombre, email, telefono, servicio, estado, payment_status, estimated_value, created_at, notes')
+    .order('created_at', { ascending: false })
   if (estado && estado !== 'todos') query = query.eq('estado', estado)
 
   const { data: allLeads } = await query

@@ -88,14 +88,16 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     await uploadFiles(Array.from(e.dataTransfer.files))
   }, [selected])
 
-  // ─── SUBIR ARCHIVO A SUPABASE STORAGE ───
-  async function uploadToStorage(file: File, projectId: string): Promise<string | null> {
-    try {
-      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-      const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
-      const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
-      const path = `project-${projectId}/${fileName}`
+  // ─── GENERAR NOMBRE ÚNICO PARA ARCHIVO ───
+  function generateFileName(file: File): string {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
+    return `${baseName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
+  }
 
+  // ─── SUBIR ARCHIVO A SUPABASE STORAGE (genérico) ───
+  async function uploadToStorage(file: File, path: string): Promise<string | null> {
+    try {
       const { error: uploadError } = await supabase.storage
         .from('projects')
         .upload(path, file, {
@@ -119,7 +121,7 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     }
   }
 
-  // ─── SUBIR FOTOS DEL PROYECTO ───
+  // ─── SUBIR FOTOS/ARCHIVOS AL PROYECTO ───
   async function uploadFiles(filesToUpload: File[]) {
     if (!selected || filesToUpload.length === 0) return
     setUploading(true)
@@ -130,7 +132,10 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
       const file = filesToUpload[i]
       setUploadProgress(`Subiendo ${i + 1}/${filesToUpload.length}: ${file.name}`)
       
-      const publicUrl = await uploadToStorage(file, selected.id)
+      const fileName = generateFileName(file)
+      const path = `project-${selected.id}/${fileName}`
+      
+      const publicUrl = await uploadToStorage(file, path)
       
       if (!publicUrl) {
         setUploadError(`Error subiendo ${file.name}`)
@@ -184,14 +189,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     })
     
     if (res.ok) {
-      if (fileToDelete?.file_url) {
-        const pathMatch = fileToDelete.file_url.match(/project-[^/]+\/(.+)$/)
-        if (pathMatch) {
-          const path = `project-${selected.id}/${pathMatch[1]}`
-          await supabase.storage.from('projects').remove([path])
-        }
-      }
-      
       setFiles(prev => prev.filter(f => f.id !== fileId))
       setProjects(prev => prev.map(p => p.id === selected.id ? { ...p, file_count: Math.max(0, p.file_count - 1) } : p))
       showMsg('Archivo eliminado')
@@ -243,10 +240,14 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     try {
       let coverUrl = null
       
-      // Si hay imagen de portada, subirla primero
+      // Si hay imagen de portada, subirla primero a carpeta temporal
       if (newForm.cover_image) {
         setUploadProgress('Subiendo foto de portada...')
-        coverUrl = await uploadToStorage(newForm.cover_image, 'covers')
+        const fileName = generateFileName(newForm.cover_image)
+        const tempPath = `covers/${fileName}`
+        
+        coverUrl = await uploadToStorage(newForm.cover_image, tempPath)
+        
         if (!coverUrl) {
           showMsg('Error subiendo foto de portada', false)
           setSaving(false)
@@ -325,9 +326,10 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
             const isActive = selected?.id === p.id
             return (
               <div key={p.id}
+                onClick={() => openProject(p)}
                 style={{ background: isActive ? '#00113a' : '#fff', border: `0.5px solid ${isActive ? '#00113a' : '#e2e8f0'}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.15s' }}
               >
-                <div onClick={() => openProject(p)} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? '#fff' : '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                     {p.leads && <div style={{ fontSize: 11, color: isActive ? 'rgba(255,255,255,0.5)' : '#94a3b8', marginTop: 2 }}>{p.leads.nombre}</div>}

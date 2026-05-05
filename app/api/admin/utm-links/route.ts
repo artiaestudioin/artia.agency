@@ -1,49 +1,51 @@
-// app/api/admin/utm-links/route.ts
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const landing_id = searchParams.get('landing_id')
-
+/** GET /api/admin/utm-links */
+export async function GET() {
   const supabase = await createClient()
-
-  let query = supabase.from('utm_links').select('*')
-  if (landing_id) query = query.eq('landing_id', landing_id)
-
-  const { data, error } = await query.order('created_at', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json({ links: data })
-}
-
-export async function POST(request: Request) {
-  const supabase = await createClient()
-  const body = await request.json()
-
-  // Build full URL
-  const baseUrl = `https://artiaagency.vercel.app/lp/${body.slug}`
-  const params = new URLSearchParams()
-  if (body.utm_source) params.set('utm_source', body.utm_source)
-  if (body.utm_medium) params.set('utm_medium', body.utm_medium)
-  if (body.utm_campaign) params.set('utm_campaign', body.utm_campaign)
-  if (body.utm_content) params.set('utm_content', body.utm_content)
-  if (body.utm_term) params.set('utm_term', body.utm_term)
-
-  const full_url = `${baseUrl}?${params.toString()}`
-
   const { data, error } = await supabase
     .from('utm_links')
-    .insert({ ...body, full_url })
-    .select()
-    .single()
+    .select('*')
+    .order('created_at', { ascending: false })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ links: data ?? [] })
+}
+
+/** POST /api/admin/utm-links */
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+    const { name, original_url, utm_source, utm_medium, utm_campaign, utm_content, utm_term } = body
+
+    if (!original_url?.trim() || !utm_campaign?.trim()) {
+      return NextResponse.json({ error: 'URL y campaña son requeridos' }, { status: 400 })
+    }
+
+    // Build UTM URL
+    const url = new URL(original_url)
+    if (utm_source)   url.searchParams.set('utm_source',   utm_source)
+    if (utm_medium)   url.searchParams.set('utm_medium',   utm_medium)
+    if (utm_campaign) url.searchParams.set('utm_campaign', utm_campaign)
+    if (utm_content)  url.searchParams.set('utm_content',  utm_content)
+    if (utm_term)     url.searchParams.set('utm_term',     utm_term)
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('utm_links')
+      .insert({
+        name: name?.trim() || null, original_url: original_url.trim(),
+        utm_source: utm_source || null, utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign.trim(), utm_content: utm_content || null,
+        utm_term: utm_term || null, full_url: url.toString(),
+      })
+      .select()
+      .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ link: data }, { status: 201 })
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message ?? 'Error interno' }, { status: 500 })
   }
-
-  return NextResponse.json({ link: data }, { status: 201 })
 }

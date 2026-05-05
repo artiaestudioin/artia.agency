@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo } from 'react'
+import Link from 'next/link'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -59,6 +60,14 @@ type EmailSend = {
   template_name: string
   sent_at: string
   opened: boolean
+}
+type Landing = {
+  id: string; title: string; status: string | null; created_at: string
+  views?: { count: number }[] | null
+}
+
+type Order = {
+  id: string; landing_id: string | null; amount: number | null; status: string | null; created_at: string
 }
 
 type PhData = {
@@ -147,6 +156,8 @@ export default function ReportesClient({
   posthog,
   sentry,
   paymentMethods = [],
+  landings = [],
+  orders = [],
 }: {
   initialPayments?: PaymentParent[]
   payments?: PaymentParent[]
@@ -156,9 +167,11 @@ export default function ReportesClient({
   posthog: PhData | null
   sentry: SentryData | null
   paymentMethods?: any[]
+  landings?: Landing[]
+  orders?: Order[]
 }) {
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('all')
-  const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'>('general')
+  const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'>('general')
   const [exporting, setExporting] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
 
@@ -302,14 +315,44 @@ export default function ReportesClient({
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
+  // ── Sales / Ventas stats ──────────────────────────────────────────
+  const salesData = useMemo(() => {
+    const totalPages   = landings.length
+    const activePages  = landings.filter(l => l.status === 'active' || l.status === 'activo' || l.status === 'published').length
+    const totalOrders  = orders.length
+    const totalRevenue = orders.filter(o => o.status === 'completed' || o.status === 'pagado').reduce((s, o) => s + (o.amount || 0), 0)
+    const avgOrder     = totalOrders > 0 ? totalRevenue / totalOrders : 0
+    const conversion   = totalPages > 0 && totalOrders > 0 ? ((totalOrders / totalPages) * 100) : 0
+
+    // Orders by month
+    const ordByMonth: Record<string, number> = {}
+    buildLastNMonths(6).forEach(({ key }) => { ordByMonth[key] = 0 })
+    orders.forEach(o => {
+      const k = getMonthKey(o.created_at)
+      if (k in ordByMonth) ordByMonth[k] += o.amount || 0
+    })
+    const ordersChart = buildLastNMonths(6).map(({ key, label }) => ({ label, value: ordByMonth[key] || 0 }))
+
+    // Pages by month
+    const pgByMonth: Record<string, number> = {}
+    buildLastNMonths(6).forEach(({ key }) => { pgByMonth[key] = 0 })
+    landings.forEach(l => {
+      const k = getMonthKey(l.created_at)
+      if (k in pgByMonth) pgByMonth[k]++
+    })
+    const pagesChart = buildLastNMonths(6).map(({ key, label }) => ({ label, value: pgByMonth[key] || 0 }))
+
+    return { totalPages, activePages, totalOrders, totalRevenue, avgOrder, conversion, ordersChart, pagesChart }
+  }, [landings, orders])
+
   // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
 async function exportPDF() {
   if (!reportRef.current) return
   setExporting(true)
 
   const originalTab = activeTab
-  const tabs: Array<'general' | 'finanzas' | 'leads' | 'proyectos' | 'analytics'> =
-    ['general', 'finanzas', 'leads', 'proyectos', 'analytics']
+  const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
+    ['general', 'finanzas', 'ventas', 'leads', 'proyectos', 'analytics']
 
   try {
     const pdf = new jsPDF('p', 'mm', 'a4')
@@ -565,6 +608,7 @@ async function exportPDF() {
           {[
             { key: 'general', label: '📈 General' },
             { key: 'finanzas', label: '💰 Finanzas' },
+            { key: 'ventas', label: '🛍 Ventas' },
             { key: 'leads', label: '👥 Leads' },
             { key: 'proyectos', label: '📁 Proyectos' },
             { key: 'analytics', label: '📡 Analytics' },
@@ -755,6 +799,95 @@ async function exportPDF() {
                   <Bar dataKey="pagado" fill="#10b981" radius={[0, 6, 6, 0]} name="Pagado" />
                 </BarChart>
               </ResponsiveContainer>
+            </ChartCard>
+          </div>
+        )}
+
+        {/* ─── VENTAS TAB ─── */}
+        {activeTab === 'ventas' && (
+          <div className="fade-in">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
+              <StatCard label="Páginas de venta" value={String(salesData.totalPages)} icon="📄" color="#7c3aed" />
+              <StatCard label="Pedidos totales" value={String(salesData.totalOrders)} icon="📦" color="#3b82f6" />
+              <StatCard label="Ingresos ventas" value={fmtMoney(salesData.totalRevenue)} icon="💵" color="#10b981" />
+              <StatCard label="Ticket promedio" value={fmtMoney(salesData.avgOrder)} icon="🛒" color="#f59e0b" />
+              <StatCard label="Tasa conversión" value={`${salesData.conversion.toFixed(1)}%`} icon="📊" color="#ec4899" />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+              <ChartCard title="Ingresos por pedidos" subtitle="Monto acumulado de pedidos por mes">
+                {salesData.totalOrders === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+                    <div style={{ fontSize: 13 }}>Sin pedidos registrados aún.</div>
+                    <Link href="/admin/ventas/pedidos" style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>Ir a Pedidos →</Link>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={salesData.ordersChart}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Ingresos" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+
+              <ChartCard title="Páginas de venta creadas" subtitle="Nuevas landing pages por mes">
+                {salesData.totalPages === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+                    <div style={{ fontSize: 13 }}>Sin páginas de venta registradas.</div>
+                    <Link href="/admin/ventas/paginas" style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>Ir a Páginas →</Link>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={salesData.pagesChart}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} name="Páginas" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+            </div>
+
+            <ChartCard title="Embudo de Ventas" subtitle="Conversión de páginas a pedidos">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, padding: '8px 0' }}>
+                {[
+                  { label: 'Páginas activas', value: salesData.activePages, pct: 100, color: '#7c3aed' },
+                  { label: 'Total páginas', value: salesData.totalPages, pct: salesData.totalPages > 0 ? 80 : 0, color: '#3b82f6' },
+                  { label: 'Pedidos recibidos', value: salesData.totalOrders, pct: salesData.totalPages > 0 ? (salesData.totalOrders / salesData.totalPages) * 100 : 0, color: '#f59e0b' },
+                  { label: 'Completados', value: orders.filter((o: any) => o.status === 'completed' || o.status === 'pagado').length, pct: salesData.totalOrders > 0 ? (orders.filter((o: any) => o.status === 'completed' || o.status === 'pagado').length / salesData.totalOrders) * 100 : 0, color: '#10b981' },
+                ].map((step, i) => (
+                  <div key={i} style={{ textAlign: 'center', padding: '16px 12px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: step.color }}>{step.value}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{step.label}</div>
+                    <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, margin: '10px 0 4px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.min(step.pct, 100)}%`, background: step.color, borderRadius: 3, transition: 'width 0.8s ease' }} />
+                    </div>
+                    <div style={{ fontSize: 11, color: step.color, fontWeight: 800 }}>{Math.round(Math.min(step.pct, 100))}%</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+                {[
+                  { href: '/admin/ventas/paginas', label: '📄 Páginas de venta' },
+                  { href: '/admin/ventas/pedidos', label: '📦 Pedidos' },
+                  { href: '/admin/ventas/rendimiento', label: '📊 Rendimiento' },
+                  { href: '/admin/ventas/campanas', label: '🔗 Campañas' },
+                ].map(l => (
+                  <Link key={l.href} href={l.href}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#0f172a', textDecoration: 'none', transition: 'all 0.15s' }}>
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
             </ChartCard>
           </div>
         )}

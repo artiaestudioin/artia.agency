@@ -86,6 +86,39 @@ function makeDefaultInstallment(date: string, num: number): Installment {
   return { amount: '', payment_date: date, status: 'pendiente', payment_method: 'transferencia', payment_number: num }
 }
 
+/** Returns true when installment is pending and past its due date */
+function isVencida(inst: { status: string; payment_date?: string | null }): boolean {
+  if (inst.status !== 'pendiente' || !inst.payment_date) return false
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const [y, m, d] = inst.payment_date.split('T')[0].split('-').map(Number)
+  return new Date(y, m - 1, d) < today
+}
+
+/**
+ * Derives payment_status from installments vs contract_value.
+ * - any overdue installment                        → 'vencido'
+ * - all paid                                       → 'pagado'
+ * - partially paid                                 → 'parcial'
+ * - contract ≠ sum of installments, nothing paid   → 'pendiente'
+ * - nothing registered                             → 'pendiente'
+ */
+function computePaymentStatus(parent: PaymentParent): string {
+  const insts = parent.installments
+  if (insts.length === 0) return 'pendiente'
+
+  const normalised = insts.map(i => ({ ...i, status: isVencida(i) ? 'vencido' as const : i.status }))
+  const contractVal = parent.contract_value || 0
+  const sumInsts    = normalised.reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
+  const totalPagado = normalised.filter(i => i.status === 'pagado').reduce((s, i) => s + (parseFloat(i.amount as string) || 0), 0)
+  const anyVencido  = normalised.some(i => i.status === 'vencido')
+
+  if (anyVencido) return 'vencido'
+  if (totalPagado >= contractVal && Math.abs(contractVal - sumInsts) < 0.01) return 'pagado'
+  if (totalPagado > 0) return 'parcial'
+  if (Math.abs(contractVal - sumInsts) > 0.01 && totalPagado === 0) return 'pendiente'
+  return 'pendiente'
+}
+
 // ─── Component ─────────────────────────────────────────────────────
 
 export default function FinanzasClient({
@@ -174,6 +207,17 @@ export default function FinanzasClient({
   function showMsg(msg: string, ok = true) {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3500)
+  }
+
+  /** Persist recalculated payment_status back to the lead row */
+  async function persistPaymentStatus(leadId: string, status: string) {
+    try {
+      await fetch('/api/admin/lead-payment-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: leadId, payment_status: status }),
+      })
+    } catch (_) { /* non-blocking */ }
   }
 
   function addInstallment() {
@@ -276,9 +320,12 @@ export default function FinanzasClient({
         })
         const data = await res.json()
         if (res.ok) {
-          const refreshRes = await fetch('/api/admin/payments')
+          const refreshRes  = await fetch('/api/admin/payments')
           const refreshData = await refreshRes.json()
-          setPayments(refreshData.payments || [])
+          const refreshed   = (refreshData.payments || []) as PaymentParent[]
+          setPayments(refreshed)
+          const updated = refreshed.find((p: PaymentParent) => p.id === editPay.id)
+          if (updated) await persistPaymentStatus(updated.lead_id, computePaymentStatus(updated))
           showMsg('Contrato actualizado ✓')
           setShowForm(false)
           setEditPay(null)
@@ -289,7 +336,9 @@ export default function FinanzasClient({
         })
         const data = await res.json()
         if (res.ok && data.parent) {
-          setPayments(prev => [data.parent, ...prev])
+          const newParent = data.parent as PaymentParent
+          setPayments(prev => [newParent, ...prev])
+          await persistPaymentStatus(newParent.lead_id, computePaymentStatus(newParent))
           showMsg('Contrato registrado ✓')
           setShowForm(false)
         } else showMsg(data.error ?? 'Error', false)

@@ -11,7 +11,7 @@ function getAdmin() {
 // POST /api/admin/projects — crear proyecto
 export async function POST(req: NextRequest) {
   const supabase = getAdmin()
-  const { name, description, event_date, lead_id,cover_url } = await req.json()
+  const { name, description, event_date, lead_id, cover_url } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: 'name requerido' }, { status: 400 })
 
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const { data: project, error } = await supabase
     .from('projects')
-    .insert([{ name: name.trim(), description,  cover_url, event_date: event_date || null, lead_id: lead_id || null, access_code }])
+    .insert([{ name: name.trim(), description, cover_url, event_date: event_date || null, lead_id: lead_id || null, access_code }])
     .select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
