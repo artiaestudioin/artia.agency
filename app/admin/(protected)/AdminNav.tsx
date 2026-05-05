@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -108,11 +108,19 @@ export default function AdminNav({ email }: { email: string }) {
     pathname.startsWith('/admin/landings')
   )
   const [mobileOpen, setMobileOpen] = useState(false)
+const [dark, setDark] = useState(false)
 
-  const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
-    return pathname.startsWith(href)
-  }
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    setDark(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setDark(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  useEffect(() => { setMobileOpen(false) }, [pathname])
+
+  const isActive = (href: string) => href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
   const logo = dark ? LOGO_DARK : LOGO_LIGHT
   const initials = email.slice(0, 2).toUpperCase()
   const username = email.split('@')[0]
