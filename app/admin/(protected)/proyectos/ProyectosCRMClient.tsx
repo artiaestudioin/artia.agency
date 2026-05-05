@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { createClient } from '@supabase/supabase-js'
 
 type Lead = { id: string; nombre: string; email: string | null; folio: string | null; servicio: string | null; payment_status: string | null }
 type Project = {
@@ -23,12 +22,6 @@ function fmtDate(d: string | null) {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://artiaagency.vercel.app'
 
-// Cliente de Supabase para el navegador (solo Storage)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export default function ProyectosCRMClient({ projects: init }: { projects: Project[] }) {
   const [projects, setProjects] = useState<Project[]>(init)
   const [selected, setSelected] = useState<Project | null>(null)
@@ -42,7 +35,6 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
   
-  // Estado para nuevo proyecto con cover
   const [newForm, setNewForm]   = useState({ 
     name: '', 
     description: '', 
@@ -88,35 +80,61 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     await uploadFiles(Array.from(e.dataTransfer.files))
   }, [selected])
 
-  // ─── GENERAR NOMBRE ÚNICO PARA ARCHIVO ───
-  function generateFileName(file: File): string {
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 50)
-    return `${baseName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
-  }
-
-  // ─── SUBIR ARCHIVO A SUPABASE STORAGE (genérico) ───
-  async function uploadToStorage(file: File, path: string): Promise<string | null> {
+  // ─── SUBIR ARCHIVO VIA API /api/upload (usa SERVICE_ROLE) ───
+  async function uploadToStorage(file: File, projectId: string): Promise<{ publicUrl: string; fileRecord: any } | null> {
     try {
-      const { error: uploadError } = await supabase.storage
-        .from('projects')
-        .upload(path, file, {
-          contentType: file.type || 'application/octet-stream',
-          upsert: false,
-        })
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('projectId', projectId)
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError)
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('Upload API error:', err)
+        setUploadError(err.error ?? `Error subiendo ${file.name}`)
         return null
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('projects')
-        .getPublicUrl(path)
+      const data = await res.json()
+      return { publicUrl: data.file.file_url, fileRecord: data.file }
 
-      return publicUrl
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error uploading:', e)
+      setUploadError(e.message ?? `Error subiendo ${file.name}`)
+      return null
+    }
+  }
+
+  // ─── SUBIR COVER VIA API /api/upload (sin projectId aún) ───
+  async function uploadCover(file: File): Promise<string | null> {
+    try {
+      // Para cover usamos un projectId temporal, luego tu API guarda en 'projects' bucket
+      // Como no hay projectId aún, subimos directo a storage vía una ruta temporal
+      // Tu API /api/upload requiere projectId, así que usamos 'covers' como temporal
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('projectId', 'covers') // carpeta temporal
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('Cover upload error:', err)
+        return null
+      }
+
+      const data = await res.json()
+      return data.file.file_url
+
+    } catch (e) {
+      console.error('Error uploading cover:', e)
       return null
     }
   }
@@ -132,42 +150,14 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
       const file = filesToUpload[i]
       setUploadProgress(`Subiendo ${i + 1}/${filesToUpload.length}: ${file.name}`)
       
-      const fileName = generateFileName(file)
-      const path = `project-${selected.id}/${fileName}`
+      const result = await uploadToStorage(file, selected.id)
       
-      const publicUrl = await uploadToStorage(file, path)
-      
-      if (!publicUrl) {
-        setUploadError(`Error subiendo ${file.name}`)
+      if (!result) {
         continue
       }
 
-      // Guardar en DB
-      try {
-        const dbRes = await fetch('/api/admin/project-files', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            project_id: selected.id,
-            file_url: publicUrl,
-            file_name: file.name,
-            file_type: file.type,
-            file_size: file.size,
-          }),
-        })
-
-        if (!dbRes.ok) {
-          const err = await dbRes.json()
-          setUploadError(err.error ?? `Error guardando ${file.name}`)
-          continue
-        }
-
-        const data = await dbRes.json()
-        setFiles(prev => [data.file, ...prev])
-        success++
-      } catch (e: any) {
-        setUploadError(e.message ?? `Error guardando ${file.name}`)
-      }
+      setFiles(prev => [result.fileRecord, ...prev])
+      success++
     }
 
     setUploadProgress('')
@@ -180,9 +170,7 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   async function deleteFile(fileId: string) {
     if (!selected || !confirm('¿Eliminar este archivo?')) return
     
-    const fileToDelete = files.find(f => f.id === fileId)
-    
-    const res = await fetch('/api/admin/project-files', {
+    const res = await fetch('/api/upload', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileId, projectId: selected.id }),
@@ -192,6 +180,9 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
       setFiles(prev => prev.filter(f => f.id !== fileId))
       setProjects(prev => prev.map(p => p.id === selected.id ? { ...p, file_count: Math.max(0, p.file_count - 1) } : p))
       showMsg('Archivo eliminado')
+    } else {
+      const err = await res.json()
+      showMsg(err.error ?? 'Error eliminando archivo', false)
     }
   }
 
@@ -240,13 +231,10 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
     try {
       let coverUrl = null
       
-      // Si hay imagen de portada, subirla primero a carpeta temporal
+      // Si hay imagen de portada, subirla primero
       if (newForm.cover_image) {
         setUploadProgress('Subiendo foto de portada...')
-        const fileName = generateFileName(newForm.cover_image)
-        const tempPath = `covers/${fileName}`
-        
-        coverUrl = await uploadToStorage(newForm.cover_image, tempPath)
+        coverUrl = await uploadCover(newForm.cover_image)
         
         if (!coverUrl) {
           showMsg('Error subiendo foto de portada', false)

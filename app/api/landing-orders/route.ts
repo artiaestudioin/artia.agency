@@ -20,7 +20,7 @@ async function sendOrderEmail(order: any) {
           <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;">
             <h1 style="color:#667eea;">¡Gracias por tu pedido!</h1>
             <p>Tu número de seguimiento es: <strong>${order.folio}</strong></p>
-            <a href="https://artiaagency.vercel.app/cliente/${order.folio}"
+            <a href="https://artiaagency.vercel.app/seguimiento/${order.folio}"
                style="background:#667eea;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block;">
               Seguir mi pedido →
             </a>
