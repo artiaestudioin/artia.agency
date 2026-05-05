@@ -1,5 +1,6 @@
 'use client'
 
+import '../landing.css'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { Landing, LandingConfig } from '@/types/landing'
@@ -393,7 +394,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
 
       {/* Hero Section */}
       <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="hero-grid-fix">
           {/* Text */}
           <div className="space-y-6" style={{ animation: 'slide-up 0.6s ease-out' }}>
             {/* Discount Badge */}
@@ -421,7 +422,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="cta-group pt-2">
               <a href="#order" onClick={() => trackEvent('click_cta')}
                 className="text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 text-center animate-pulse-soft flex items-center justify-center gap-2"
                 style={{ background: config.gradient_cta }}>
@@ -462,11 +463,11 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
 
               {/* Gallery Thumbs */}
               {config.show_gallery && config.gallery.length > 0 && (
-                <div className="flex gap-2 mt-4 justify-center">
+                <div className="gallery-row">
                   {[config.image, ...config.gallery].map((img, i) => (
                     <button key={i} onClick={() => setCurrentImage(img)}
-                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition ${currentImage === img ? 'border-purple-500' : 'border-transparent hover:border-purple-300'}`}>
-                      <img src={img} className="w-full h-full object-cover" alt="" />
+                      style={{ borderColor: currentImage === img ? '#A855F7' : 'transparent' }}>
+                      <img src={img} alt="" />
                     </button>
                   ))}
                 </div>
@@ -482,7 +483,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
           <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden">
             <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]" />
 
-            <div className="relative flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="urgency-inner">
               {config.show_countdown && (
                 <>
                   <div className="text-center lg:text-left">
@@ -490,17 +491,19 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
                     <p className="text-gray-400 text-sm">Después el precio vuelve a {fmtMoney(config.old_price)}</p>
                   </div>
 
-                  <div className="flex gap-3 sm:gap-4">
+                  <div className="countdown-row">
                     {['hours', 'minutes', 'seconds'].map((unit, i) => (
-                      <div key={unit} className="text-center">
-                        <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl font-black backdrop-blur ${unit === 'seconds' ? 'text-red-400' : ''}`}>
+                      <div key={unit} className="countdown-unit">
+                        <div className="countdown-box" style={{ color: unit === 'seconds' ? '#F87171' : 'white' }}>
                           {String(countdown[unit as keyof typeof countdown]).padStart(2, '0')}
                         </div>
-                        <span className="text-xs text-gray-400 mt-1 block capitalize">{unit === 'hours' ? 'Horas' : unit === 'minutes' ? 'Min' : 'Seg'}</span>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', display: 'block' }}>
+                          {unit === 'hours' ? 'Horas' : unit === 'minutes' ? 'Min' : 'Seg'}
+                        </span>
                       </div>
                     )).reduce((acc: React.ReactNode[], curr, i) => {
                       acc.push(curr)
-                      if (i < 2) acc.push(<div key={`sep-${i}`} className="text-2xl sm:text-3xl font-black self-start mt-4">:</div>)
+                      if (i < 2) acc.push(<div key={`sep-${i}`} className="countdown-colon">:</div>)
                       return acc
                     }, [])}
                   </div>
@@ -530,7 +533,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
       {/* Features */}
       {config.show_features && (
         <section className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-16">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="features-grid-fix">
             {config.features.map((f, i) => (
               <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition">
                 <div className="text-3xl mb-3">{f.icon}</div>
@@ -550,7 +553,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
             <p className="text-gray-500">Más de 2,000 productos entregados</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="testimonials-grid-fix">
             {config.testimonials.map((t, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
@@ -584,7 +587,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Product Summary */}
-                <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+                <div className="product-row">
                   <img src={currentImage} alt="" className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900">{config.product_name}</h4>
@@ -597,7 +600,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
                 </div>
 
                 {/* Form Fields */}
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="form-grid-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
                     <input type="text" required value={formData.name || ''}
