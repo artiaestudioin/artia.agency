@@ -141,6 +141,10 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
+function formatK(v: number): string {
+  return '$' + Math.round(v / 1000) + 'k'
+}
+
 function n(v: any): number {
   const p = parseFloat(String(v ?? 0))
   return isNaN(p) ? 0 : p
@@ -917,7 +921,6 @@ export default function ReportesClient({
               ))}
             </div>
             
-            {/* UN SOLO BOTON: Exportar PDF con Analisis IA */}
             <button
               onClick={exportPDF}
               disabled={exporting}
@@ -961,7 +964,7 @@ export default function ReportesClient({
         </div>
       </header>
 
-      {/* Report Content */}
+      {/* Report Content — SOLO tabs, SIN analisis IA */}
       <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
         <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
           ARTIA
@@ -1002,7 +1005,7 @@ export default function ReportesClient({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Area type="monotone" dataKey="facturado" stroke="#6366f1" fill="url(#colorFact)" strokeWidth={2} name="Facturado" />
@@ -1070,7 +1073,7 @@ export default function ReportesClient({
                 <LineChart data={financeData.monthlyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Line type="monotone" dataKey="facturado" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 4 }} name="Facturado" />
@@ -1108,7 +1111,7 @@ export default function ReportesClient({
                     <BarChart data={salesData.ordersChart}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Bar dataKey="revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Ingresos" />
@@ -1146,7 +1149,7 @@ export default function ReportesClient({
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={salesData.topLandings} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                     <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={150} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
@@ -1164,7 +1167,7 @@ export default function ReportesClient({
                     <BarChart data={utmData.bySource}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                       <Tooltip content={<CustomTooltip />} />
                       <Bar dataKey="revenue" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Revenue" />
                     </BarChart>
@@ -1176,7 +1179,7 @@ export default function ReportesClient({
                     <BarChart data={utmData.byCampaign}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-15} textAnchor="end" height={60} />
-                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={formatK} />
                       <Tooltip content={<CustomTooltip />} />
                       <Bar dataKey="revenue" fill="#ec4899" radius={[6, 6, 0, 0]} name="Revenue" />
                     </BarChart>
@@ -1419,74 +1422,7 @@ export default function ReportesClient({
           </div>
         )}
 
-        {/* ─── AI ANALYSIS PREVIEW (opcional, muestra el analisis en pantalla) ─── */}
-        {aiAnalysis && (
-          <div style={{ 
-            marginTop: 32, 
-            background: '#f8fafc', 
-            borderRadius: 16, 
-            padding: '24px 28px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 10, 
-              marginBottom: 16,
-              paddingBottom: 12,
-              borderBottom: '2px solid #e2e8f0'
-            }}>
-              <span style={{ fontSize: 24 }}>🧠</span>
-              <h2 style={{ 
-                fontSize: 18, 
-                fontWeight: 800, 
-                color: '#00113a', 
-                margin: 0 
-              }}>
-                Analisis Inteligente
-              </h2>
-              <span style={{ 
-                marginLeft: 'auto', 
-                fontSize: 11, 
-                color: '#94a3b8',
-                fontWeight: 600 
-              }}>
-                powered by Groq
-              </span>
-            </div>
-            
-            <div style={{ 
-              fontSize: 14, 
-              lineHeight: 1.7, 
-              color: '#334155',
-              whiteSpace: 'pre-wrap',
-            }}>
-              {aiAnalysis}
-            </div>
-            
-            <div style={{ 
-              marginTop: 16, 
-              paddingTop: 12, 
-              borderTop: '1px solid #f1f5f9',
-              display: 'flex', 
-              gap: 10 
-            }}>
-              <button
-                onClick={() => setAiAnalysis(null)}
-                style={{
-                  padding: '6px 14px', borderRadius: 8, fontSize: 12,
-                  border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
-                  cursor: 'pointer', fontWeight: 600,
-                }}
-              >
-                Cerrar analisis
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Footer */}
+        {/* Footer DENTRO del reportRef (se captura en PDF) */}
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
             Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -1495,6 +1431,85 @@ export default function ReportesClient({
             Artia Studio CRM · artiaagency.vercel.app
           </p>
         </div>
+      </div>
+
+      {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
+      {/* Aparece UNA SOLA VEZ en la UI, NO se repite por tab */}
+      {/* En el PDF se incluye como pagina separada (ver exportPDF) */}
+      {aiAnalysis && (
+        <div style={{ 
+          marginTop: 32, 
+          background: '#f8fafc', 
+          borderRadius: 16, 
+          padding: '24px 28px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10, 
+            marginBottom: 16,
+            paddingBottom: 12,
+            borderBottom: '2px solid #e2e8f0'
+          }}>
+            <span style={{ fontSize: 24 }}>🧠</span>
+            <h2 style={{ 
+              fontSize: 18, 
+              fontWeight: 800, 
+              color: '#00113a', 
+              margin: 0 
+            }}>
+              Analisis Inteligente
+            </h2>
+            <span style={{ 
+              marginLeft: 'auto', 
+              fontSize: 11, 
+              color: '#94a3b8',
+              fontWeight: 600 
+            }}>
+              powered by Groq
+            </span>
+          </div>
+          
+          <div style={{ 
+            fontSize: 14, 
+            lineHeight: 1.7, 
+            color: '#334155',
+            whiteSpace: 'pre-wrap',
+          }}>
+            {aiAnalysis}
+          </div>
+          
+          <div style={{ 
+            marginTop: 16, 
+            paddingTop: 12, 
+            borderTop: '1px solid #f1f5f9',
+            display: 'flex', 
+            gap: 10 
+          }}>
+            <button
+              onClick={() => setAiAnalysis(null)}
+              style={{
+                padding: '6px 14px', borderRadius: 8, fontSize: 12,
+                border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+                cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              Cerrar analisis
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+          Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+        <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
+          Artia Studio CRM · artiaagency.vercel.app
+        </p>
       </div>
     </div>
   )
