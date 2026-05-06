@@ -43,18 +43,16 @@ type NavGroup = {
 const NAV_ITEMS: NavGroup[] = [
   {
     href: '/admin',
-    label: 'Dashboard',
+    label: 'Resumen',
     icon: <LayoutDashboard size={18} />,
   },
   {
-    href: '/admin/leads',
     label: 'Clientes',
     icon: <Users size={18} />,
-  },
-  {
-    href: '/admin/pipeline',
-    label: 'Proceso de ventas',
-    icon: <GitBranch size={18} />,
+    children: [
+      { href: '/admin/pipeline', label: 'Estado de Clientes', icon: <GitBranch size={15} /> },
+  
+    ],
   },
   {
     label: 'Ventas',

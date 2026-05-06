@@ -450,13 +450,185 @@ export default function ReportesClient({
     return { bySource, byCampaign }
   }, [utmStats])
 
-  // ─── Export PDF ───
-  async function exportPDF() {
-    if (!reportRef.current) return
-    setExporting(true)
-    // ... (mantener tu lógica actual de exportPDF)
+  /// ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
+async function exportPDF() {
+  if (!reportRef.current) return
+  setExporting(true)
+
+  const originalTab = activeTab
+  const tabs: Array<'general' | 'finanzas' | 'ventas' | 'Clientes' | 'proyectos' | 'analytics'> =
+    ['general', 'finanzas', 'ventas', 'Clientes', 'proyectos', 'analytics']
+
+  try {
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdfWidth  = pdf.internal.pageSize.getWidth()
+    const pdfHeight = pdf.internal.pageSize.getHeight()
+    
+    // ─── PORTADA DEL PDF ───
+    const now = new Date()
+    const fechaStr = now.toLocaleDateString('es-EC', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    })
+    
+    pdf.setFillColor(0, 17, 58)
+    pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+    
+    pdf.setTextColor(255, 255, 255)
+    pdf.setFontSize(42)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
+    
+    pdf.setFontSize(14)
+    pdf.setFont('helvetica', 'normal')
+    pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
+    
+    pdf.setDrawColor(99, 102, 241)
+    pdf.setLineWidth(1.5)
+    pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
+    
+    pdf.setFontSize(22)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
+    
+    pdf.setFontSize(11)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(148, 163, 184)
+    const descLines = pdf.splitTextToSize(
+      'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, Clientes, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
+      pdfWidth - 60
+    )
+    pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
+    
+    pdf.setFontSize(12)
+    pdf.setTextColor(255, 255, 255)
+    pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
+    
+    const periodoLabel = {
+      '7d': 'Últimos 7 días',
+      '30d': 'Últimos 30 días',
+      '90d': 'Últimos 90 días',
+      '1y': 'Último año',
+      'all': 'Histórico completo'
+    }[dateRange]
+    
+    pdf.setFontSize(10)
+    pdf.setTextColor(148, 163, 184)
+    pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
+    
+    pdf.setFontSize(9)
+    pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
+    
+    let firstPage = false
+
+    for (const tab of tabs) {
+      setActiveTab(tab)
+      // Esperar más tiempo para que Recharts renderice completamente
+      await new Promise(r => setTimeout(r, 1200))
+
+      if (!reportRef.current) continue
+      
+      // ─── CAPTURA ROBUSTA CON CLONADO Y ESTILOS FORZADOS ───
+      const el = reportRef.current
+      
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1400,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        // CLAVE: Modificar el DOM clonado antes de capturar
+        onclone: (clonedDoc, clonedEl) => {
+          // 1. Forzar fondo blanco en el contenedor principal
+          clonedEl.style.backgroundColor = '#ffffff !important'
+          clonedEl.style.background = '#ffffff !important'
+          
+          // 2. Aplicar fondos blancos a TODAS las tarjetas internas
+          const allCards = clonedEl.querySelectorAll('[style*="background"]')
+          allCards.forEach((card: any) => {
+            // Si tiene transparencia o gradiente, forzar blanco sólido
+            const currentBg = window.getComputedStyle(card).backgroundColor
+            if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
+              card.style.backgroundColor = '#ffffff'
+            }
+          })
+          
+          // 3. Forzar fondo blanco en todos los divs que no tengan fondo explícito
+          const allDivs = clonedEl.querySelectorAll('div')
+          allDivs.forEach((div: any) => {
+            const computed = window.getComputedStyle(div)
+            if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
+              // Solo si no es un elemento de gráfico de Recharts
+              if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
+                div.style.backgroundColor = '#ffffff'
+              }
+            }
+          })
+          
+          // 4. Asegurar que los textos tengan color oscuro visible
+          const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
+          allText.forEach((text: any) => {
+            const computed = window.getComputedStyle(text)
+            const color = computed.color
+            // Si el color es muy claro o transparente, forzar oscuro
+            if (color.includes('0)') || color.includes('rgba(0')) {
+              text.style.color = '#0f172a'
+            }
+          })
+          
+          // 5. Desactivar cualquier animación CSS en el clon
+          const style = clonedDoc.createElement('style')
+          style.textContent = `
+            * { animation: none !important; transition: none !important; }
+            .recharts-surface { overflow: visible !important; }
+            .recharts-wrapper { background: #ffffff !important; }
+          `
+          clonedDoc.head.appendChild(style)
+        }
+      })
+
+      const imgW      = canvas.width
+      const imgH      = canvas.height
+      const ratio     = pdfWidth / imgW
+      const renderedH = imgH * ratio
+      let   remaining = renderedH
+      let   srcY      = 0
+
+      while (remaining > 0) {
+        if (!firstPage) {
+          pdf.addPage()
+        }
+        firstPage = false
+
+        const sliceH      = Math.min(pdfHeight, remaining)
+        const sliceCanvas = document.createElement('canvas')
+        sliceCanvas.width  = imgW
+        sliceCanvas.height = Math.ceil(sliceH / ratio)
+        const ctx = sliceCanvas.getContext('2d')!
+        
+        // Fondo blanco sólido
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
+        ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
+        
+        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, sliceH)
+
+        srcY      += sliceCanvas.height
+        remaining -= pdfHeight
+      }
+    }
+
+    pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
+  } catch (err) {
+    console.error('Error exportando PDF:', err)
+    alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
+  } finally {
+    setActiveTab(originalTab)
     setExporting(false)
   }
+}
 
   // ── Custom Tooltip ──
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -480,19 +652,6 @@ export default function ReportesClient({
       </div>
     )
   }
-
-  // ─── Loading / Empty / Error States ───────────────────────────────
-  const EmptyState = ({ icon, title, action }: { icon: string; title: string; action?: { label: string; href: string } }) => (
-    <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#475569', marginBottom: 8 }}>{title}</div>
-      {action && (
-        <Link href={action.href} style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>
-          {action.label} →
-        </Link>
-      )}
-    </div>
-  )
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px' }}>
@@ -544,7 +703,7 @@ export default function ReportesClient({
                 transition: 'all 0.2s',
               }}
             >
-              {exporting ? '⏳ Exportando…' : '📄 Exportar PDF'}
+              {exporting ? '⏳ Exportando todas las tabs…' : '📄 Exportar PDF'}
             </button>
           </div>
         </div>
@@ -577,6 +736,10 @@ export default function ReportesClient({
 
       {/* Report Content */}
       <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
+        {/* Watermark for PDF */}
+        <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
+          ARTIA
+        </div>
         
         {/* ─── GENERAL TAB ─── */}
         {activeTab === 'general' && (
@@ -584,35 +747,42 @@ export default function ReportesClient({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
               <KPIPulseCard icon="💰" label="Total Facturado" value={fmtMoney(financeData.totalFacturado)} sub={`${fmtMoney(financeData.totalPagado)} cobrado`} color="#6366f1" trend={financeData.totalFacturado > 0 ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 100) : 0} />
               <KPIPulseCard icon="⏳" label="Pendiente por Cobrar" value={fmtMoney(financeData.totalPendiente)} sub={`${fmtMoney(financeData.totalVencido)} vencido`} color="#f59e0b" trend={financeData.totalPendiente > 0 ? Math.round((financeData.totalVencido / financeData.totalPendiente) * 100) : 0} />
-              <KPIPulseCard icon="👥" label="Nuevos Leads" value={String(leadsData.total)} sub={`Valor estimado: ${fmtMoney(leadsData.totalValue)}`} color="#10b981" />
+              <KPIPulseCard icon="👥" label="Nuevos Clientes" value={String(leadsData.total)} sub={`Valor estimado: ${fmtMoney(leadsData.totalValue)}`} color="#10b981" />
               <KPIPulseCard icon="📁" label="Proyectos Activos" value={String(projectsData.total)} sub={`${projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0} en curso`} color="#3b82f6" />
               <KPIPulseCard icon="🛍" label="Ventas Landings" value={fmtMoney(salesData.totalRevenue)} sub={`${salesData.totalOrders} pedidos`} color="#ec4899" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
               <ChartCard title="Ingresos Mensuales" subtitle="Facturado vs Pagado vs Pendiente">
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={financeData.monthlyRevenue}>
-                    <defs>
-                      <linearGradient id="colorFact" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorPag" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Area type="monotone" dataKey="facturado" stroke="#6366f1" fill="url(#colorFact)" strokeWidth={2} name="Facturado" />
-                    <Area type="monotone" dataKey="pagado" stroke="#10b981" fill="url(#colorPag)" strokeWidth={2} name="Pagado" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartCard>
+  <ResponsiveContainer width="100%" height={300}>
+    <AreaChart data={financeData.monthlyRevenue}>
+      <defs>
+        <linearGradient id="colorFact" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+        </linearGradient>
+        <linearGradient id="colorPag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+        </linearGradient>
+        {/* 👇 Gradiente nuevo para pendiente */}
+        <linearGradient id="colorPend" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+        </linearGradient>
+      </defs>
+      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+      <Tooltip content={<CustomTooltip />} />
+      <Legend />
+      <Area type="monotone" dataKey="facturado" stroke="#6366f1" fill="url(#colorFact)" strokeWidth={2} name="Facturado" />
+      <Area type="monotone" dataKey="pagado" stroke="#10b981" fill="url(#colorPag)" strokeWidth={2} name="Pagado" />
+      {/* 👇 Área nueva para pendiente, con línea punteada igual que en LineChart */}
+      <Area type="monotone" dataKey="pendiente" stroke="#f59e0b" fill="url(#colorPend)" strokeWidth={2} strokeDasharray="5 5" name="Pendiente" />
+    </AreaChart>
+  </ResponsiveContainer>
+</ChartCard>
 
               <ChartCard title="Estado de Pagos" subtitle="Distribución de contratos">
                 <ResponsiveContainer width="100%" height={300}>
@@ -789,13 +959,13 @@ export default function ReportesClient({
         {activeTab === 'leads' && (
           <div className="fade-in">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Total Leads" value={String(leadsData.total)} icon="👥" color="#6366f1" />
+              <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
               <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
               <StatCard label="Tasa Conversión" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-              <ChartCard title="Leads por Estado" subtitle="Distribución del pipeline">
+              <ChartCard title="Estado de Clientes" subtitle="Distribución global de estados">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
@@ -809,7 +979,7 @@ export default function ReportesClient({
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Top Servicios" subtitle="Leads por tipo de servicio">
+              <ChartCard title="Top Servicios" subtitle="Clientes por tipo de servicio">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={leadsData.byService}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -822,7 +992,7 @@ export default function ReportesClient({
               </ChartCard>
             </div>
 
-            <ChartCard title="Evolución de Leads" subtitle="Nuevos leads por mes">
+            <ChartCard title="Evolución de Clientes" subtitle="Nuevos Clientes por mes">
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={leadsData.monthlyLeads}>
                   <defs>

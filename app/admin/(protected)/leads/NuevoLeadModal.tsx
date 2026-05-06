@@ -83,7 +83,7 @@ export default function NuevoLeadModal() {
           letterSpacing: '0.3px',
         }}
       >
-        <span style={{ fontSize: 16 }}>+</span> Nuevo lead manual
+        <span style={{ fontSize: 16 }}>+</span> Registrar Cliente Nuevo
       </button>
 
       {/* Overlay */}
@@ -110,7 +110,7 @@ export default function NuevoLeadModal() {
             }}>
               <div>
                 <p style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 800, color: '#fff' }}>
-                  Nuevo lead manual
+                  Registro del Nuevo Cliente
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
                   Cliente de WhatsApp u otro canal

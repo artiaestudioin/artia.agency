@@ -1,8 +1,25 @@
 // app/admin/landings/orders/page.tsx
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { revalidatePath } from 'next/cache'
 
 export const metadata = { title: 'Pedidos Landings — Artia Admin' }
+
+// Server Action para eliminar pedido
+async function deleteOrder(formData: FormData) {
+  'use server'
+  const id = formData.get('id') as string
+  const supabase = await createClient()
+  
+  const { error } = await supabase.from('landing_orders').delete().eq('id', id)
+  
+  if (error) {
+    console.error('Delete error:', error)
+    throw new Error(error.message)
+  }
+  
+  revalidatePath('/admin/landings/orders')
+}
 
 export default async function LandingOrdersPage({
   searchParams,
@@ -12,7 +29,6 @@ export default async function LandingOrdersPage({
   const { status, q } = await searchParams
   const supabase = await createClient()
 
-  // Validar status
   const activeStatus = status && status !== 'all' ? status : null
 
   let query = supabase
@@ -30,7 +46,6 @@ export default async function LandingOrdersPage({
     console.error('Error fetching orders:', ordersError)
   }
 
-  // FIX: Búsqueda ampliada — buscar en todos los campos relevantes
   const filtered = (orders || []).filter((o: any) => {
     if (!q) return true
     const term = q.toLowerCase().trim()
@@ -50,7 +65,6 @@ export default async function LandingOrdersPage({
     return searchFields.some(field => field.toLowerCase().includes(term))
   })
 
-  // Counts sobre orders (ya filtrados por status si aplica)
   const counts = {
     all: orders?.length || 0,
     pending: orders?.filter((o: any) => o.status === 'pending').length || 0,
@@ -86,7 +100,7 @@ export default async function LandingOrdersPage({
     <div style={{ maxWidth: 1200 }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>🛒 Pedidos Landings</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>🛒 Pedidos </h1>
           <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
             {counts.all} pedidos en total · {filtered.length} mostrados
             {q && ` (filtrado por "${q}")`}
@@ -277,7 +291,7 @@ export default async function LandingOrdersPage({
                         </div>
                       </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           <Link href={`/admin/landings/orders/${order.id}`}
                             style={{
                               fontSize: 11, color: '#2563eb', background: '#eff6ff',
@@ -292,6 +306,30 @@ export default async function LandingOrdersPage({
                             }}>
                             👁️ Ver
                           </Link>
+                          <form action={deleteOrder} style={{ display: 'inline' }}>
+                            <input type="hidden" name="id" value={order.id} />
+                            <button
+                              type="submit"
+                              onClick={(e) => {
+                                if (!confirm('¿Eliminar este pedido permanentemente?')) {
+                                  e.preventDefault()
+                                }
+                              }}
+                              style={{
+                                fontSize: 11, color: '#ef4444', background: '#fef2f2',
+                                padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
+                                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = '#fee2e2'
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = '#fef2f2'
+                              }}
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </form>
                         </div>
                       </td>
                     </tr>

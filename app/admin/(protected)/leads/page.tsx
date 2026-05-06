@@ -44,8 +44,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Leads</h1>
-          <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>{total} leads en total</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Clientes</h1>
+          <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>{total} Clientes en total</p>
         </div>
         <NuevoLeadModal />
       </header>

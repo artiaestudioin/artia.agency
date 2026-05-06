@@ -52,7 +52,7 @@ export default async function LandingStatsPage({
             href="/admin/landings"
             style={{ color: '#64748b', textDecoration: 'none', fontSize: 14 }}
           >
-            ← Landings
+            ← Volver a paginas de ventas
           </Link>
           <span style={{ color: '#cbd5e1' }}>/</span>
           <span style={{ color: '#0f172a', fontWeight: 600, fontSize: 14 }}>Stats</span>

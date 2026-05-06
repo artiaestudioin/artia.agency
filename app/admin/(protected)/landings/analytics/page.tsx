@@ -38,8 +38,8 @@ export default async function LandingAnalyticsPage() {
   return (
     <div style={{ maxWidth: 1200 }}>
       <header style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>📈 Analytics Landings</h1>
-        <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Performance de todas tus landing pages</p>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>📈 Analíticas Generales</h1>
+        <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Analíticas de todas las páginas de ventas creadas</p>
       </header>
 
       {/* KPI Cards */}
@@ -61,7 +61,7 @@ export default async function LandingAnalyticsPage() {
       {/* Top Landings Table */}
       <div style={{ background: '#fff', borderRadius: 14, border: '0.5px solid #e2e8f0', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', margin: 0 }}>Top Landing Pages</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', margin: 0 }}>Top Páginas de Ventas</h3>
           <Link href="/admin/landings" style={{ fontSize: 12, color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>
             Ver todas →
           </Link>
@@ -71,7 +71,7 @@ export default async function LandingAnalyticsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Landing', 'Views', 'CTR', 'Conv. Rate', 'Revenue', 'Estado'].map(h => (
+                {['Páginas', 'visitas', 'CTR', 'Conv. Rate', 'Ganancia', 'Estado'].map(h => (
                   <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     {h}
                   </th>

@@ -109,7 +109,7 @@ export default function LandingsPageClient({
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Landing Pages</h1>
           <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>
-            {counts.all} landings · {counts.active} activas · ${totalRevenue.toFixed(2)} revenue
+            {counts.all} paginas · {counts.active} activas · ${totalRevenue.toFixed(2)} de ganancia
           </p>
         </div>
         <Link href="/admin/landings/nuevo"
@@ -118,7 +118,7 @@ export default function LandingsPageClient({
             padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
-          + Nueva Landing
+          + Crear nueva pagina de ventas
         </Link>
       </header>
 
@@ -195,7 +195,7 @@ export default function LandingsPageClient({
         {landings.length === 0 ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#475569', marginBottom: 4 }}>No se encontraron landings</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#475569', marginBottom: 4 }}>No se encontraron páginas</div>
             <div style={{ fontSize: 13 }}>{q ? 'Intenta con otros términos' : 'Crea tu primera landing page'}</div>
           </div>
         ) : (
@@ -238,7 +238,7 @@ export default function LandingsPageClient({
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>{landing.views_count?.toLocaleString() || 0}</div>
-                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Views</div>
+                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Visitas</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>{landing.conversion_rate || 0}%</div>
@@ -246,7 +246,7 @@ export default function LandingsPageClient({
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 18, fontWeight: 900, color: '#10b981' }}>${landing.revenue_total?.toFixed(0) || 0}</div>
-                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Revenue</div>
+                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Ganancia</div>
                     </div>
                   </div>
 
@@ -284,13 +284,13 @@ export default function LandingsPageClient({
                       }}>
                       ✏️ Editar
                     </Link>
-                    <Link href={`/admin/landings/${landing.id}/stats`}
+                    <Link href={`/admin/landings/${landing.id}/Analíticas`}
                       style={{
                         flex: 1, textAlign: 'center', padding: '8px 12px', borderRadius: 8,
                         background: '#f8fafc', color: '#475569', textDecoration: 'none',
                         fontSize: 12, fontWeight: 700, border: '0.5px solid #e2e8f0',
                       }}>
-                      📊 Stats
+                      📊 Analitícas
                     </Link>
                     <button
                       onClick={() => setConfirmId(landing.id)}
