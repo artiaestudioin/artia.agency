@@ -877,7 +877,7 @@ export default function ReportesClient({
       </div>
     )
   }
-//CORRECCION NUEVA
+
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px' }}>
       <style>{ANIMATIONS}</style>
@@ -917,6 +917,7 @@ export default function ReportesClient({
               ))}
             </div>
             
+            {/* UN SOLO BOTON: Exportar PDF con Analisis IA */}
             <button
               onClick={exportPDF}
               disabled={exporting}
@@ -960,7 +961,7 @@ export default function ReportesClient({
         </div>
       </header>
 
-      {/* Report Content — SOLO tabs, SIN analisis IA */}
+      {/* Report Content */}
       <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
         <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
           ARTIA
@@ -1329,7 +1330,7 @@ export default function ReportesClient({
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
+                                      <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -1418,85 +1419,72 @@ export default function ReportesClient({
           </div>
         )}
 
-        {/* Footer DENTRO del reportRef (se captura en PDF) */}
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-            Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-          <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
-            Artia Studio CRM · artiaagency.vercel.app
-          </p>
-        </div>
-      </div>
-
-      {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
-      {/* Aparece UNA SOLA VEZ en la UI, NO se repite por tab */}
-      {/* En el PDF se incluye como pagina separada (ver exportPDF) */}
-      {aiAnalysis && (
-        <div style={{ 
-          marginTop: 32, 
-          background: '#f8fafc', 
-          borderRadius: 16, 
-          padding: '24px 28px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-        }}>
+        {/* ─── AI ANALYSIS PREVIEW (opcional, muestra el analisis en pantalla) ─── */}
+        {aiAnalysis && (
           <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 10, 
-            marginBottom: 16,
-            paddingBottom: 12,
-            borderBottom: '2px solid #e2e8f0'
+            marginTop: 32, 
+            background: '#f8fafc', 
+            borderRadius: 16, 
+            padding: '24px 28px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
           }}>
-            <span style={{ fontSize: 24 }}>🧠</span>
-            <h2 style={{ 
-              fontSize: 18, 
-              fontWeight: 800, 
-              color: '#00113a', 
-              margin: 0 
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 10, 
+              marginBottom: 16,
+              paddingBottom: 12,
+              borderBottom: '2px solid #e2e8f0'
             }}>
-              Analisis Inteligente
-            </h2>
-            <span style={{ 
-              marginLeft: 'auto', 
-              fontSize: 11, 
-              color: '#94a3b8',
-              fontWeight: 600 
+              <span style={{ fontSize: 24 }}>🧠</span>
+              <h2 style={{ 
+                fontSize: 18, 
+                fontWeight: 800, 
+                color: '#00113a', 
+                margin: 0 
+              }}>
+                Analisis Inteligente
+              </h2>
+              <span style={{ 
+                marginLeft: 'auto', 
+                fontSize: 11, 
+                color: '#94a3b8',
+                fontWeight: 600 
+              }}>
+                powered by Groq
+              </span>
+            </div>
+            
+            <div style={{ 
+              fontSize: 14, 
+              lineHeight: 1.7, 
+              color: '#334155',
+              whiteSpace: 'pre-wrap',
             }}>
-              powered by Groq
-            </span>
+              {aiAnalysis}
+            </div>
+            
+            <div style={{ 
+              marginTop: 16, 
+              paddingTop: 12, 
+              borderTop: '1px solid #f1f5f9',
+              display: 'flex', 
+              gap: 10 
+            }}>
+              <button
+                onClick={() => setAiAnalysis(null)}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12,
+                  border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+                  cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                Cerrar analisis
+              </button>
+            </div>
           </div>
-          
-          <div style={{ 
-            fontSize: 14, 
-            lineHeight: 1.7, 
-            color: '#334155',
-            whiteSpace: 'pre-wrap',
-          }}>
-            {aiAnalysis}
-          </div>
-          
-          <div style={{ 
-            marginTop: 16, 
-            paddingTop: 12, 
-            borderTop: '1px solid #f1f5f9',
-            display: 'flex', 
-            gap: 10 
-          }}>
-            <button
-              onClick={() => setAiAnalysis(null)}
-              style={{
-                padding: '6px 14px', borderRadius: 8, fontSize: 12,
-                border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
-                cursor: 'pointer', fontWeight: 600,
-              }}
-            >
-              Cerrar analisis
-            </button>
-          </div>
-        </div>
-      )}
+        )}
 
         {/* Footer */}
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
