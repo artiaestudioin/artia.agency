@@ -1,6 +1,5 @@
 // lib/pdf-generator.ts
 import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -34,7 +33,7 @@ interface FinanzasSection {
   cobranza_rate: number
   contratos: { pagados: number; en_progreso: number; con_vencidas: number; total: number }
   metodos_pago: { name: string; count: number }[]
-  evolucion_mensual: MonthlyFinanceItem[]
+  evolucion_mensual: MonthlyItem[]
 }
 
 interface VentasSection {
@@ -45,8 +44,8 @@ interface VentasSection {
   ctr_promedio: number
   landings: { total: number; activas: number; inactivas: number }
   top_landings: { name: string; revenue: number; orders: number; conversion: number; ctr: number; views: number }[]
-  orders_por_mes: MonthlySalesItem[]
-  landings_por_mes: MonthlyCountItem[]
+  orders_por_mes: MonthlyItem[]
+  landings_por_mes: MonthlyItem[]
 }
 
 interface LeadsSection {
@@ -56,7 +55,7 @@ interface LeadsSection {
   valor_estimado_total: number
   por_estado: StatusItem[]
   por_servicio: ServiceItem[]
-  evolucion_mensual: MonthlyLeadsItem[]
+  evolucion_mensual: MonthlyItem[]
   cohorte: CohortData
 }
 
@@ -68,7 +67,7 @@ interface ProyectosSection {
   lead_time_promedio_dias: number
   proyectos_con_fecha: number
   por_estado: StatusItem[]
-  evolucion_mensual: MonthlyCountItem[]
+  evolucion_mensual: MonthlyItem[]
 }
 
 interface AnalyticsSection {
@@ -163,11 +162,83 @@ function hexToRgb(hex: string): [number, number, number] {
   ] : [100, 116, 139]
 }
 
+// ─── Table Helper (nativo, sin jspdf-autotable) ────────────────────
+
+function drawTable(
+  pdf: jsPDF,
+  headers: string[],
+  rows: string[][],
+  x: number,
+  y: number,
+  colWidths: number[],
+  options: {
+    headerBg?: [number, number, number]
+    headerTextColor?: [number, number, number]
+    rowHeight?: number
+    fontSize?: number
+  } = {}
+): number {
+  const {
+    headerBg = [99, 102, 241],
+    headerTextColor = [255, 255, 255],
+    rowHeight = 7,
+    fontSize = 8
+  } = options
+
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0)
+
+  // Header background
+  pdf.setFillColor(headerBg[0], headerBg[1], headerBg[2])
+  pdf.rect(x, y, totalWidth, rowHeight, 'F')
+
+  // Header text
+  pdf.setFontSize(fontSize)
+  pdf.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2])
+  pdf.setFont('helvetica', 'bold')
+
+  let colX = x
+  headers.forEach((h, i) => {
+    pdf.text(h, colX + 2, y + rowHeight - 1.5)
+    colX += colWidths[i]
+  })
+
+  // Rows
+  pdf.setFont('helvetica', 'normal')
+  pdf.setTextColor(51, 65, 85)
+
+  rows.forEach((row, rowIdx) => {
+    const rowY = y + rowHeight + rowIdx * rowHeight
+    
+    // Alternating background
+    if (rowIdx % 2 === 1) {
+      pdf.setFillColor(248, 250, 252)
+      pdf.rect(x, rowY, totalWidth, rowHeight, 'F')
+    }
+
+    // Grid lines
+    pdf.setDrawColor(226, 232, 240)
+    pdf.setLineWidth(0.2)
+    pdf.line(x, rowY + rowHeight, x + totalWidth, rowY + rowHeight)
+
+    colX = x
+    row.forEach((cell, colIdx) => {
+      const align = colIdx > 0 ? 'right' : 'left'
+      const textX = align === 'right' ? colX + colWidths[colIdx] - 2 : colX + 2
+      pdf.text(cell, textX, rowY + rowHeight - 1.5, { align })
+      colX += colWidths[colIdx]
+    })
+  })
+
+  // Border
+  pdf.setDrawColor(226, 232, 240)
+  pdf.setLineWidth(0.3)
+  pdf.rect(x, y, totalWidth, rowHeight + rows.length * rowHeight)
+
+  return y + rowHeight + rows.length * rowHeight + 4
+}
+
 // ─── Chart Engine (Vectorial PDF) ──────────────────────────────────
 
-/**
- * Dibuja un pie/donut chart vectorial en el PDF
- */
 function drawPieChart(
   pdf: jsPDF,
   data: { name: string; value: number; color?: string }[],
@@ -179,7 +250,7 @@ function drawPieChart(
   const total = data.reduce((s, d) => s + d.value, 0)
   if (total === 0) return
 
-  let currentAngle = -Math.PI / 2 // Empezar desde arriba
+  let currentAngle = -Math.PI / 2
 
   data.forEach((slice) => {
     const sliceAngle = (slice.value / total) * 2 * Math.PI
@@ -189,7 +260,6 @@ function drawPieChart(
     pdf.setFillColor(r, g, b)
     pdf.setDrawColor(r, g, b)
 
-    // Dibujar sector
     const steps = Math.max(8, Math.ceil(sliceAngle / 0.05))
     const points: [number, number][] = []
 
@@ -202,7 +272,6 @@ function drawPieChart(
     }
 
     if (innerRadius > 0) {
-      // Donut: agregar arco interior en reversa
       for (let i = steps; i >= 0; i--) {
         const angle = currentAngle + (sliceAngle * i) / steps
         points.push([
@@ -216,10 +285,8 @@ function drawPieChart(
 
     pdf.polygon(points, 'FD')
 
-    // Separador sutil
     pdf.setDrawColor(255, 255, 255)
     pdf.setLineWidth(0.5)
-    const midAngle = currentAngle + sliceAngle / 2
     pdf.line(
       cx + Math.cos(currentAngle) * (innerRadius || 0.5),
       cy + Math.sin(currentAngle) * (innerRadius || 0.5),
@@ -231,9 +298,6 @@ function drawPieChart(
   })
 }
 
-/**
- * Dibuja un bar chart horizontal o vertical vectorial
- */
 function drawBarChart(
   pdf: jsPDF,
   data: { label: string; value: number; color?: string }[],
@@ -261,13 +325,12 @@ function drawBarChart(
   const maxValue = forcedMax || Math.max(...values, 1)
   const count = data.length
 
-  pdf.setDrawColor(226, 232, 240) // slate-200
+  pdf.setDrawColor(226, 232, 240)
   pdf.setLineWidth(0.2)
 
   if (horizontal) {
-    // Barras horizontales
     const barHeight = (height - 20) / count
-    const availableWidth = width - 80 // espacio para labels
+    const availableWidth = width - 80
 
     data.forEach((item, i) => {
       const barY = y + 10 + i * barHeight
@@ -275,17 +338,14 @@ function drawBarChart(
       const color = item.color || barColors[i % barColors.length]
       const [r, g, b] = hexToRgb(color)
 
-      // Label
       pdf.setFontSize(9)
       pdf.setTextColor(100, 116, 139)
       pdf.text(item.label.substring(0, 20), x, barY + barHeight / 2 + 3)
 
-      // Barra
       pdf.setFillColor(r, g, b)
       pdf.setDrawColor(r, g, b)
       pdf.roundedRect(x + 70, barY + 2, barWidth, barHeight - 6, 2, 2, 'FD')
 
-      // Valor
       if (showValues) {
         pdf.setFontSize(9)
         pdf.setTextColor(15, 23, 42)
@@ -293,12 +353,10 @@ function drawBarChart(
       }
     })
   } else {
-    // Barras verticales
     const barWidth = Math.min((width - 30) / count - 4, 35)
     const availableHeight = height - 40
     const startX = x + (width - count * (barWidth + 4)) / 2
 
-    // Grid lines
     for (let i = 0; i <= 4; i++) {
       const gridY = y + 10 + (availableHeight * i) / 4
       pdf.line(x + 10, gridY, x + width - 10, gridY)
@@ -311,18 +369,15 @@ function drawBarChart(
       const color = item.color || barColors[i % barColors.length]
       const [r, g, b] = hexToRgb(color)
 
-      // Barra
       pdf.setFillColor(r, g, b)
       pdf.setDrawColor(r, g, b)
       pdf.roundedRect(barX, barY, barWidth, barHeight, 3, 3, 'FD')
 
-      // Label X
       pdf.setFontSize(7)
       pdf.setTextColor(100, 116, 139)
       const label = item.label.length > 8 ? item.label.substring(0, 6) + '..' : item.label
       pdf.text(label, barX + barWidth / 2, y + 10 + availableHeight + 8, { align: 'center' })
 
-      // Valor encima
       if (showValues && barHeight > 12) {
         pdf.setFontSize(8)
         pdf.setTextColor(255, 255, 255)
@@ -332,9 +387,6 @@ function drawBarChart(
   }
 }
 
-/**
- * Dibuja un line/area chart vectorial
- */
 function drawLineChart(
   pdf: jsPDF,
   data: { label: string; value: number }[],
@@ -345,7 +397,6 @@ function drawLineChart(
   options: {
     lineColor?: string
     fillColor?: string
-    fillOpacity?: number
     showPoints?: boolean
     valueFormatter?: (v: number) => string
   } = {}
@@ -374,7 +425,6 @@ function drawLineChart(
   const getX = (i: number) => x + paddingLeft + (i / (data.length - 1)) * chartW
   const getY = (v: number) => y + paddingTop + chartH - ((v - minValue) / range) * chartH
 
-  // Grid
   pdf.setDrawColor(241, 245, 249)
   pdf.setLineWidth(0.2)
   for (let i = 0; i <= 4; i++) {
@@ -382,7 +432,6 @@ function drawLineChart(
     pdf.line(x + paddingLeft, gridY, x + width - paddingRight, gridY)
   }
 
-  // Fill area (polígono cerrado)
   const fillRgb = hexToRgb(fillColor)
   const points: [number, number][] = []
   data.forEach((d, i) => points.push([getX(i), getY(d.value)]))
@@ -394,7 +443,6 @@ function drawLineChart(
   pdf.setLineWidth(0.1)
   pdf.polygon(points, 'F')
 
-  // Línea
   const lineRgb = hexToRgb(lineColor)
   pdf.setDrawColor(lineRgb[0], lineRgb[1], lineRgb[2])
   pdf.setLineWidth(1.5)
@@ -403,7 +451,6 @@ function drawLineChart(
     pdf.line(getX(i), getY(data[i].value), getX(i + 1), getY(data[i + 1].value))
   }
 
-  // Puntos
   if (showPoints) {
     data.forEach((d, i) => {
       const px = getX(i)
@@ -415,7 +462,6 @@ function drawLineChart(
     })
   }
 
-  // Labels X
   pdf.setFontSize(7)
   pdf.setTextColor(148, 163, 184)
   data.forEach((d, i) => {
@@ -423,7 +469,6 @@ function drawLineChart(
     pdf.text(label, getX(i), y + height - 8, { align: 'center' })
   })
 
-  // Labels Y (simplificados)
   pdf.setFontSize(7)
   pdf.setTextColor(148, 163, 184)
   for (let i = 0; i <= 4; i++) {
@@ -433,9 +478,6 @@ function drawLineChart(
   }
 }
 
-/**
- * Dibuja un funnel chart (pirámide invertida)
- */
 function drawFunnel(
   pdf: jsPDF,
   data: { label: string; value: number; color: string }[],
@@ -458,7 +500,6 @@ function drawFunnel(
     pdf.setDrawColor(r, g, b)
     pdf.roundedRect(segmentX, segmentY + 2, segmentWidth, stepHeight - 6, 4, 4, 'FD')
 
-    // Label centrado
     pdf.setFontSize(9)
     pdf.setTextColor(255, 255, 255)
     const label = `${item.label}: ${item.value}`
@@ -466,9 +507,6 @@ function drawFunnel(
   })
 }
 
-/**
- * Dibuja una barra de progreso horizontal
- */
 function drawProgressBar(
   pdf: jsPDF,
   value: number,
@@ -484,12 +522,10 @@ function drawProgressBar(
   const [r, g, b] = hexToRgb(color)
   const pct = Math.min(value / max, 1)
 
-  // Fondo
   pdf.setFillColor(bgR, bgG, bgB)
   pdf.setDrawColor(bgR, bgG, bgB)
   pdf.roundedRect(x, y, width, height, height / 2, height / 2, 'FD')
 
-  // Progreso
   if (pct > 0) {
     pdf.setFillColor(r, g, b)
     pdf.setDrawColor(r, g, b)
@@ -504,8 +540,8 @@ export async function generatePDF(
   aiContent: string | null
 ): Promise<Blob> {
   const pdf = new jsPDF('p', 'mm', 'a4')
-  const pageW = pdf.internal.pageSize.getWidth()  // 210
-  const pageH = pdf.internal.pageSize.getHeight()   // 297
+  const pageW = pdf.internal.pageSize.getWidth()
+  const pageH = pdf.internal.pageSize.getHeight()
   const margin = 16
   const contentW = pageW - margin * 2
 
@@ -579,7 +615,6 @@ export async function generatePDF(
   pdf.line(margin, y, pageW - margin, y)
   y += 12
 
-  // KPIs grid 3x2
   const kpis = [
     { label: 'Health Score', value: `${payload.summary?.health_score ?? 0}/100`, icon: '❤️', color: '#10b981' },
     { label: 'Total Leads', value: fmtNumber(payload.summary?.total_leads ?? 0), icon: '👥', color: '#6366f1' },
@@ -598,23 +633,19 @@ export async function generatePDF(
     const kpiX = margin + col * (kpiW + 8)
     const kpiY = y + row * (kpiH + 8)
 
-    // Card bg
     pdf.setFillColor(248, 250, 252)
     pdf.setDrawColor(226, 232, 240)
     pdf.roundedRect(kpiX, kpiY, kpiW, kpiH, 4, 4, 'FD')
 
-    // Color strip
     const [r, g, b] = hexToRgb(kpi.color)
     pdf.setFillColor(r, g, b)
     pdf.rect(kpiX, kpiY, 3, kpiH, 'F')
 
-    // Label
     pdf.setFontSize(8)
     pdf.setTextColor(148, 163, 184)
     pdf.setFont('helvetica', 'bold')
     pdf.text(kpi.label.toUpperCase(), kpiX + 10, kpiY + 10)
 
-    // Value
     pdf.setFontSize(14)
     pdf.setTextColor(15, 23, 42)
     pdf.setFont('helvetica', 'bold')
@@ -624,7 +655,7 @@ export async function generatePDF(
   y += 2 * (kpiH + 8) + 15
 
   // ═══════════════════════════════════════════════════════════════
-  // ANÁLISIS IA (si existe)
+  // ANÁLISIS IA
   // ═══════════════════════════════════════════════════════════════
   if (aiContent) {
     pdf.setTextColor(0, 17, 58)
@@ -667,7 +698,6 @@ export async function generatePDF(
   renderSectionHeader(pdf, 'Finanzas', 'Métricas de facturación, cobranza y cartera', margin, y, pageW)
   y += 22
 
-  // Stats cards
   const finStats = [
     { label: 'Total Facturado', value: fmtMoney(payload.finanzas.total_facturado), color: '#6366f1' },
     { label: 'Total Cobrado', value: fmtMoney(payload.finanzas.total_cobrado), color: '#10b981' },
@@ -677,7 +707,6 @@ export async function generatePDF(
   y = renderStatsRow(pdf, finStats, margin, y, contentW)
   y += 12
 
-  // Cartera sana progress bar
   pdf.setFontSize(11)
   pdf.setTextColor(100, 116, 139)
   pdf.setFont('helvetica', 'bold')
@@ -688,7 +717,6 @@ export async function generatePDF(
   )
   y += 18
 
-  // Contratos donut chart
   const contratosData = [
     { name: 'Pagados', value: payload.finanzas.contratos.pagados, color: '#10b981' },
     { name: 'En Progreso', value: payload.finanzas.contratos.en_progreso, color: '#3b82f6' },
@@ -705,7 +733,6 @@ export async function generatePDF(
     drawPieChart(pdf, contratosData, margin + 45, y + 35, 30, 18)
     y += 80
 
-    // Leyenda
     contratosData.forEach((d, i) => {
       const [r, g, b] = hexToRgb(d.color)
       pdf.setFillColor(r, g, b)
@@ -716,42 +743,30 @@ export async function generatePDF(
     })
   }
 
-  // Evolución mensual line chart
   if (payload.finanzas.evolucion_mensual?.length > 0) {
     pdf.addPage()
     y = margin
     renderSectionHeader(pdf, 'Evolución Financiera Mensual', 'Tendencia de facturación, cobranza y vencidos', margin, y, pageW)
     y += 22
 
-    // Tabla de datos
-    const tableData = payload.finanzas.evolucion_mensual.map(m => [
-      m.month,
-      fmtMoney(m.facturado),
-      fmtMoney(m.pagado),
-      fmtMoney(m.pendiente),
-      fmtMoney(m.vencido),
+    const tableHeaders = ['Mes', 'Facturado', 'Cobrado', 'Pendiente', 'Vencido']
+    const tableRows = payload.finanzas.evolucion_mensual.map(m => [
+      m.month || m.label || '',
+      fmtMoney(m.facturado || 0),
+      fmtMoney(m.pagado || 0),
+      fmtMoney(m.pendiente || 0),
+      fmtMoney(m.vencido || 0),
     ])
+    const colWidths = [35, 32, 32, 32, 32]
 
-    autoTable(pdf, {
-      startY: y,
-      head: [['Mes', 'Facturado', 'Cobrado', 'Pendiente', 'Vencido']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: [99, 102, 241], textColor: 255, fontSize: 9 },
-      bodyStyles: { fontSize: 9, textColor: [51, 65, 85] },
-      columnStyles: {
-        0: { cellWidth: 35 },
-        1: { halign: 'right' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
-        4: { halign: 'right' },
-      },
-      margin: { left: margin, right: margin },
+    y = drawTable(pdf, tableHeaders, tableRows, margin, y, colWidths, {
+      headerBg: [99, 102, 241],
+      headerTextColor: [255, 255, 255],
+      rowHeight: 7,
+      fontSize: 8
     })
+    y += 15
 
-    y = (pdf as any).lastAutoTable.finalY + 15
-
-    // Chart visual
     if (y < pageH - 100) {
       pdf.setFontSize(11)
       pdf.setTextColor(100, 116, 139)
@@ -759,8 +774,8 @@ export async function generatePDF(
       y += 8
 
       const chartData = payload.finanzas.evolucion_mensual.map(m => ({
-        label: m.month.substring(0, 6),
-        value: m.facturado
+        label: (m.month || m.label || '').substring(0, 6),
+        value: m.facturado || 0
       }))
       drawLineChart(pdf, chartData, margin, y, contentW, 70, {
         lineColor: '#6366f1',
@@ -787,7 +802,6 @@ export async function generatePDF(
   y = renderStatsRow(pdf, ventasStats, margin, y, contentW)
   y += 15
 
-  // Landings status
   pdf.setFontSize(11)
   pdf.setTextColor(100, 116, 139)
   pdf.setFont('helvetica', 'bold')
@@ -799,7 +813,6 @@ export async function generatePDF(
   pdf.text(`${payload.ventas.landings.activas} activas / ${payload.ventas.landings.total} total`, margin, y + 12)
   y += 20
 
-  // Top landings bar chart
   if (payload.ventas.top_landings?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -819,7 +832,6 @@ export async function generatePDF(
     y += 80
   }
 
-  // Orders por mes
   if (payload.ventas.orders_por_mes?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -828,8 +840,8 @@ export async function generatePDF(
     y += 10
 
     const orderData = payload.ventas.orders_por_mes.map(o => ({
-      label: o.label.substring(0, 6),
-      value: o.revenue,
+      label: (o.label || '').substring(0, 6),
+      value: o.revenue || 0,
       color: '#3b82f6'
     }))
     drawBarChart(pdf, orderData, margin, y, contentW, 60, {
@@ -855,7 +867,6 @@ export async function generatePDF(
   y = renderStatsRow(pdf, leadsStats, margin, y, contentW)
   y += 15
 
-  // Funnel cohort
   pdf.setFontSize(13)
   pdf.setTextColor(15, 23, 42)
   pdf.setFont('helvetica', 'bold')
@@ -870,7 +881,6 @@ export async function generatePDF(
   drawFunnel(pdf, funnelData, margin + 20, y, contentW - 40, 50)
   y += 65
 
-  // Métricas cohorte
   const cohortMetrics = [
     { label: 'Lead → Proyecto', value: `${payload.leads.cohorte.conversion_lead_a_proyecto_pct}%` },
     { label: 'Proyecto → Pago', value: `${payload.leads.cohorte.conversion_proyecto_a_pago_pct}%` },
@@ -880,7 +890,6 @@ export async function generatePDF(
   y = renderMiniStats(pdf, cohortMetrics, margin, y, contentW)
   y += 10
 
-  // Leads por estado pie chart
   if (payload.leads.por_estado?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -897,7 +906,6 @@ export async function generatePDF(
     y += 80
   }
 
-  // Evolución mensual leads
   if (payload.leads.evolucion_mensual?.length > 0) {
     if (y > pageH - 100) { pdf.addPage(); y = margin }
     pdf.setFontSize(13)
@@ -907,8 +915,8 @@ export async function generatePDF(
     y += 10
 
     const evData = payload.leads.evolucion_mensual.map(e => ({
-      label: e.month.substring(0, 6),
-      value: e.leads
+      label: (e.month || e.label || '').substring(0, 6),
+      value: e.leads || e.value || 0
     }))
     drawLineChart(pdf, evData, margin, y, contentW, 60, {
       lineColor: '#6366f1',
@@ -935,7 +943,6 @@ export async function generatePDF(
   y = renderStatsRow(pdf, projStats, margin, y, contentW)
   y += 15
 
-  // Proyectos por estado bar chart
   if (payload.proyectos.por_estado?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -954,7 +961,6 @@ export async function generatePDF(
     y += 65
   }
 
-  // Evolución mensual
   if (payload.proyectos.evolucion_mensual?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -963,8 +969,8 @@ export async function generatePDF(
     y += 10
 
     const projEv = payload.proyectos.evolucion_mensual.map(e => ({
-      label: e.label.substring(0, 6),
-      value: e.value
+      label: (e.label || e.month || '').substring(0, 6),
+      value: e.value || e.proyectos || 0
     }))
     drawBarChart(pdf, projEv, margin, y, contentW, 50, {
       barColors: ['#3b82f6'],
@@ -978,7 +984,7 @@ export async function generatePDF(
   // ═══════════════════════════════════════════════════════════════
   pdf.addPage()
   y = margin
-  renderSectionHeader(pdf, 'Analytics', 'Trafico web y monitoreo de errores', margin, y, pageW)
+  renderSectionHeader(pdf, 'Analytics', 'Tráfico web y monitoreo de errores', margin, y, pageW)
   y += 22
 
   const analyticsStats = [
@@ -989,7 +995,6 @@ export async function generatePDF(
   y = renderStatsRow(pdf, analyticsStats, margin, y, contentW)
   y += 15
 
-  // Visitas diarias
   if (payload.analytics.visitas_diarias?.length > 0) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -1009,7 +1014,6 @@ export async function generatePDF(
     y += 70
   }
 
-  // Conversion funnel
   if (payload.analytics.conversion_funnel.visitas != null) {
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
@@ -1082,22 +1086,18 @@ function renderStatsRow(
     const cardX = x + i * (cardW + gap)
     const [r, g, b] = hexToRgb(stat.color)
 
-    // Card background
     pdf.setFillColor(255, 255, 255)
     pdf.setDrawColor(226, 232, 240)
     pdf.roundedRect(cardX, y, cardW, cardH, 6, 6, 'FD')
 
-    // Top color bar
     pdf.setFillColor(r, g, b)
     pdf.rect(cardX, y, cardW, 3, 'F')
 
-    // Label
     pdf.setFontSize(7)
     pdf.setTextColor(148, 163, 184)
     pdf.setFont('helvetica', 'bold')
     pdf.text(stat.label.toUpperCase(), cardX + 8, y + 12)
 
-    // Value
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
     pdf.setFont('helvetica', 'bold')
