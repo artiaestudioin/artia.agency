@@ -563,7 +563,7 @@ export default function ReportesClient({
     }
   }, [leadCohort])
 
-  /  // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
+ // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
   async function exportPDF() {
     if (!reportRef.current) return
     setExporting(true)
