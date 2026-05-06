@@ -225,7 +225,9 @@ export default function ReportesClient({
   const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'>('general')
   const [exporting, setExporting] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
-
+// ─── AI Analysis State ───────────────────────────────────────────
+const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
+const [aiLoading, setAiLoading] = useState(false)
   // ── Filter by date range ──
   const cutoffDate = useMemo(() => {
     const now = new Date()
@@ -249,6 +251,99 @@ export default function ReportesClient({
   const filteredOrders   = orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false })
   const filteredLandings = landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
 
+// ─── Build JSON Payload for AI ──────────────────────────────────
+const buildAIPayload = useMemo(() => {
+  const now = new Date()
+  const monthLabel = now.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
+
+  return {
+    month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+    period: dateRange,
+    generated_at: now.toISOString(),
+
+    finanzas: {
+      total_facturado: Math.round(financeData.totalFacturado * 100) / 100,
+      total_cobrado: Math.round(financeData.totalPagado * 100) / 100,
+      pendiente_al_dia: Math.round(financeData.totalPendienteFuturo * 100) / 100,
+      vencido: Math.round(financeData.totalVencido * 100) / 100,
+      total_pendiente: Math.round(financeData.totalPendiente * 100) / 100,
+      cartera_sana_pct: financeData.carteraSanaPct,
+      cobranza_rate: financeData.totalFacturado > 0
+        ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 1000) / 10
+        : 0,
+      contratos: {
+        pagados: financeData.statusCounts.find(s => s.name === 'Pagado')?.value || 0,
+        en_progreso: financeData.statusCounts.find(s => s.name === 'En progreso')?.value || 0,
+        con_vencidas: financeData.statusCounts.find(s => s.name === 'Con vencidas')?.value || 0,
+      },
+      evolucion_mensual: financeData.monthlyRevenue,
+    },
+
+    ventas: {
+      total_orders: salesData.totalOrders,
+      ingresos: Math.round(salesData.totalRevenue * 100) / 100,
+      ticket_promedio: Math.round(salesData.avgOrder * 100) / 100,
+      conversion_rate: Math.round(salesData.conversionRate * 1000) / 10,
+      landings: {
+        total: salesData.totalLandings,
+        activas: salesData.activeLandings,
+      },
+      top_landings: salesData.topLandings.map(l => ({
+        name: l.name,
+        revenue: l.revenue,
+        orders: l.orders,
+        conversion: l.conversion,
+      })),
+    },
+
+    leads: {
+      nuevos: leadsData.total,
+      convertidos: leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0,
+      conversion_rate: leadsData.total > 0
+        ? Math.round(((leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0) / leadsData.total) * 1000) / 10
+        : 0,
+      valor_estimado_total: Math.round(leadsData.totalValue * 100) / 100,
+      por_estado: leadsData.byStatus,
+      cohorte: {
+        conversion_lead_a_proyecto_pct: cohortData.conversionProject,
+        conversion_proyecto_a_pago_pct: cohortData.conversionPayment,
+        dias_promedio_lead_a_proyecto: cohortData.avgDaysToProject,
+        fuga_funnel_pct: cohortData.funnelDrop,
+      },
+    },
+
+    proyectos: {
+      total: projectsData.total,
+      activos: projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0,
+      completados: projectsData.byStatus.find(s => s.name === 'Completado')?.value || 0,
+      lead_time_promedio_dias: projectsData.avgLeadTime,
+    },
+
+    analytics: {
+      visitas_7d: posthog?.pageviews ?? null,
+      issues_sentry: sentry?.unresolvedCount ?? null,
+    },
+  }
+}, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry])
+
+// ─── Call AI Analysis ────────────────────────────────────────────
+async function runAIAnalysis() {
+  setAiLoading(true)
+  try {
+    const res = await fetch('/api/ai-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload: buildAIPayload }),
+    })
+    const data = await res.json()
+    setAiAnalysis(data.choices?.[0]?.message?.content || 'Sin respuesta de la IA')
+  } catch (err) {
+    setAiAnalysis('Error al conectar con el análisis de IA.')
+  } finally {
+    setAiLoading(false)
+  }
+}
+  
   // ── Computed Data ──
   const methodData = useMemo(() => {
     const methodMap = new Map<string, number>()
@@ -804,6 +899,22 @@ export default function ReportesClient({
                 </button>
               ))}
             </div>
+
+            {/* NUEVO: Botón IA */}
+  <button
+    onClick={runAIAnalysis}
+    disabled={aiLoading}
+    style={{
+      padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+      border: 'none', cursor: aiLoading ? 'not-allowed' : 'pointer',
+      background: aiLoading ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      color: '#fff', display: 'flex', alignItems: 'center', gap: 8,
+      boxShadow: aiLoading ? 'none' : '0 4px 16px rgba(99,102,241,0.3)',
+      transition: 'all 0.2s',
+    }}
+  >
+    {aiLoading ? '⏳ Analizando…' : '🤖 Analizar con IA'}
+  </button>
             <button
               onClick={exportPDF}
               disabled={exporting}
@@ -1307,7 +1418,83 @@ export default function ReportesClient({
             )}
           </div>
         )}
-
+{/* ─── AI ANALYSIS SECTION ─── */}
+{aiAnalysis && (
+  <div style={{ 
+    marginTop: 32, 
+    background: '#f8fafc', 
+    borderRadius: 16, 
+    padding: '24px 28px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+  }}>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: 10, 
+      marginBottom: 16,
+      paddingBottom: 12,
+      borderBottom: '2px solid #e2e8f0'
+    }}>
+      <span style={{ fontSize: 24 }}>🧠</span>
+      <h2 style={{ 
+        fontSize: 18, 
+        fontWeight: 800, 
+        color: '#00113a', 
+        margin: 0 
+      }}>
+        Análisis Inteligente — {dateRange === 'all' ? 'Histórico' : `Últimos ${dateRange}`}
+      </h2>
+      <span style={{ 
+        marginLeft: 'auto', 
+        fontSize: 11, 
+        color: '#94a3b8',
+        fontWeight: 600 
+      }}>
+        powered by Groq
+      </span>
+    </div>
+    
+    <div style={{ 
+      fontSize: 14, 
+      lineHeight: 1.7, 
+      color: '#334155',
+      whiteSpace: 'pre-wrap',
+    }}>
+      {aiAnalysis}
+    </div>
+    
+    <div style={{ 
+      marginTop: 16, 
+      paddingTop: 12, 
+      borderTop: '1px solid #e2e8f0',
+      display: 'flex', 
+      gap: 10 
+    }}>
+      <button
+        onClick={() => setAiAnalysis(null)}
+        style={{
+          padding: '6px 14px', borderRadius: 8, fontSize: 12,
+          border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+          cursor: 'pointer', fontWeight: 600,
+        }}
+      >
+        Cerrar análisis
+      </button>
+      <button
+        onClick={runAIAnalysis}
+        disabled={aiLoading}
+        style={{
+          padding: '6px 14px', borderRadius: 8, fontSize: 12,
+          border: 'none', background: '#6366f1', color: '#fff',
+          cursor: aiLoading ? 'not-allowed' : 'pointer', fontWeight: 600,
+        }}
+      >
+        {aiLoading ? '⏳' : '🔄'} Reanalizar
+      </button>
+    </div>
+  </div>
+)}
         {/* Footer */}
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
