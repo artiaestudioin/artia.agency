@@ -9,7 +9,9 @@ import {
 } from 'recharts'
 import { generatePDF, PDFPayload } from '@/lib/pdf-generator'
 
-// ─── Types ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════
 
 type PaymentParent = {
   id: string
@@ -121,7 +123,9 @@ type LeadCohort = {
   payments: { id: string; contract_value: number; status: string; created_at: string }[]
 }
 
-// ─── Colors ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// COLORS
+// ═══════════════════════════════════════════════════════════════════
 
 const COLORS = {
   primary:   ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'],
@@ -138,7 +142,9 @@ const ESTADO_COLORS_MAP: Record<string, string> = {
   completado: '#059669', pendiente: '#d97706', vencido: '#dc2626',
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════
 
 function formatK(v: number): string {
   return '$' + Math.round(v / 1000) + 'k'
@@ -189,7 +195,9 @@ function buildLastNMonths(n: number): { key: string; label: string }[] {
   return result
 }
 
-// ─── Component ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════
 
 export default function ReportesClient({
   initialPayments,
@@ -253,13 +261,13 @@ export default function ReportesClient({
   const filteredOrders   = orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false })
   const filteredLandings = landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
 
-  // ── Computed Data ──
+    // ── Computed Data: FINANZAS ──
   const methodData = useMemo(() => {
     const methodMap = new Map<string, number>()
     if (paymentMethods && Array.isArray(paymentMethods)) {
       paymentMethods.forEach((p: any) => {
-        const raw = p.payment_method?.trim().toLowerCase() || 'otro';
-        const method = raw.charAt(0).toUpperCase() + raw.slice(1);
+        const raw = p.payment_method?.trim().toLowerCase() || 'otro'
+        const method = raw.charAt(0).toUpperCase() + raw.slice(1)
         methodMap.set(method, (methodMap.get(method) || 0) + 1)
       })
     }
@@ -331,13 +339,18 @@ export default function ReportesClient({
     }
   }, [filteredPayments])
 
+    // ── Computed Data: LEADS ──
   const leadsData = useMemo(() => {
     const byStatus = Object.entries(
       filteredLeads.reduce((acc, l) => {
         acc[l.estado || 'nuevo'] = (acc[l.estado || 'nuevo'] || 0) + 1
         return acc
       }, {} as Record<string, number>)
-    ).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1).replace('_', ' '), value, color: ESTADO_COLORS_MAP[name] || '#94a3b8' }))
+    ).map(([name, value]) => ({ 
+      name: name.charAt(0).toUpperCase() + name.slice(1).replace('_', ' '), 
+      value, 
+      color: ESTADO_COLORS_MAP[name] || '#94a3b8' 
+    }))
 
     const byService = Object.entries(
       filteredLeads.reduce((acc, l) => {
@@ -345,7 +358,9 @@ export default function ReportesClient({
         acc[svc] = (acc[svc] || 0) + 1
         return acc
       }, {} as Record<string, number>)
-    ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6)
+    ).map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6)
 
     const monthlyMap = new Map<string, { month: string; leads: number; valor: number }>()
     filteredLeads.forEach(l => {
@@ -360,16 +375,27 @@ export default function ReportesClient({
       monthlyMap.get(key) || { month: label, leads: 0, valor: 0 }
     )
 
-    return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
+    return { 
+      byStatus, 
+      byService, 
+      monthlyLeads, 
+      total: filteredLeads.length, 
+      totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) 
+    }
   }, [filteredLeads])
 
+  // ── Computed Data: PROYECTOS ──
   const projectsData = useMemo(() => {
     const byStatus = Object.entries(
       filteredProjects.reduce((acc, p) => {
         acc[p.status || 'activo'] = (acc[p.status || 'activo'] || 0) + 1
         return acc
       }, {} as Record<string, number>)
-    ).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value, color: ESTADO_COLORS_MAP[name] || '#94a3b8' }))
+    ).map(([name, value]) => ({ 
+      name: name.charAt(0).toUpperCase() + name.slice(1), 
+      value, 
+      color: ESTADO_COLORS_MAP[name] || '#94a3b8' 
+    }))
 
     const leadTimes = filteredProjects
       .filter(p => p.event_date)
@@ -407,6 +433,7 @@ export default function ReportesClient({
     }
   }, [filteredProjects])
 
+  // ── Computed Data: EMAILS ──
   const emailData = useMemo(() => {
     const total = filteredEmails.length
     const opened = filteredEmails.filter(e => e.opened).length
@@ -417,11 +444,14 @@ export default function ReportesClient({
         acc[e.template_name || 'Sin plantilla'] = (acc[e.template_name || 'Sin plantilla'] || 0) + 1
         return acc
       }, {} as Record<string, number>)
-    ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5)
+    ).map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
 
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
+  // ── Computed Data: VENTAS ──
   const salesData = useMemo(() => {
     const totalLandings   = filteredLandings.length
     const activeLandings  = filteredLandings.filter(l => l.status === 'active').length
@@ -492,6 +522,7 @@ export default function ReportesClient({
     }
   }, [filteredLandings, filteredOrders])
 
+  // ── Computed Data: UTM ──
   const utmData = useMemo(() => {
     const sourceMap = new Map<string, { revenue: number; orders: number }>()
     const campaignMap = new Map<string, { revenue: number; orders: number }>()
@@ -524,6 +555,7 @@ export default function ReportesClient({
     return { bySource, byCampaign }
   }, [utmStats])
 
+  // ── Computed Data: COHORT ──
   const cohortData = useMemo(() => {
     const cohort = leadCohort || []
     const totalLeads = cohort.length
@@ -559,7 +591,7 @@ export default function ReportesClient({
     }
   }, [leadCohort])
 
-  // ─── Build JSON Payload for AI & PDF ────────────────────────────
+    // ─── Build JSON Payload for AI & PDF ────────────────────────────
   const buildAIPayload = useMemo(() => {
     const now = new Date()
     const monthLabel = now.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
@@ -679,8 +711,7 @@ export default function ReportesClient({
       },
     }
   }, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry, filteredLandings, filteredPayments, methodData])
-
-  // ─── Export PDF (NUEVO: genera desde JSON, no desde HTML) ───────
+    // ─── Export PDF (NUEVO: genera desde JSON, no desde HTML) ───────
   async function exportPDF() {
     setExporting(true)
 
@@ -744,6 +775,10 @@ export default function ReportesClient({
       </div>
     )
   }
+
+    // ═══════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px' }}>
@@ -833,7 +868,7 @@ export default function ReportesClient({
           ARTIA
         </div>
         
-        {/* ─── GENERAL TAB ─── */}
+                {/* ─── GENERAL TAB ─── */}
         {activeTab === 'general' && (
           <div className="fade-in">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
@@ -896,7 +931,7 @@ export default function ReportesClient({
           </div>
         )}
 
-        {/* ─── FINANZAS TAB ─── */}
+                {/* ─── FINANZAS TAB ─── */}
         {activeTab === 'finanzas' && (
           <div className="fade-in">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
@@ -949,7 +984,7 @@ export default function ReportesClient({
           </div>
         )}
 
-        {/* ─── VENTAS TAB ─── */}
+                {/* ─── VENTAS TAB ─── */}
         {activeTab === 'ventas' && (
           <div className="fade-in">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
@@ -1072,311 +1107,321 @@ export default function ReportesClient({
           </div>
         )}
 
-        {/* ─── LEADS TAB ─── */}
-    {activeTab === 'leads' && (
-      <div className="fade-in">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
-          <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
-          <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
-        </div>
+                {/* ─── LEADS TAB ─── */}
+        {activeTab === 'leads' && (
+          <div className="fade-in">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+              <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
+              <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
+              <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
+            </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
-          <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
-          <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
-          <StatCard label="Dias Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+              <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
+              <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
+              <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
+              <StatCard label="Dias Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
+            </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-          <ChartCard title="Estado de Clientes" subtitle="Distribucion global de estados">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
-                  {leadsData.byStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="Top Servicios" subtitle="Clientes por tipo de servicio">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={leadsData.byService}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-20} textAnchor="end" height={80} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Leads" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-
-        <ChartCard title="Evolucion de Clientes" subtitle="Nuevos Clientes por mes">
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={leadsData.monthlyLeads}>
-              <defs>
-                <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="leads" stroke="#6366f1" fill="url(#colorLeads)" strokeWidth={3} name="Leads" />
-              <Area type="monotone" dataKey="valor" stroke="#10b981" fill="transparent" strokeWidth={2} strokeDasharray="5 5" name="Valor Est." />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-    )}
-
-    {/* ─── PROYECTOS TAB ─── */}
-    {activeTab === 'proyectos' && (
-      <div className="fade-in">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Total Proyectos" value={String(projectsData.total)} icon="📁" color="#3b82f6" />
-          <StatCard label="En Curso" value={String(projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0)} icon="🚀" color="#10b981" />
-          <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
-            <div style={{ padding: '16px 0' }}>
-              {projectsData.byStatus.length === 0 ? (
-                <EmptyState icon="📭" title="Sin proyectos en este periodo" />
-              ) : (
-                (() => {
-                  const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
-                  return (
-                    <>
-                      <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
-                        {projectsData.byStatus.map((entry, i) => (
-                          <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
-                        ))}
-                      </div>
-                      {projectsData.byStatus.map((entry, i) => (
-                        <div key={i} style={{ marginBottom: 20 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
-                            </div>
-                          </div>
-                          <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})` }} />
-                          </div>
-                        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+              <ChartCard title="Estado de Clientes" subtitle="Distribucion global de estados">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
+                      {leadsData.byStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
-                      <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
-                        <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
-                      </div>
-                    </>
-                  )
-                })()
-              )}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Top Servicios" subtitle="Clientes por tipo de servicio">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={leadsData.byService}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-20} textAnchor="end" height={80} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Leads" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
-          </ChartCard>
 
-          <ChartCard title="Proyectos por Mes" subtitle="Creacion mensual">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={projectsData.monthlyProjects}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      </div>
-    )}
+            <ChartCard title="Evolucion de Clientes" subtitle="Nuevos Clientes por mes">
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={leadsData.monthlyLeads}>
+                  <defs>
+                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="leads" stroke="#6366f1" fill="url(#colorLeads)" strokeWidth={3} name="Leads" />
+                  <Area type="monotone" dataKey="valor" stroke="#10b981" fill="transparent" strokeWidth={2} strokeDasharray="5 5" name="Valor Est." />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+        )}
 
-    {/* ─── ANALYTICS TAB ─── */}
-    {activeTab === 'analytics' && (
-      <div className="fade-in">
-        {analyticsError && (
-          <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
-            padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
-          }}>
-            <span style={{ fontSize: 16 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>
-                Datos de analytics no disponibles
-              </div>
-              <div style={{ fontSize: 12, color: '#7f1d1d' }}>
-                {analyticsError}. Mostrando ultimos datos cacheados o N/A.
-              </div>
+            {/* ─── PROYECTOS TAB ─── */}
+        {activeTab === 'proyectos' && (
+          <div className="fade-in">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+              <StatCard label="Total Proyectos" value={String(projectsData.total)} icon="📁" color="#3b82f6" />
+              <StatCard label="En Curso" value={String(projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0)} icon="🚀" color="#10b981" />
+              <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
+                <div style={{ padding: '16px 0' }}>
+                  {projectsData.byStatus.length === 0 ? (
+                    <EmptyState icon="📭" title="Sin proyectos en este periodo" />
+                  ) : (
+                    (() => {
+                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                      return (
+                        <>
+                          <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
+                            {projectsData.byStatus.map((entry, i) => (
+                              <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
+                            ))}
+                          </div>
+                          {projectsData.byStatus.map((entry, i) => (
+                            <div key={i} style={{ marginBottom: 20 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
+                                  <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
+                                </div>
+                              </div>
+                              <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})` }} />
+                              </div>
+                            </div>
+                          ))}
+                          <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                          </div>
+                        </>
+                      )
+                    })()
+                  )}
+                </div>
+              </ChartCard>
+
+              <ChartCard title="Proyectos por Mes" subtitle="Creacion mensual">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={projectsData.monthlyProjects}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
             </div>
           </div>
         )}
 
-        {!analyticsError && !analyticsFresh && (
-          <div style={{
-            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12,
-            padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
-          }}>
-            <span style={{ fontSize: 16 }}>⏱️</span>
-            <div style={{ fontSize: 13, color: '#92400e' }}>
-              Datos de analytics pueden estar desactualizados. Ultima actualizacion: hace mas de 5 minutos.
+            {/* ─── ANALYTICS TAB ─── */}
+        {activeTab === 'analytics' && (
+          <div className="fade-in">
+            {analyticsError && (
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
+                padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
+              }}>
+                <span style={{ fontSize: 16 }}>⚠️</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>
+                    Datos de analytics no disponibles
+                  </div>
+                  <div style={{ fontSize: 12, color: '#7f1d1d' }}>
+                    {analyticsError}. Mostrando ultimos datos cacheados o N/A.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!analyticsError && !analyticsFresh && (
+              <div style={{
+                background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12,
+                padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
+              }}>
+                <span style={{ fontSize: 16 }}>⏱️</span>
+                <div style={{ fontSize: 13, color: '#92400e' }}>
+                  Datos de analytics pueden estar desactualizados. Ultima actualizacion: hace mas de 5 minutos.
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
+              <StatCard label="Pageviews (7d)" value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'} icon="👁️" color="#f97316" />
+              <StatCard label="Issues Sentry" value={sentry ? String(sentry.unresolvedCount) : 'N/A'} icon="🐛" color="#ef4444" />
             </div>
+
+            {posthog && posthog.daily.length > 0 && (
+              <ChartCard title="Trafico Web — Ultimos 7 dias" subtitle="Pageviews diarios">
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={posthog.daily}>
+                    <defs>
+                      <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="value" stroke="#f97316" fill="url(#colorTraffic)" strokeWidth={3} name="Pageviews" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
+
+            {sentry && sentry.issues.length > 0 && (
+              <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={sentry.issues.map El usuario quiere que continúe entregando el resto del archivo `ReportesClient.tsx`. Me quedé en la Parte 13, en medio del tab Analytics. Necesito completar:
+
+1. Terminar el tab Analytics (el `BarChart` de Sentry que quedó cortado)
+2. El footer dentro del report content
+3. El AI Analysis fuera del reportRef
+4. El footer final
+5. Los subcomponentes: KPIPulseCard, StatCard, ChartCard, EmptyState
+6. Las animaciones CSS
+
+Voy a continuar exactamente donde me quedé, manteniendo la misma estructura y sin romper nada. </think> ((i) => ({ 
+                    name: i.level, 
+                    count: parseInt(i.count) || 0,
+                    color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' 
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Issues">
+                      {sentry.issues.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.level === 'fatal' ? '#dc2626' : entry.level === 'error' ? '#ea580c' : entry.level === 'warning' ? '#d97706' : '#64748b'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Pageviews (7d)" value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'} icon="👁️" color="#f97316" />
-          <StatCard label="Issues Sentry" value={sentry ? String(sentry.unresolvedCount) : 'N/A'} icon="🐛" color="#ef4444" />
+        {/* Footer DENTRO del report content */}
+        <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+            Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
+            Artia Studio CRM · artiaagency.vercel.app
+          </p>
         </div>
-
-        {posthog && posthog.daily.length > 0 && (
-          <ChartCard title="Trafico Web — Ultimos 7 dias" subtitle="Pageviews diarios">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={posthog.daily}>
-                <defs>
-                  <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="value" stroke="#f97316" fill="url(#colorTraffic)" strokeWidth={3} name="Pageviews" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        )}
-
-        {sentry && sentry.issues.length > 0 && (
-          <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={sentry.issues.map(i => ({ 
-                name: i.level, 
-                count: parseInt(i.count) || 0,
-                color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' 
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Issues">
-                  {sentry.issues.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.level === 'fatal' ? '#dc2626' : entry.level === 'error' ? '#ea580c' : entry.level === 'warning' ? '#d97706' : '#64748b'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        )}
       </div>
-    )}
 
-    {/* Footer DENTRO del reportRef */}
-    <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-      <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-        Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-      </p>
-      <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
-        Artia Studio CRM · artiaagency.vercel.app
-      </p>
-    </div>
-  </div>
-
-  {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
-  {aiAnalysis && (
-    <div style={{ 
-      marginTop: 32, 
-      background: '#f8fafc', 
-      borderRadius: 16, 
-      padding: '24px 28px',
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-    }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 10, 
-        marginBottom: 16,
-        paddingBottom: 12,
-        borderBottom: '2px solid #e2e8f0'
-      }}>
-        <span style={{ fontSize: 24 }}>🧠</span>
-        <h2 style={{ 
-          fontSize: 18, 
-          fontWeight: 800, 
-          color: '#00113a', 
-          margin: 0 
+      {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
+      {aiAnalysis && (
+        <div style={{ 
+          marginTop: 32, 
+          background: '#f8fafc', 
+          borderRadius: 16, 
+          padding: '24px 28px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
         }}>
-          Analisis Inteligente
-        </h2>
-        <span style={{ 
-          marginLeft: 'auto', 
-          fontSize: 11, 
-          color: '#94a3b8',
-          fontWeight: 600 
-        }}>
-          powered by Groq
-        </span>
-      </div>
-      
-      <div style={{ 
-        fontSize: 14, 
-        lineHeight: 1.7, 
-        color: '#334155',
-        whiteSpace: 'pre-wrap',
-      }}>
-        {aiAnalysis}
-      </div>
-      
-      <div style={{ 
-        marginTop: 16, 
-        paddingTop: 12, 
-        borderTop: '1px solid #f1f5f9',
-        display: 'flex', 
-        gap: 10 
-      }}>
-        <button
-          onClick={() => setAiAnalysis(null)}
-          style={{
-            padding: '6px 14px', borderRadius: 8, fontSize: 12,
-            border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
-            cursor: 'pointer', fontWeight: 600,
-          }}
-        >
-          Cerrar analisis
-        </button>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10, 
+            marginBottom: 16,
+            paddingBottom: 12,
+            borderBottom: '2px solid #e2e8f0'
+          }}>
+            <span style={{ fontSize: 24 }}>🧠</span>
+            <h2 style={{ 
+              fontSize: 18, 
+              fontWeight: 800, 
+              color: '#00113a', 
+              margin: 0 
+            }}>
+              Analisis Inteligente
+            </h2>
+            <span style={{ 
+              marginLeft: 'auto', 
+              fontSize: 11, 
+              color: '#94a3b8',
+              fontWeight: 600 
+            }}>
+              powered by Groq
+            </span>
+          </div>
+          
+          <div style={{ 
+            fontSize: 14, 
+            lineHeight: 1.7, 
+            color: '#334155',
+            whiteSpace: 'pre-wrap',
+          }}>
+            {aiAnalysis}
+          </div>
+          
+          <div style={{ 
+            marginTop: 16, 
+            paddingTop: 12, 
+            borderTop: '1px solid #f1f5f9',
+            display: 'flex', 
+            gap: 10 
+          }}>
+            <button
+              onClick={() => setAiAnalysis(null)}
+              style={{
+                padding: '6px 14px', borderRadius: 8, fontSize: 12,
+                border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+                cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              Cerrar analisis
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Footer final */}
+      <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+          Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+        <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
+          Artia Studio CRM · artiaagency.vercel.app
+        </p>
       </div>
     </div>
-  )}
-
-  {/* Footer */}
-  <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-    <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-      Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-    </p>
-    <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
-      Artia Studio CRM · artiaagency.vercel.app
-    </p>
-  </div>
-</div>
   )
 }
-
-// ─── Subcomponents ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// SUBCOMPONENTES
+// ═══════════════════════════════════════════════════════════════════
 
 function KPIPulseCard({ icon, label, value, sub, color, trend }: {
   icon: string; label: string; value: string; sub: string; color: string; trend?: number
@@ -1473,6 +1518,10 @@ function EmptyState({ icon, title, action }: { icon: string; title: string; acti
     </div>
   )
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// ANIMACIONES CSS
+// ═══════════════════════════════════════════════════════════════════
 
 const ANIMATIONS = `
   @keyframes fadeIn {
