@@ -62,7 +62,6 @@ type EmailSend = {
   opened: boolean
 }
 
-// FIX: Type actualizado para coincidir con la VIEW real de landing_stats
 type Landing = {
   id: string
   name: string
@@ -85,7 +84,7 @@ type Order = {
   landing_id: string | null
   total: number | null
   status: string | null
-  payment_status: string | null // NUEVO
+  payment_status: string | null
   created_at: string
   utm_source: string | null
   utm_medium: string | null
@@ -99,7 +98,7 @@ type UtmStat = {
   utm_campaign: string | null
   total: number | null
   status: string | null
-  payment_status: string | null // NUEVO
+  payment_status: string | null
 }
 
 type PhData = {
@@ -113,7 +112,6 @@ type SentryData = {
   issues: { level: string; count: string }[]
 }
 
-// NUEVO: Type para cohorte
 type LeadCohort = {
   id: string
   nombre: string
@@ -225,9 +223,11 @@ export default function ReportesClient({
   const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'>('general')
   const [exporting, setExporting] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
-// ─── AI Analysis State ───────────────────────────────────────────
-const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
-const [aiLoading, setAiLoading] = useState(false)
+
+  // ─── AI Analysis State ───────────────────────────────────────────
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+
   // ── Filter by date range ──
   const cutoffDate = useMemo(() => {
     const now = new Date()
@@ -251,105 +251,11 @@ const [aiLoading, setAiLoading] = useState(false)
   const filteredOrders   = orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false })
   const filteredLandings = landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
 
-// ─── Build JSON Payload for AI ──────────────────────────────────
-const buildAIPayload = useMemo(() => {
-  const now = new Date()
-  const monthLabel = now.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
-
-  return {
-    month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
-    period: dateRange,
-    generated_at: now.toISOString(),
-
-    finanzas: {
-      total_facturado: Math.round(financeData.totalFacturado * 100) / 100,
-      total_cobrado: Math.round(financeData.totalPagado * 100) / 100,
-      pendiente_al_dia: Math.round(financeData.totalPendienteFuturo * 100) / 100,
-      vencido: Math.round(financeData.totalVencido * 100) / 100,
-      total_pendiente: Math.round(financeData.totalPendiente * 100) / 100,
-      cartera_sana_pct: financeData.carteraSanaPct,
-      cobranza_rate: financeData.totalFacturado > 0
-        ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 1000) / 10
-        : 0,
-      contratos: {
-        pagados: financeData.statusCounts.find(s => s.name === 'Pagado')?.value || 0,
-        en_progreso: financeData.statusCounts.find(s => s.name === 'En progreso')?.value || 0,
-        con_vencidas: financeData.statusCounts.find(s => s.name === 'Con vencidas')?.value || 0,
-      },
-      evolucion_mensual: financeData.monthlyRevenue,
-    },
-
-    ventas: {
-      total_orders: salesData.totalOrders,
-      ingresos: Math.round(salesData.totalRevenue * 100) / 100,
-      ticket_promedio: Math.round(salesData.avgOrder * 100) / 100,
-      conversion_rate: Math.round(salesData.conversionRate * 1000) / 10,
-      landings: {
-        total: salesData.totalLandings,
-        activas: salesData.activeLandings,
-      },
-      top_landings: salesData.topLandings.map(l => ({
-        name: l.name,
-        revenue: l.revenue,
-        orders: l.orders,
-        conversion: l.conversion,
-      })),
-    },
-
-    leads: {
-      nuevos: leadsData.total,
-      convertidos: leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0,
-      conversion_rate: leadsData.total > 0
-        ? Math.round(((leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0) / leadsData.total) * 1000) / 10
-        : 0,
-      valor_estimado_total: Math.round(leadsData.totalValue * 100) / 100,
-      por_estado: leadsData.byStatus,
-      cohorte: {
-        conversion_lead_a_proyecto_pct: cohortData.conversionProject,
-        conversion_proyecto_a_pago_pct: cohortData.conversionPayment,
-        dias_promedio_lead_a_proyecto: cohortData.avgDaysToProject,
-        fuga_funnel_pct: cohortData.funnelDrop,
-      },
-    },
-
-    proyectos: {
-      total: projectsData.total,
-      activos: projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0,
-      completados: projectsData.byStatus.find(s => s.name === 'Completado')?.value || 0,
-      lead_time_promedio_dias: projectsData.avgLeadTime,
-    },
-
-    analytics: {
-      visitas_7d: posthog?.pageviews ?? null,
-      issues_sentry: sentry?.unresolvedCount ?? null,
-    },
-  }
-}, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry])
-
-// ─── Call AI Analysis ────────────────────────────────────────────
-async function runAIAnalysis() {
-  setAiLoading(true)
-  try {
-    const res = await fetch('/api/ai-analysis', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payload: buildAIPayload }),
-    })
-    const data = await res.json()
-    setAiAnalysis(data.choices?.[0]?.message?.content || 'Sin respuesta de la IA')
-  } catch (err) {
-    setAiAnalysis('Error al conectar con el análisis de IA.')
-  } finally {
-    setAiLoading(false)
-  }
-}
-  
   // ── Computed Data ──
   const methodData = useMemo(() => {
     const methodMap = new Map<string, number>()
     if (paymentMethods && Array.isArray(paymentMethods)) {
       paymentMethods.forEach((p: any) => {
-        // FIX: Usar payment_method (nuevo modelo), no method (obsoleto)
         const raw = p.payment_method?.trim().toLowerCase() || 'otro';
         const method = raw.charAt(0).toUpperCase() + raw.slice(1);
         methodMap.set(method, (methodMap.get(method) || 0) + 1)
@@ -362,7 +268,6 @@ async function runAIAnalysis() {
     }))
   }, [paymentMethods])
 
-  // FIX: Finance desagregado - pendiente al día vs vencido
   const financeData = useMemo(() => {
     const totalFacturado = filteredPayments.reduce((s, p) => s + n(p.contract_value), 0)
     
@@ -456,7 +361,6 @@ async function runAIAnalysis() {
     return { byStatus, byService, monthlyLeads, total: filteredLeads.length, totalValue: filteredLeads.reduce((s, l) => s + n(l.estimated_value), 0) }
   }, [filteredLeads])
 
-  // FIX: Projects con lead time operativo
   const projectsData = useMemo(() => {
     const byStatus = Object.entries(
       filteredProjects.reduce((acc, p) => {
@@ -516,18 +420,15 @@ async function runAIAnalysis() {
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
-  // FIX: Ventas con conversion_rate real de la view y revenue por payment_status
   const salesData = useMemo(() => {
     const totalLandings   = filteredLandings.length
     const activeLandings  = filteredLandings.filter(l => l.status === 'active').length
     const totalOrders     = filteredOrders.length
-    // FIX: Revenue basado en payment_status='paid', no solo status
     const totalRevenue    = filteredOrders
       .filter(o => o.payment_status === 'paid')
       .reduce((s, o) => s + (o.total || 0), 0)
     const avgOrder        = totalOrders > 0 ? totalRevenue / totalOrders : 0
     
-    // FIX: Usar conversion_rate precalculado de la view
     const avgConversionRate = filteredLandings.length > 0
       ? filteredLandings.reduce((sum, l) => sum + (l.conversion_rate || 0), 0) / filteredLandings.length
       : 0
@@ -589,7 +490,6 @@ async function runAIAnalysis() {
     }
   }, [filteredLandings, filteredOrders])
 
-  // NUEVO: UTM DATA (sin cambios estructurales)
   const utmData = useMemo(() => {
     const sourceMap = new Map<string, { revenue: number; orders: number }>()
     const campaignMap = new Map<string, { revenue: number; orders: number }>()
@@ -622,7 +522,6 @@ async function runAIAnalysis() {
     return { bySource, byCampaign }
   }, [utmStats])
 
-  // NUEVO: Cohort Analysis
   const cohortData = useMemo(() => {
     const cohort = leadCohort || []
     const totalLeads = cohort.length
@@ -658,10 +557,104 @@ async function runAIAnalysis() {
     }
   }, [leadCohort])
 
- // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
+  // ─── Build JSON Payload for AI ──────────────────────────────────
+  const buildAIPayload = useMemo(() => {
+    const now = new Date()
+    const monthLabel = now.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
+
+    return {
+      month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+      period: dateRange,
+      generated_at: now.toISOString(),
+
+      finanzas: {
+        total_facturado: Math.round(financeData.totalFacturado * 100) / 100,
+        total_cobrado: Math.round(financeData.totalPagado * 100) / 100,
+        pendiente_al_dia: Math.round(financeData.totalPendienteFuturo * 100) / 100,
+        vencido: Math.round(financeData.totalVencido * 100) / 100,
+        total_pendiente: Math.round(financeData.totalPendiente * 100) / 100,
+        cartera_sana_pct: financeData.carteraSanaPct,
+        cobranza_rate: financeData.totalFacturado > 0
+          ? Math.round((financeData.totalPagado / financeData.totalFacturado) * 1000) / 10
+          : 0,
+        contratos: {
+          pagados: financeData.statusCounts.find(s => s.name === 'Pagado')?.value || 0,
+          en_progreso: financeData.statusCounts.find(s => s.name === 'En progreso')?.value || 0,
+          con_vencidas: financeData.statusCounts.find(s => s.name === 'Con vencidas')?.value || 0,
+        },
+        evolucion_mensual: financeData.monthlyRevenue,
+      },
+
+      ventas: {
+        total_orders: salesData.totalOrders,
+        ingresos: Math.round(salesData.totalRevenue * 100) / 100,
+        ticket_promedio: Math.round(salesData.avgOrder * 100) / 100,
+        conversion_rate: Math.round(salesData.conversionRate * 1000) / 10,
+        landings: {
+          total: salesData.totalLandings,
+          activas: salesData.activeLandings,
+        },
+        top_landings: salesData.topLandings.map(l => ({
+          name: l.name,
+          revenue: l.revenue,
+          orders: l.orders,
+          conversion: l.conversion,
+        })),
+      },
+
+      leads: {
+        nuevos: leadsData.total,
+        convertidos: leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0,
+        conversion_rate: leadsData.total > 0
+          ? Math.round(((leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0) / leadsData.total) * 1000) / 10
+          : 0,
+        valor_estimado_total: Math.round(leadsData.totalValue * 100) / 100,
+        por_estado: leadsData.byStatus,
+        cohorte: {
+          conversion_lead_a_proyecto_pct: cohortData.conversionProject,
+          conversion_proyecto_a_pago_pct: cohortData.conversionPayment,
+          dias_promedio_lead_a_proyecto: cohortData.avgDaysToProject,
+          fuga_funnel_pct: cohortData.funnelDrop,
+        },
+      },
+
+      proyectos: {
+        total: projectsData.total,
+        activos: projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0,
+        completados: projectsData.byStatus.find(s => s.name === 'Completado')?.value || 0,
+        lead_time_promedio_dias: projectsData.avgLeadTime,
+      },
+
+      analytics: {
+        visitas_7d: posthog?.pageviews ?? null,
+        issues_sentry: sentry?.unresolvedCount ?? null,
+      },
+    }
+  }, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry])
+
+  // ─── Export PDF con Análisis IA — TODO EN UNO ──
   async function exportPDF() {
     if (!reportRef.current) return
     setExporting(true)
+
+    // ─── PASO 1: Generar análisis IA automáticamente ───
+    let aiContent = ''
+    try {
+      setAiLoading(true)
+      const res = await fetch('/api/ai-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: buildAIPayload }),
+      })
+      const data = await res.json()
+      aiContent = data.choices?.[0]?.message?.content || 'Análisis de IA no disponible.'
+      setAiAnalysis(aiContent)
+    } catch (err) {
+      console.error('Error IA:', err)
+      aiContent = 'Análisis de IA no disponible en este momento.'
+    } finally {
+      setAiLoading(false)
+    }
 
     const originalTab = activeTab
     const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
@@ -727,16 +720,50 @@ async function runAIAnalysis() {
       pdf.setFontSize(9)
       pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
       
+      // ─── NUEVO: PÁGINA DE ANÁLISIS IA ───
+      if (aiContent) {
+        pdf.addPage()
+        pdf.setFillColor(248, 250, 252)
+        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+        
+        pdf.setTextColor(0, 17, 58)
+        pdf.setFontSize(20)
+        pdf.setFont('helvetica', 'bold')
+        pdf.text('Analisis Inteligente — Artia AI', 20, 30)
+
+        pdf.setDrawColor(99, 102, 241)
+        pdf.setLineWidth(0.5)
+        pdf.line(20, 35, pdfWidth - 20, 35)
+
+        pdf.setFontSize(10)
+        pdf.setFont('helvetica', 'normal')
+        pdf.setTextColor(51, 65, 85)
+
+        const aiLines = pdf.splitTextToSize(aiContent, pdfWidth - 40)
+        let yPos = 45
+        const lineHeight = 5.5
+        const maxY = pdfHeight - 20
+
+        for (const line of aiLines) {
+          if (yPos > maxY) {
+            pdf.addPage()
+            pdf.setFillColor(248, 250, 252)
+            pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+            yPos = 20
+          }
+          pdf.text(line, 20, yPos)
+          yPos += lineHeight
+        }
+      }
+
       let firstPage = false
 
       for (const tab of tabs) {
         setActiveTab(tab)
-        // Esperar más tiempo para que Recharts renderice completamente
         await new Promise(r => setTimeout(r, 1200))
 
         if (!reportRef.current) continue
         
-        // ─── CAPTURA ROBUSTA CON CLONADO Y ESTILOS FORZADOS ───
         const el = reportRef.current
         
         const canvas = await html2canvas(el, {
@@ -747,46 +774,37 @@ async function runAIAnalysis() {
           windowWidth: 1400,
           scrollX: 0,
           scrollY: -window.scrollY,
-          // CLAVE: Modificar el DOM clonado antes de capturar
           onclone: (clonedDoc, clonedEl) => {
-            // 1. Forzar fondo blanco en el contenedor principal
             clonedEl.style.backgroundColor = '#ffffff !important'
             clonedEl.style.background = '#ffffff !important'
             
-            // 2. Aplicar fondos blancos a TODAS las tarjetas internas
             const allCards = clonedEl.querySelectorAll('[style*="background"]')
             allCards.forEach((card: any) => {
-              // Si tiene transparencia o gradiente, forzar blanco sólido
               const currentBg = window.getComputedStyle(card).backgroundColor
               if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
                 card.style.backgroundColor = '#ffffff'
               }
             })
             
-            // 3. Forzar fondo blanco en todos los divs que no tengan fondo explícito
             const allDivs = clonedEl.querySelectorAll('div')
             allDivs.forEach((div: any) => {
               const computed = window.getComputedStyle(div)
               if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
-                // Solo si no es un elemento de gráfico de Recharts
                 if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
                   div.style.backgroundColor = '#ffffff'
                 }
               }
             })
             
-            // 4. Asegurar que los textos tengan color oscuro visible
             const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
             allText.forEach((text: any) => {
               const computed = window.getComputedStyle(text)
               const color = computed.color
-              // Si el color es muy claro o transparente, forzar oscuro
               if (color.includes('0)') || color.includes('rgba(0')) {
                 text.style.color = '#0f172a'
               }
             })
             
-            // 5. Desactivar cualquier animación CSS en el clon
             const style = clonedDoc.createElement('style')
             style.textContent = `
               * { animation: none !important; transition: none !important; }
@@ -816,7 +834,6 @@ async function runAIAnalysis() {
           sliceCanvas.height = Math.ceil(sliceH / ratio)
           const ctx = sliceCanvas.getContext('2d')!
           
-          // Fondo blanco sólido
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
           ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
@@ -831,7 +848,7 @@ async function runAIAnalysis() {
       pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
     } catch (err) {
       console.error('Error exportando PDF:', err)
-      alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
+      alert('Error al generar PDF. Asegurate de que CORS este habilitado.')
     } finally {
       setActiveTab(originalTab)
       setExporting(false)
@@ -870,19 +887,19 @@ async function runAIAnalysis() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 900, color: '#00113a', margin: '0 0 6px', letterSpacing: '-0.5px' }}>
-              📊 Reportes & Analytics
+              Reportes & Analytics
             </h1>
             <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
-              Visualización completa del rendimiento de tu negocio
+              Visualizacion completa del rendimiento de tu negocio
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 4, gap: 2 }}>
               {[
-                { key: '7d', label: '7 días' },
-                { key: '30d', label: '30 días' },
-                { key: '90d', label: '90 días' },
-                { key: '1y', label: '1 año' },
+                { key: '7d', label: '7 dias' },
+                { key: '30d', label: '30 dias' },
+                { key: '90d', label: '90 dias' },
+                { key: '1y', label: '1 ano' },
                 { key: 'all', label: 'Todo' },
               ].map(r => (
                 <button
@@ -899,35 +916,21 @@ async function runAIAnalysis() {
                 </button>
               ))}
             </div>
-
-            {/* NUEVO: Botón IA */}
-  <button
-    onClick={runAIAnalysis}
-    disabled={aiLoading}
-    style={{
-      padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-      border: 'none', cursor: aiLoading ? 'not-allowed' : 'pointer',
-      background: aiLoading ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      color: '#fff', display: 'flex', alignItems: 'center', gap: 8,
-      boxShadow: aiLoading ? 'none' : '0 4px 16px rgba(99,102,241,0.3)',
-      transition: 'all 0.2s',
-    }}
-  >
-    {aiLoading ? '⏳ Analizando…' : '🤖 Analizar con IA'}
-  </button>
+            
+            {/* UN SOLO BOTON: Exportar PDF con Analisis IA */}
             <button
               onClick={exportPDF}
               disabled={exporting}
               style={{
                 padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                 border: 'none', cursor: exporting ? 'not-allowed' : 'pointer',
-                background: exporting ? '#94a3b8' : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                background: exporting ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #dc2626)',
                 color: '#fff', display: 'flex', alignItems: 'center', gap: 8,
-                boxShadow: exporting ? 'none' : '0 4px 16px rgba(239,68,68,0.3)',
+                boxShadow: exporting ? 'none' : '0 4px 16px rgba(99,102,241,0.3)',
                 transition: 'all 0.2s',
               }}
             >
-              {exporting ? '⏳ Exportando todas las tabs…' : '📄 Exportar PDF'}
+              {exporting ? (aiLoading ? 'Analizando con IA...' : 'Generando PDF...') : 'Exportar PDF con IA'}
             </button>
           </div>
         </div>
@@ -935,12 +938,12 @@ async function runAIAnalysis() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginTop: 20, borderBottom: '2px solid #f1f5f9', paddingBottom: 2 }}>
           {[
-            { key: 'general', label: '📈 General' },
-            { key: 'finanzas', label: '💰 Finanzas' },
-            { key: 'ventas', label: '🛍 Ventas' },
-            { key: 'leads', label: '👥 Leads' },
-            { key: 'proyectos', label: '📁 Proyectos' },
-            { key: 'analytics', label: '📡 Analytics' },
+            { key: 'general', label: 'General' },
+            { key: 'finanzas', label: 'Finanzas' },
+            { key: 'ventas', label: 'Ventas' },
+            { key: 'leads', label: 'Leads' },
+            { key: 'proyectos', label: 'Proyectos' },
+            { key: 'analytics', label: 'Analytics' },
           ].map(t => (
             <button
               key={t.key}
@@ -1004,13 +1007,13 @@ async function runAIAnalysis() {
                     <Legend />
                     <Area type="monotone" dataKey="facturado" stroke="#6366f1" fill="url(#colorFact)" strokeWidth={2} name="Facturado" />
                     <Area type="monotone" dataKey="pagado" stroke="#10b981" fill="url(#colorPag)" strokeWidth={2} name="Pagado" />
-                    <Area type="monotone" dataKey="pendiente" stroke="#3b82f6" fill="url(#colorPend)" strokeWidth={2} strokeDasharray="5 5" name="Pendiente al Día" />
+                    <Area type="monotone" dataKey="pendiente" stroke="#3b82f6" fill="url(#colorPend)" strokeWidth={2} strokeDasharray="5 5" name="Pendiente al Dia" />
                     <Area type="monotone" dataKey="vencido" stroke="#ef4444" fill="url(#colorVenc)" strokeWidth={2} strokeDasharray="3 3" name="Vencido" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Estado de Pagos" subtitle="Distribución de contratos">
+              <ChartCard title="Estado de Pagos" subtitle="Distribucion de contratos">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie data={financeData.statusCounts} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
@@ -1033,11 +1036,10 @@ async function runAIAnalysis() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total Facturado" value={fmtMoney(financeData.totalFacturado)} icon="💵" color="#6366f1" />
               <StatCard label="Total Pagado" value={fmtMoney(financeData.totalPagado)} icon="✅" color="#10b981" />
-              <StatCard label="Pendiente al Día" value={fmtMoney(financeData.totalPendienteFuturo)} icon="📅" color="#3b82f6" />
+              <StatCard label="Pendiente al Dia" value={fmtMoney(financeData.totalPendienteFuturo)} icon="📅" color="#3b82f6" />
               <StatCard label="Vencido" value={fmtMoney(financeData.totalVencido)} icon="⚠️" color="#ef4444" />
             </div>
 
-            {/* NUEVO: Barra de salud de cartera */}
             <div style={{ 
               background: '#fff', borderRadius: 12, padding: '16px 20px', 
               border: '1px solid #e2e8f0', marginBottom: 20,
@@ -1063,7 +1065,7 @@ async function runAIAnalysis() {
               </div>
             </div>
 
-            <ChartCard title="Evolución de Ingresos" subtitle="Últimos 12 meses">
+            <ChartCard title="Evolucion de Ingresos" subtitle="Ultimos 12 meses">
               <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={financeData.monthlyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -1073,7 +1075,7 @@ async function runAIAnalysis() {
                   <Legend />
                   <Line type="monotone" dataKey="facturado" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 4 }} name="Facturado" />
                   <Line type="monotone" dataKey="pagado" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} name="Pagado" />
-                  <Line type="monotone" dataKey="pendiente" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente al Día" />
+                  <Line type="monotone" dataKey="pendiente" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente al Dia" />
                   <Line type="monotone" dataKey="vencido" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 3" dot={false} name="Vencido" />
                 </LineChart>
               </ResponsiveContainer>
@@ -1090,7 +1092,7 @@ async function runAIAnalysis() {
               <StatCard label="Pedidos Totales" value={String(salesData.totalOrders)} icon="📦" color="#3b82f6" />
               <StatCard label="Ingresos Ventas" value={fmtMoney(salesData.totalRevenue)} icon="💵" color="#10b981" />
               <StatCard label="Ticket Promedio" value={fmtMoney(salesData.avgOrder)} icon="🛒" color="#f59e0b" />
-              <StatCard label="Conversión" value={`${salesData.conversionRate.toFixed(1)}%`} icon="📊" color="#ec4899" />
+              <StatCard label="Conversion" value={`${salesData.conversionRate.toFixed(1)}%`} icon="📊" color="#ec4899" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
@@ -1157,7 +1159,7 @@ async function runAIAnalysis() {
 
             {utmData.bySource.length > 0 && (
               <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                <ChartCard title="Performance por UTM Source" subtitle="Ingresos por fuente de tráfico">
+                <ChartCard title="Performance por UTM Source" subtitle="Ingresos por fuente de trafico">
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={utmData.bySource}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -1169,7 +1171,7 @@ async function runAIAnalysis() {
                   </ResponsiveContainer>
                 </ChartCard>
 
-                <ChartCard title="Performance por Campaña" subtitle="Ingresos por campaña UTM">
+                <ChartCard title="Performance por Campana" subtitle="Ingresos por campana UTM">
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={utmData.byCampaign}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -1210,19 +1212,18 @@ async function runAIAnalysis() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
               <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
-              <StatCard label="Tasa Conversión" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
+              <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
             </div>
 
-            {/* NUEVO: KPIs de Cohorte */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
               <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
               <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
               <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
-              <StatCard label="Días Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
+              <StatCard label="Dias Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-              <ChartCard title="Estado de Clientes" subtitle="Distribución global de estados">
+              <ChartCard title="Estado de Clientes" subtitle="Distribucion global de estados">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
@@ -1249,7 +1250,7 @@ async function runAIAnalysis() {
               </ChartCard>
             </div>
 
-            <ChartCard title="Evolución de Clientes" subtitle="Nuevos Clientes por mes">
+            <ChartCard title="Evolucion de Clientes" subtitle="Nuevos Clientes por mes">
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={leadsData.monthlyLeads}>
                   <defs>
@@ -1280,10 +1281,10 @@ async function runAIAnalysis() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
+              <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
                 <div style={{ padding: '16px 0' }}>
                   {projectsData.byStatus.length === 0 ? (
-                    <EmptyState icon="📭" title="Sin proyectos en este período" />
+                    <EmptyState icon="📭" title="Sin proyectos en este periodo" />
                   ) : (
                     (() => {
                       const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
@@ -1322,14 +1323,14 @@ async function runAIAnalysis() {
                 </div>
               </ChartCard>
 
-              <ChartCard title="Proyectos por Mes" subtitle="Creación mensual">
+              <ChartCard title="Proyectos por Mes" subtitle="Creacion mensual">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={projectsData.monthlyProjects}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
+                                      <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -1340,7 +1341,6 @@ async function runAIAnalysis() {
         {/* ─── ANALYTICS TAB ─── */}
         {activeTab === 'analytics' && (
           <div className="fade-in">
-            {/* NUEVO: Alertas de analytics */}
             {analyticsError && (
               <div style={{
                 background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
@@ -1352,7 +1352,7 @@ async function runAIAnalysis() {
                     Datos de analytics no disponibles
                   </div>
                   <div style={{ fontSize: 12, color: '#7f1d1d' }}>
-                    {analyticsError}. Mostrando últimos datos cacheados o N/A.
+                    {analyticsError}. Mostrando ultimos datos cacheados o N/A.
                   </div>
                 </div>
               </div>
@@ -1365,7 +1365,7 @@ async function runAIAnalysis() {
               }}>
                 <span style={{ fontSize: 16 }}>⏱️</span>
                 <div style={{ fontSize: 13, color: '#92400e' }}>
-                  Datos de analytics pueden estar desactualizados. Última actualización: hace más de 5 minutos.
+                  Datos de analytics pueden estar desactualizados. Ultima actualizacion: hace mas de 5 minutos.
                 </div>
               </div>
             )}
@@ -1376,7 +1376,7 @@ async function runAIAnalysis() {
             </div>
 
             {posthog && posthog.daily.length > 0 && (
-              <ChartCard title="Tráfico Web — Últimos 7 días" subtitle="Pageviews diarios">
+              <ChartCard title="Trafico Web — Ultimos 7 dias" subtitle="Pageviews diarios">
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={posthog.daily}>
                     <defs>
@@ -1418,83 +1418,74 @@ async function runAIAnalysis() {
             )}
           </div>
         )}
-{/* ─── AI ANALYSIS SECTION ─── */}
-{aiAnalysis && (
-  <div style={{ 
-    marginTop: 32, 
-    background: '#f8fafc', 
-    borderRadius: 16, 
-    padding: '24px 28px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-  }}>
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: 10, 
-      marginBottom: 16,
-      paddingBottom: 12,
-      borderBottom: '2px solid #e2e8f0'
-    }}>
-      <span style={{ fontSize: 24 }}>🧠</span>
-      <h2 style={{ 
-        fontSize: 18, 
-        fontWeight: 800, 
-        color: '#00113a', 
-        margin: 0 
-      }}>
-        Análisis Inteligente — {dateRange === 'all' ? 'Histórico' : `Últimos ${dateRange}`}
-      </h2>
-      <span style={{ 
-        marginLeft: 'auto', 
-        fontSize: 11, 
-        color: '#94a3b8',
-        fontWeight: 600 
-      }}>
-        powered by Groq
-      </span>
-    </div>
-    
-    <div style={{ 
-      fontSize: 14, 
-      lineHeight: 1.7, 
-      color: '#334155',
-      whiteSpace: 'pre-wrap',
-    }}>
-      {aiAnalysis}
-    </div>
-    
-    <div style={{ 
-      marginTop: 16, 
-      paddingTop: 12, 
-      borderTop: '1px solid #e2e8f0',
-      display: 'flex', 
-      gap: 10 
-    }}>
-      <button
-        onClick={() => setAiAnalysis(null)}
-        style={{
-          padding: '6px 14px', borderRadius: 8, fontSize: 12,
-          border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
-          cursor: 'pointer', fontWeight: 600,
-        }}
-      >
-        Cerrar análisis
-      </button>
-      <button
-        onClick={runAIAnalysis}
-        disabled={aiLoading}
-        style={{
-          padding: '6px 14px', borderRadius: 8, fontSize: 12,
-          border: 'none', background: '#6366f1', color: '#fff',
-          cursor: aiLoading ? 'not-allowed' : 'pointer', fontWeight: 600,
-        }}
-      >
-        {aiLoading ? '⏳' : '🔄'} Reanalizar
-      </button>
-    </div>
-  </div>
-)}
+
+        {/* ─── AI ANALYSIS PREVIEW (opcional, muestra el analisis en pantalla) ─── */}
+        {aiAnalysis && (
+          <div style={{ 
+            marginTop: 32, 
+            background: '#f8fafc', 
+            borderRadius: 16, 
+            padding: '24px 28px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 10, 
+              marginBottom: 16,
+              paddingBottom: 12,
+              borderBottom: '2px solid #e2e8f0'
+            }}>
+              <span style={{ fontSize: 24 }}>🧠</span>
+              <h2 style={{ 
+                fontSize: 18, 
+                fontWeight: 800, 
+                color: '#00113a', 
+                margin: 0 
+              }}>
+                Analisis Inteligente
+              </h2>
+              <span style={{ 
+                marginLeft: 'auto', 
+                fontSize: 11, 
+                color: '#94a3b8',
+                fontWeight: 600 
+              }}>
+                powered by Groq
+              </span>
+            </div>
+            
+            <div style={{ 
+              fontSize: 14, 
+              lineHeight: 1.7, 
+              color: '#334155',
+              whiteSpace: 'pre-wrap',
+            }}>
+              {aiAnalysis}
+            </div>
+            
+            <div style={{ 
+              marginTop: 16, 
+              paddingTop: 12, 
+              borderTop: '1px solid #f1f5f9',
+              display: 'flex', 
+              gap: 10 
+            }}>
+              <button
+                onClick={() => setAiAnalysis(null)}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12,
+                  border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+                  cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                Cerrar analisis
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>

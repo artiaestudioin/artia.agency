@@ -1,3 +1,4 @@
+// app/api/ai-analysis/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,7 @@ Analyze the following monthly data and generate:
    - Ventas
    - Leads / Clientes
    - Proyectos
-   - Analíticas
+   - Analiticas
 
 Rules:
 - Be concise and clear
@@ -56,7 +57,7 @@ Output format:
 [Proyectos]
 ...
 
-[Analíticas]
+[Analiticas]
 
 Identify trends, inconsistencies, and risks.
 Prioritize insights over raw numbers.
