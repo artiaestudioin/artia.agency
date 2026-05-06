@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
+import { DeleteOrderButton } from './DeleteOrderButton'
 
 export const metadata = { title: 'Pedidos Landings — Artia Admin' }
 
@@ -306,30 +307,7 @@ export default async function LandingOrdersPage({
                             }}>
                             👁️ Ver
                           </Link>
-                          <form action={deleteOrder} style={{ display: 'inline' }}>
-                            <input type="hidden" name="id" value={order.id} />
-                            <button
-                              type="submit"
-                              onClick={(e) => {
-                                if (!confirm('¿Eliminar este pedido permanentemente?')) {
-                                  e.preventDefault()
-                                }
-                              }}
-                              style={{
-                                fontSize: 11, color: '#ef4444', background: '#fef2f2',
-                                padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700,
-                                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.background = '#fee2e2'
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.background = '#fef2f2'
-                              }}
-                            >
-                              🗑️ Eliminar
-                            </button>
-                          </form>
+                          <DeleteOrderButton orderId={order.id} deleteAction={deleteOrder} />
                         </div>
                       </td>
                     </tr>
