@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo } from 'react'
+import jsPDF from 'jspdf'
 import Link from 'next/link'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
