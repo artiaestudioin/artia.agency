@@ -7,7 +7,7 @@ export const metadata = { title: 'Reportes — Artia Admin' }
 export default async function ReportesPage() {
   const supabase = await createClient()
 
-  // ─── FINANZAS (módulo existente, sin cambios estructurales) ───
+  // ─── FINANZAS ───
   const [
     { data: rawPayments, error: errorP },
     { data: paymentMethodsData },
@@ -20,7 +20,6 @@ export default async function ReportesPage() {
       installments:payment_installments(id, amount, payment_date, status, payment_number, payment_method),
       lead:lead_id(nombre, folio, servicio)
     `).order('created_at', { ascending: false }),
-    // FIX: Migrar paymentMethods a payment_installments (modelo padre-hijo)
     supabase
       .from('payment_installments')
       .select('payment_method')
@@ -47,7 +46,7 @@ export default async function ReportesPage() {
     lead: Array.isArray(p.lead) ? (p.lead[0] ?? null) : (p.lead ?? null),
   }))
 
-  // ─── VENTAS / LANDINGS (CORREGIDO) ───
+  // ─── VENTAS / LANDINGS ───
   const [
     { data: landingsData },
     { data: landingOrders },
@@ -58,13 +57,11 @@ export default async function ReportesPage() {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100),
-    
     supabase
       .from('landing_orders')
       .select('id, landing_id, total, status, payment_status, created_at, utm_source, utm_medium, utm_campaign, product_name')
       .order('created_at', { ascending: false })
       .limit(500),
-    
     supabase
       .from('landing_orders')
       .select('utm_source, utm_medium, utm_campaign, total, status, payment_status')
@@ -72,7 +69,7 @@ export default async function ReportesPage() {
       .order('created_at', { ascending: false }),
   ])
 
-  // ─── COHORT: Lead → Proyecto → Pago (NUEVO) ───
+  // ─── COHORT: Lead → Proyecto → Pago ───
   const { data: leadCohort } = await supabase
     .from('leads')
     .select(`
@@ -87,7 +84,7 @@ export default async function ReportesPage() {
     .order('created_at', { ascending: false })
     .limit(200)
 
-  // ─── ANALYTICS (PostHog / Sentry) ───
+  // ─── ANALYTICS ───
   let posthog = null
   let sentry = null
   let analyticsFresh = false

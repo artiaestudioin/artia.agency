@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area,
 } from 'recharts'
+import { generatePDF, PDFPayload } from '@/lib/pdf-generator'
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -226,7 +225,6 @@ export default function ReportesClient({
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('all')
   const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'>('general')
   const [exporting, setExporting] = useState(false)
-  const reportRef = useRef<HTMLDivElement>(null)
 
   // ─── AI Analysis State ───────────────────────────────────────────
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
@@ -561,7 +559,7 @@ export default function ReportesClient({
     }
   }, [leadCohort])
 
-  // ─── Build JSON Payload for AI ──────────────────────────────────
+  // ─── Build JSON Payload for AI & PDF ────────────────────────────
   const buildAIPayload = useMemo(() => {
     const now = new Date()
     const monthLabel = now.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })
@@ -570,6 +568,21 @@ export default function ReportesClient({
       month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
       period: dateRange,
       generated_at: now.toISOString(),
+
+      summary: {
+        health_score: Math.round(
+          (financeData.carteraSanaPct * 0.3) +
+          ((leadsData.total > 0 ? (leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0) / leadsData.total * 100 : 0) * 0.25) +
+          ((projectsData.total > 0 ? (projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0) / projectsData.total * 100 : 0) * 0.25) +
+          (Math.min(salesData.conversionRate * 10, 100) * 0.2)
+        ),
+        total_leads: leadsData.total,
+        total_projects: projectsData.total,
+        total_orders: salesData.totalOrders,
+        total_revenue: salesData.totalRevenue,
+        total_facturado: financeData.totalFacturado,
+        total_cobrado: financeData.totalPagado,
+      },
 
       finanzas: {
         total_facturado: Math.round(financeData.totalFacturado * 100) / 100,
@@ -585,7 +598,9 @@ export default function ReportesClient({
           pagados: financeData.statusCounts.find(s => s.name === 'Pagado')?.value || 0,
           en_progreso: financeData.statusCounts.find(s => s.name === 'En progreso')?.value || 0,
           con_vencidas: financeData.statusCounts.find(s => s.name === 'Con vencidas')?.value || 0,
+          total: filteredPayments.length,
         },
+        metodos_pago: methodData.map(m => ({ name: m.name, count: m.value })),
         evolucion_mensual: financeData.monthlyRevenue,
       },
 
@@ -594,16 +609,29 @@ export default function ReportesClient({
         ingresos: Math.round(salesData.totalRevenue * 100) / 100,
         ticket_promedio: Math.round(salesData.avgOrder * 100) / 100,
         conversion_rate: Math.round(salesData.conversionRate * 1000) / 10,
+        ctr_promedio: filteredLandings.length > 0
+          ? Math.round(filteredLandings.reduce((s, l) => s + (l.ctr || 0), 0) / filteredLandings.length * 10) / 10
+          : 0,
         landings: {
           total: salesData.totalLandings,
           activas: salesData.activeLandings,
+          inactivas: salesData.totalLandings - salesData.activeLandings,
         },
         top_landings: salesData.topLandings.map(l => ({
           name: l.name,
           revenue: l.revenue,
           orders: l.orders,
           conversion: l.conversion,
+          ctr: l.ctr,
+          views: l.views,
         })),
+        orders_por_mes: salesData.ordersChart.map(o => ({
+          label: o.label,
+          revenue: o.revenue,
+          orders: o.orders,
+          paid_orders: o.paid_orders,
+        })),
+        landings_por_mes: salesData.landingsChart,
       },
 
       leads: {
@@ -614,11 +642,16 @@ export default function ReportesClient({
           : 0,
         valor_estimado_total: Math.round(leadsData.totalValue * 100) / 100,
         por_estado: leadsData.byStatus,
+        por_servicio: leadsData.byService,
+        evolucion_mensual: leadsData.monthlyLeads,
         cohorte: {
+          total_leads: cohortData.totalLeads,
+          con_proyecto: cohortData.withProjects,
+          con_pago: cohortData.withPayments,
           conversion_lead_a_proyecto_pct: cohortData.conversionProject,
           conversion_proyecto_a_pago_pct: cohortData.conversionPayment,
           dias_promedio_lead_a_proyecto: cohortData.avgDaysToProject,
-          fuga_funnel_pct: cohortData.funnelDrop,
+          funnel_drop_pct: Math.round(cohortData.funnelDrop * 10) / 10,
         },
       },
 
@@ -626,22 +659,32 @@ export default function ReportesClient({
         total: projectsData.total,
         activos: projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0,
         completados: projectsData.byStatus.find(s => s.name === 'Completado')?.value || 0,
+        en_curso: projectsData.byStatus.find(s => s.name === 'En curso')?.value || 0,
         lead_time_promedio_dias: projectsData.avgLeadTime,
+        proyectos_con_fecha: projectsData.projectsWithEvent,
+        por_estado: projectsData.byStatus,
+        evolucion_mensual: projectsData.monthlyProjects,
       },
 
       analytics: {
         visitas_7d: posthog?.pageviews ?? null,
+        visitas_diarias: posthog?.daily ?? [],
         issues_sentry: sentry?.unresolvedCount ?? null,
+        events_24h: sentry?.events24h ?? null,
+        conversion_funnel: {
+          visitas: posthog?.pageviews ?? null,
+          clicks: null,
+          conversiones: salesData.totalOrders,
+        },
       },
     }
-  }, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry])
+  }, [dateRange, financeData, salesData, leadsData, cohortData, projectsData, posthog, sentry, filteredLandings, filteredPayments, methodData])
 
-  // ─── Export PDF con Análisis IA — TODO EN UNO ──
+  // ─── Export PDF (NUEVO: genera desde JSON, no desde HTML) ───────
   async function exportPDF() {
-    if (!reportRef.current) return
     setExporting(true)
 
-    // ─── PASO 1: Generar análisis IA automáticamente ───
+    // PASO 1: Generar análisis IA (lógica preservada exactamente)
     let aiContent = ''
     try {
       setAiLoading(true)
@@ -660,201 +703,21 @@ export default function ReportesClient({
       setAiLoading(false)
     }
 
-    const originalTab = activeTab
-    const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
-      ['general', 'finanzas', 'ventas', 'leads', 'proyectos', 'analytics']
-
+    // PASO 2: Generar PDF desde datos JSON usando motor vectorial
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth  = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
-      
-      // ─── PORTADA DEL PDF ───
-      const now = new Date()
-      const fechaStr = now.toLocaleDateString('es-EC', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      })
-      
-      pdf.setFillColor(0, 17, 58)
-      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-      
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(42)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
-      
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
-      
-      pdf.setDrawColor(99, 102, 241)
-      pdf.setLineWidth(1.5)
-      pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
-      
-      pdf.setFontSize(22)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
-      
-      pdf.setFontSize(11)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setTextColor(148, 163, 184)
-      const descLines = pdf.splitTextToSize(
-        'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, leads, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
-        pdfWidth - 60
-      )
-      pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
-      
-      pdf.setFontSize(12)
-      pdf.setTextColor(255, 255, 255)
-      pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
-      
-      const periodoLabel = {
-        '7d': 'Últimos 7 días',
-        '30d': 'Últimos 30 días',
-        '90d': 'Últimos 90 días',
-        '1y': 'Último año',
-        'all': 'Histórico completo'
-      }[dateRange]
-      
-      pdf.setFontSize(10)
-      pdf.setTextColor(148, 163, 184)
-      pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
-      
-      pdf.setFontSize(9)
-      pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
-      
-      // ─── NUEVO: PÁGINA DE ANÁLISIS IA ───
-      if (aiContent) {
-        pdf.addPage()
-        pdf.setFillColor(248, 250, 252)
-        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-        
-        pdf.setTextColor(0, 17, 58)
-        pdf.setFontSize(20)
-        pdf.setFont('helvetica', 'bold')
-        pdf.text('Analisis Inteligente — Artia AI', 20, 30)
-
-        pdf.setDrawColor(99, 102, 241)
-        pdf.setLineWidth(0.5)
-        pdf.line(20, 35, pdfWidth - 20, 35)
-
-        pdf.setFontSize(10)
-        pdf.setFont('helvetica', 'normal')
-        pdf.setTextColor(51, 65, 85)
-
-        const aiLines = pdf.splitTextToSize(aiContent, pdfWidth - 40)
-        let yPos = 45
-        const lineHeight = 5.5
-        const maxY = pdfHeight - 20
-
-        for (const line of aiLines) {
-          if (yPos > maxY) {
-            pdf.addPage()
-            pdf.setFillColor(248, 250, 252)
-            pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-            yPos = 20
-          }
-          pdf.text(line, 20, yPos)
-          yPos += lineHeight
-        }
-      }
-
-      let firstPage = false
-
-      for (const tab of tabs) {
-        setActiveTab(tab)
-        await new Promise(r => setTimeout(r, 1200))
-
-        if (!reportRef.current) continue
-        
-        const el = reportRef.current
-        
-        const canvas = await html2canvas(el, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 1400,
-          scrollX: 0,
-          scrollY: -window.scrollY,
-          onclone: (clonedDoc, clonedEl) => {
-            clonedEl.style.backgroundColor = '#ffffff !important'
-            clonedEl.style.background = '#ffffff !important'
-            
-            const allCards = clonedEl.querySelectorAll('[style*="background"]')
-            allCards.forEach((card: any) => {
-              const currentBg = window.getComputedStyle(card).backgroundColor
-              if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
-                card.style.backgroundColor = '#ffffff'
-              }
-            })
-            
-            const allDivs = clonedEl.querySelectorAll('div')
-            allDivs.forEach((div: any) => {
-              const computed = window.getComputedStyle(div)
-              if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
-                if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
-                  div.style.backgroundColor = '#ffffff'
-                }
-              }
-            })
-            
-            const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
-            allText.forEach((text: any) => {
-              const computed = window.getComputedStyle(text)
-              const color = computed.color
-              if (color.includes('0)') || color.includes('rgba(0')) {
-                text.style.color = '#0f172a'
-              }
-            })
-            
-            const style = clonedDoc.createElement('style')
-            style.textContent = `
-              * { animation: none !important; transition: none !important; }
-              .recharts-surface { overflow: visible !important; }
-              .recharts-wrapper { background: #ffffff !important; }
-            `
-            clonedDoc.head.appendChild(style)
-          }
-        })
-
-        const imgW      = canvas.width
-        const imgH      = canvas.height
-        const ratio     = pdfWidth / imgW
-        const renderedH = imgH * ratio
-        let   remaining = renderedH
-        let   srcY      = 0
-
-        while (remaining > 0) {
-          if (!firstPage) {
-            pdf.addPage()
-          }
-          firstPage = false
-
-          const sliceH      = Math.min(pdfHeight, remaining)
-          const sliceCanvas = document.createElement('canvas')
-          sliceCanvas.width  = imgW
-          sliceCanvas.height = Math.ceil(sliceH / ratio)
-          const ctx = sliceCanvas.getContext('2d')!
-          
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
-          ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
-          
-          pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, sliceH)
-
-          srcY      += sliceCanvas.height
-          remaining -= pdfHeight
-        }
-      }
-
-      pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
+      const blob = await generatePDF(buildAIPayload as PDFPayload, aiContent || null)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `reporte-artia-${new Date().toISOString().slice(0, 10)}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
     } catch (err) {
-      console.error('Error exportando PDF:', err)
-      alert('Error al generar PDF. Asegurate de que CORS este habilitado.')
+      console.error('Error generando PDF:', err)
+      alert('Error al generar PDF. Revisa la consola.')
     } finally {
-      setActiveTab(originalTab)
       setExporting(false)
     }
   }
@@ -964,8 +827,8 @@ export default function ReportesClient({
         </div>
       </header>
 
-      {/* Report Content — SOLO tabs, SIN analisis IA */}
-      <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
+      {/* Report Content */}
+      <div style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
         <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
           ARTIA
         </div>
@@ -1210,308 +1073,306 @@ export default function ReportesClient({
         )}
 
         {/* ─── LEADS TAB ─── */}
-        {activeTab === 'leads' && (
-          <div className="fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
-              <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
-              <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
-            </div>
+    {activeTab === 'leads' && (
+      <div className="fade-in">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+          <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
+          <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
+          <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
+        </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
-              <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
-              <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
-              <StatCard label="Dias Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+          <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
+          <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
+          <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
+          <StatCard label="Dias Lead→Proyecto" value={`${cohortData.avgDaysToProject}d`} icon="⏱️" color="#3b82f6" />
+        </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-              <ChartCard title="Estado de Clientes" subtitle="Distribucion global de estados">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
-                      {leadsData.byStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <ChartCard title="Estado de Clientes" subtitle="Distribucion global de estados">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
+                  {leadsData.byStatus.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
-              <ChartCard title="Top Servicios" subtitle="Clientes por tipo de servicio">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={leadsData.byService}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-20} textAnchor="end" height={80} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Leads" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
+          <ChartCard title="Top Servicios" subtitle="Clientes por tipo de servicio">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={leadsData.byService}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-20} textAnchor="end" height={80} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Leads" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
 
-            <ChartCard title="Evolucion de Clientes" subtitle="Nuevos Clientes por mes">
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={leadsData.monthlyLeads}>
-                  <defs>
-                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="leads" stroke="#6366f1" fill="url(#colorLeads)" strokeWidth={3} name="Leads" />
-                  <Area type="monotone" dataKey="valor" stroke="#10b981" fill="transparent" strokeWidth={2} strokeDasharray="5 5" name="Valor Est." />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          </div>
-        )}
+        <ChartCard title="Evolucion de Clientes" subtitle="Nuevos Clientes por mes">
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={leadsData.monthlyLeads}>
+              <defs>
+                <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="leads" stroke="#6366f1" fill="url(#colorLeads)" strokeWidth={3} name="Leads" />
+              <Area type="monotone" dataKey="valor" stroke="#10b981" fill="transparent" strokeWidth={2} strokeDasharray="5 5" name="Valor Est." />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    )}
 
-        {/* ─── PROYECTOS TAB ─── */}
-        {activeTab === 'proyectos' && (
-          <div className="fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Total Proyectos" value={String(projectsData.total)} icon="📁" color="#3b82f6" />
-              <StatCard label="En Curso" value={String(projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0)} icon="🚀" color="#10b981" />
-              <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
-            </div>
+    {/* ─── PROYECTOS TAB ─── */}
+    {activeTab === 'proyectos' && (
+      <div className="fade-in">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+          <StatCard label="Total Proyectos" value={String(projectsData.total)} icon="📁" color="#3b82f6" />
+          <StatCard label="En Curso" value={String(projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0)} icon="🚀" color="#10b981" />
+          <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
+        </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
-                <div style={{ padding: '16px 0' }}>
-                  {projectsData.byStatus.length === 0 ? (
-                    <EmptyState icon="📭" title="Sin proyectos en este periodo" />
-                  ) : (
-                    (() => {
-                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
-                      return (
-                        <>
-                          <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
-                            {projectsData.byStatus.map((entry, i) => (
-                              <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
-                            ))}
-                          </div>
-                          {projectsData.byStatus.map((entry, i) => (
-                            <div key={i} style={{ marginBottom: 20 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
-                                  <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
-                                </div>
-                              </div>
-                              <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})` }} />
-                              </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
+            <div style={{ padding: '16px 0' }}>
+              {projectsData.byStatus.length === 0 ? (
+                <EmptyState icon="📭" title="Sin proyectos en este periodo" />
+              ) : (
+                (() => {
+                  const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
+                  return (
+                    <>
+                      <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
+                        {projectsData.byStatus.map((entry, i) => (
+                          <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
+                        ))}
+                      </div>
+                      {projectsData.byStatus.map((entry, i) => (
+                        <div key={i} style={{ marginBottom: 20 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 12, height: 12, borderRadius: '50%', background: entry.color }} />
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
                             </div>
-                          ))}
-                          <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', background: entry.color, padding: '3px 12px', borderRadius: 20 }}>{entry.value}</span>
+                            </div>
                           </div>
-                        </>
-                      )
-                    })()
-                  )}
-                </div>
-              </ChartCard>
-
-              <ChartCard title="Proyectos por Mes" subtitle="Creacion mensual">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={projectsData.monthlyProjects}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                                      <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
-          </div>
-        )}
-
-        {/* ─── ANALYTICS TAB ─── */}
-        {activeTab === 'analytics' && (
-          <div className="fade-in">
-            {analyticsError && (
-              <div style={{
-                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
-                padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
-              }}>
-                <span style={{ fontSize: 16 }}>⚠️</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>
-                    Datos de analytics no disponibles
-                  </div>
-                  <div style={{ fontSize: 12, color: '#7f1d1d' }}>
-                    {analyticsError}. Mostrando ultimos datos cacheados o N/A.
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!analyticsError && !analyticsFresh && (
-              <div style={{
-                background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12,
-                padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
-              }}>
-                <span style={{ fontSize: 16 }}>⏱️</span>
-                <div style={{ fontSize: 13, color: '#92400e' }}>
-                  Datos de analytics pueden estar desactualizados. Ultima actualizacion: hace mas de 5 minutos.
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Pageviews (7d)" value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'} icon="👁️" color="#f97316" />
-              <StatCard label="Issues Sentry" value={sentry ? String(sentry.unresolvedCount) : 'N/A'} icon="🐛" color="#ef4444" />
-            </div>
-
-            {posthog && posthog.daily.length > 0 && (
-              <ChartCard title="Trafico Web — Ultimos 7 dias" subtitle="Pageviews diarios">
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={posthog.daily}>
-                    <defs>
-                      <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="value" stroke="#f97316" fill="url(#colorTraffic)" strokeWidth={3} name="Pageviews" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            )}
-
-            {sentry && sentry.issues.length > 0 && (
-              <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={sentry.issues.map(i => ({ 
-                    name: i.level, 
-                    count: parseInt(i.count) || 0,
-                    color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' 
-                  }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Issues">
-                      {sentry.issues.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.level === 'fatal' ? '#dc2626' : entry.level === 'error' ? '#ea580c' : entry.level === 'warning' ? '#d97706' : '#64748b'} />
+                          <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})` }} />
+                          </div>
+                        </div>
                       ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            )}
-          </div>
-        )}
+                      <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>TOTAL PROYECTOS</span>
+                        <span style={{ fontSize: 20, fontWeight: 900, color: '#0f172a' }}>{total}</span>
+                      </div>
+                    </>
+                  )
+                })()
+              )}
+            </div>
+          </ChartCard>
 
-        {/* Footer DENTRO del reportRef (se captura en PDF) */}
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-            Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-          <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
-            Artia Studio CRM · artiaagency.vercel.app
-          </p>
+          <ChartCard title="Proyectos por Mes" subtitle="Creacion mensual">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={projectsData.monthlyProjects}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="proyectos" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Proyectos" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </div>
       </div>
+    )}
 
-      {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
-      {/* Aparece UNA SOLA VEZ en la UI, NO se repite por tab */}
-      {/* En el PDF se incluye como pagina separada (ver exportPDF) */}
-      {aiAnalysis && (
-        <div style={{ 
-          marginTop: 32, 
-          background: '#f8fafc', 
-          borderRadius: 16, 
-          padding: '24px 28px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 10, 
-            marginBottom: 16,
-            paddingBottom: 12,
-            borderBottom: '2px solid #e2e8f0'
+    {/* ─── ANALYTICS TAB ─── */}
+    {activeTab === 'analytics' && (
+      <div className="fade-in">
+        {analyticsError && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
+            padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
           }}>
-            <span style={{ fontSize: 24 }}>🧠</span>
-            <h2 style={{ 
-              fontSize: 18, 
-              fontWeight: 800, 
-              color: '#00113a', 
-              margin: 0 
-            }}>
-              Analisis Inteligente
-            </h2>
-            <span style={{ 
-              marginLeft: 'auto', 
-              fontSize: 11, 
-              color: '#94a3b8',
-              fontWeight: 600 
-            }}>
-              powered by Groq
-            </span>
+            <span style={{ fontSize: 16 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>
+                Datos de analytics no disponibles
+              </div>
+              <div style={{ fontSize: 12, color: '#7f1d1d' }}>
+                {analyticsError}. Mostrando ultimos datos cacheados o N/A.
+              </div>
+            </div>
           </div>
-          
-          <div style={{ 
-            fontSize: 14, 
-            lineHeight: 1.7, 
-            color: '#334155',
-            whiteSpace: 'pre-wrap',
+        )}
+
+        {!analyticsError && !analyticsFresh && (
+          <div style={{
+            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12,
+            padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10
           }}>
-            {aiAnalysis}
+            <span style={{ fontSize: 16 }}>⏱️</span>
+            <div style={{ fontSize: 13, color: '#92400e' }}>
+              Datos de analytics pueden estar desactualizados. Ultima actualizacion: hace mas de 5 minutos.
+            </div>
           </div>
-          
-          <div style={{ 
-            marginTop: 16, 
-            paddingTop: 12, 
-            borderTop: '1px solid #f1f5f9',
-            display: 'flex', 
-            gap: 10 
-          }}>
-            <button
-              onClick={() => setAiAnalysis(null)}
-              style={{
-                padding: '6px 14px', borderRadius: 8, fontSize: 12,
-                border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
-                cursor: 'pointer', fontWeight: 600,
-              }}
-            >
-              Cerrar analisis
-            </button>
-          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
+          <StatCard label="Pageviews (7d)" value={posthog ? posthog.pageviews.toLocaleString() : 'N/A'} icon="👁️" color="#f97316" />
+          <StatCard label="Issues Sentry" value={sentry ? String(sentry.unresolvedCount) : 'N/A'} icon="🐛" color="#ef4444" />
         </div>
-      )}
 
-      {/* Footer */}
-      <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-          Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-        <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
-          Artia Studio CRM · artiaagency.vercel.app
-        </p>
+        {posthog && posthog.daily.length > 0 && (
+          <ChartCard title="Trafico Web — Ultimos 7 dias" subtitle="Pageviews diarios">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={posthog.daily}>
+                <defs>
+                  <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="value" stroke="#f97316" fill="url(#colorTraffic)" strokeWidth={3} name="Pageviews" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
+
+        {sentry && sentry.issues.length > 0 && (
+          <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={sentry.issues.map(i => ({ 
+                name: i.level, 
+                count: parseInt(i.count) || 0,
+                color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' 
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Issues">
+                  {sentry.issues.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.level === 'fatal' ? '#dc2626' : entry.level === 'error' ? '#ea580c' : entry.level === 'warning' ? '#d97706' : '#64748b'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        )}
+      </div>
+    )}
+
+    {/* Footer DENTRO del reportRef */}
+    <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+      <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+        Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </p>
+      <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
+        Artia Studio CRM · artiaagency.vercel.app
+      </p>
+    </div>
+  </div>
+
+  {/* ─── AI ANALYSIS FUERA del reportRef ─── */}
+  {aiAnalysis && (
+    <div style={{ 
+      marginTop: 32, 
+      background: '#f8fafc', 
+      borderRadius: 16, 
+      padding: '24px 28px',
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 10, 
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: '2px solid #e2e8f0'
+      }}>
+        <span style={{ fontSize: 24 }}>🧠</span>
+        <h2 style={{ 
+          fontSize: 18, 
+          fontWeight: 800, 
+          color: '#00113a', 
+          margin: 0 
+        }}>
+          Analisis Inteligente
+        </h2>
+        <span style={{ 
+          marginLeft: 'auto', 
+          fontSize: 11, 
+          color: '#94a3b8',
+          fontWeight: 600 
+        }}>
+          powered by Groq
+        </span>
+      </div>
+      
+      <div style={{ 
+        fontSize: 14, 
+        lineHeight: 1.7, 
+        color: '#334155',
+        whiteSpace: 'pre-wrap',
+      }}>
+        {aiAnalysis}
+      </div>
+      
+      <div style={{ 
+        marginTop: 16, 
+        paddingTop: 12, 
+        borderTop: '1px solid #f1f5f9',
+        display: 'flex', 
+        gap: 10 
+      }}>
+        <button
+          onClick={() => setAiAnalysis(null)}
+          style={{
+            padding: '6px 14px', borderRadius: 8, fontSize: 12,
+            border: '1px solid #e2e8f0', background: '#fff', color: '#64748b',
+            cursor: 'pointer', fontWeight: 600,
+          }}
+        >
+          Cerrar analisis
+        </button>
       </div>
     </div>
+  )}
+
+  {/* Footer */}
+  <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+    <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+      Reporte generado el {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+    </p>
+    <p style={{ fontSize: 11, color: '#cbd5e1', margin: '4px 0 0' }}>
+      Artia Studio CRM · artiaagency.vercel.app
+    </p>
+  </div>
+</div>
   )
 }
 
