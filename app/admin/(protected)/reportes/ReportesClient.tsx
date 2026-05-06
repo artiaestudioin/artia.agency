@@ -736,7 +736,7 @@ export default function ReportesClient({
 
     // PASO 2: Generar PDF desde datos JSON usando motor vectorial
     try {
-      const blob = await generatePDF(buildAIPayload as PDFPayload, aiContent || null)
+      const blob = await generatePDF(buildAIPayload as unknown as PDFPayload, aiContent || null)
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url

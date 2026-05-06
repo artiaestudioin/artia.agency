@@ -79,30 +79,20 @@ interface AnalyticsSection {
   conversion_funnel: { visitas: number | null; clicks: number | null; conversiones: number | null }
 }
 
-interface MonthlyFinanceItem {
-  month: string
-  facturado: number
-  pagado: number
-  pendiente: number
-  vencido: number
-}
-
-interface MonthlySalesItem {
-  label: string
-  revenue: number
-  orders: number
-  paid_orders: number
-}
-
-interface MonthlyCountItem {
-  label: string
-  value: number
-}
-
-interface MonthlyLeadsItem {
-  month: string
-  leads: number
-  valor: number
+interface MonthlyItem {
+  label?: string
+  value?: number
+  month?: string
+  proyectos?: number
+  leads?: number
+  valor?: number
+  facturado?: number
+  pagado?: number
+  pendiente?: number
+  vencido?: number
+  revenue?: number
+  orders?: number
+  paid_orders?: number
 }
 
 interface StatusItem {
