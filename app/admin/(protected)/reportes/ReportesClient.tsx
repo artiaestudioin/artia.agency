@@ -457,8 +457,8 @@ async function exportPDF() {
   setExporting(true)
 
   const originalTab = activeTab
-  const tabs: Array<'general' | 'finanzas' | 'ventas' | 'Clientes' | 'proyectos' | 'analytics'> =
-    ['general', 'finanzas', 'ventas', 'Clientes', 'proyectos', 'analytics']
+  const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
+    ['general', 'finanzas', 'ventas', 'leads', 'proyectos', 'analytics']
 
   try {
     const pdf = new jsPDF('p', 'mm', 'a4')
