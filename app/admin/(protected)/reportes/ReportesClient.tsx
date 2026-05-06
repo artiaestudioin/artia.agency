@@ -564,24 +564,21 @@ export default function ReportesClient({
     }
   }, [leadCohort])
 
-  // ─── Export PDF ─────────────────────────────────────────────
+  /  // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
   async function exportPDF() {
     if (!reportRef.current) return
     setExporting(true)
 
     const originalTab = activeTab
-    // FIX: 'leads' en vez de 'Clientes'
     const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
       ['general', 'finanzas', 'ventas', 'leads', 'proyectos', 'analytics']
 
     try {
-      const { jsPDF } = await import('jspdf')
-      const html2canvas = (await import('html2canvas')).default
-      
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth  = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
       
+      // ─── PORTADA DEL PDF ───
       const now = new Date()
       const fechaStr = now.toLocaleDateString('es-EC', { 
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -636,14 +633,16 @@ export default function ReportesClient({
       pdf.setFontSize(9)
       pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
       
-      let firstPage = true
+      let firstPage = false
 
       for (const tab of tabs) {
         setActiveTab(tab)
+        // Esperar más tiempo para que Recharts renderice completamente
         await new Promise(r => setTimeout(r, 1200))
 
         if (!reportRef.current) continue
         
+        // ─── CAPTURA ROBUSTA CON CLONADO Y ESTILOS FORZADOS ───
         const el = reportRef.current
         
         const canvas = await html2canvas(el, {
@@ -654,37 +653,46 @@ export default function ReportesClient({
           windowWidth: 1400,
           scrollX: 0,
           scrollY: -window.scrollY,
+          // CLAVE: Modificar el DOM clonado antes de capturar
           onclone: (clonedDoc, clonedEl) => {
+            // 1. Forzar fondo blanco en el contenedor principal
             clonedEl.style.backgroundColor = '#ffffff !important'
             clonedEl.style.background = '#ffffff !important'
             
+            // 2. Aplicar fondos blancos a TODAS las tarjetas internas
             const allCards = clonedEl.querySelectorAll('[style*="background"]')
             allCards.forEach((card: any) => {
+              // Si tiene transparencia o gradiente, forzar blanco sólido
               const currentBg = window.getComputedStyle(card).backgroundColor
               if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
                 card.style.backgroundColor = '#ffffff'
               }
             })
             
+            // 3. Forzar fondo blanco en todos los divs que no tengan fondo explícito
             const allDivs = clonedEl.querySelectorAll('div')
             allDivs.forEach((div: any) => {
               const computed = window.getComputedStyle(div)
               if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
+                // Solo si no es un elemento de gráfico de Recharts
                 if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
                   div.style.backgroundColor = '#ffffff'
                 }
               }
             })
             
+            // 4. Asegurar que los textos tengan color oscuro visible
             const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
             allText.forEach((text: any) => {
               const computed = window.getComputedStyle(text)
               const color = computed.color
+              // Si el color es muy claro o transparente, forzar oscuro
               if (color.includes('0)') || color.includes('rgba(0')) {
                 text.style.color = '#0f172a'
               }
             })
             
+            // 5. Desactivar cualquier animación CSS en el clon
             const style = clonedDoc.createElement('style')
             style.textContent = `
               * { animation: none !important; transition: none !important; }
@@ -714,6 +722,7 @@ export default function ReportesClient({
           sliceCanvas.height = Math.ceil(sliceH / ratio)
           const ctx = sliceCanvas.getContext('2d')!
           
+          // Fondo blanco sólido
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
           ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
