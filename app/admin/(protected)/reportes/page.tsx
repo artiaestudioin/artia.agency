@@ -7,7 +7,7 @@ export const metadata = { title: 'Reportes — Artia Admin' }
 export default async function ReportesPage() {
   const supabase = await createClient()
 
-  // ─── FINANZAS (módulo existente, sin cambios) ───
+  // ─── FINANZAS (módulo existente, sin cambios estructurales) ───
   const [
     { data: rawPayments, error: errorP },
     { data: paymentMethodsData },
@@ -20,7 +20,12 @@ export default async function ReportesPage() {
       installments:payment_installments(id, amount, payment_date, status, payment_number, payment_method),
       lead:lead_id(nombre, folio, servicio)
     `).order('created_at', { ascending: false }),
-    supabase.from('payments').select('method').order('created_at', { ascending: false }),
+    // FIX: Migrar paymentMethods a payment_installments (modelo padre-hijo)
+    supabase
+      .from('payment_installments')
+      .select('payment_method')
+      .not('payment_method', 'is', null)
+      .order('created_at', { ascending: false }),
     supabase.from('leads').select('id, nombre, folio, servicio, estado, estimated_value, created_at, payment_status').order('created_at', { ascending: false }),
     supabase.from('projects').select('id, name, status, event_date, created_at, lead:lead_id(nombre, folio)').order('created_at', { ascending: false }),
     supabase.from('email_sends').select('id, to_email, template_name, sent_at, opened').order('sent_at', { ascending: false }).limit(1000),
@@ -43,46 +48,71 @@ export default async function ReportesPage() {
   }))
 
   // ─── VENTAS / LANDINGS (CORREGIDO) ───
-  // FIX: Usar tabla 'landings' (no 'landing_pages') y campos correctos
   const [
     { data: landingsData },
     { data: landingOrders },
     { data: utmStats },
   ] = await Promise.all([
-    // Landings con métricas reales desde la view landing_stats
     supabase
       .from('landing_stats')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100),
     
-    // Orders con campo 'total' (no 'amount')
     supabase
       .from('landing_orders')
-      .select('id, landing_id, total, status, created_at, utm_source, utm_medium, utm_campaign, product_name')
+      .select('id, landing_id, total, status, payment_status, created_at, utm_source, utm_medium, utm_campaign, product_name')
       .order('created_at', { ascending: false })
       .limit(500),
     
-    // UTM Stats: agrupación por source/medium/campaign
     supabase
       .from('landing_orders')
-      .select('utm_source, utm_medium, utm_campaign, total, status')
+      .select('utm_source, utm_medium, utm_campaign, total, status, payment_status')
       .not('utm_source', 'is', null)
       .order('created_at', { ascending: false }),
   ])
 
+  // ─── COHORT: Lead → Proyecto → Pago (NUEVO) ───
+  const { data: leadCohort } = await supabase
+    .from('leads')
+    .select(`
+      id,
+      nombre,
+      created_at,
+      estimated_value,
+      final_value,
+      projects:projects(id, name, status, created_at),
+      payments:payment_parents(id, contract_value, status, created_at)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(200)
+
   // ─── ANALYTICS (PostHog / Sentry) ───
   let posthog = null
   let sentry = null
+  let analyticsFresh = false
+  let analyticsError = null
+
   try {
     const [phRes, seRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/admin/posthog-stats`, { next: { revalidate: 300 } }),
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/admin/sentry-stats`, { next: { revalidate: 300 } }),
     ])
-    if (phRes.ok) posthog = await phRes.json()
-    if (seRes.ok) sentry = await seRes.json()
-  } catch {
-    // Silently fail analytics
+    
+    if (phRes.ok) {
+      posthog = await phRes.json()
+      analyticsFresh = true
+    } else {
+      analyticsError = 'PostHog unavailable'
+    }
+    
+    if (seRes.ok) {
+      sentry = await seRes.json()
+    } else {
+      analyticsError = analyticsError ? `${analyticsError}, Sentry unavailable` : 'Sentry unavailable'
+    }
+  } catch (err) {
+    analyticsError = err instanceof Error ? err.message : 'Analytics connection failed'
   }
 
   return (
@@ -98,6 +128,9 @@ export default async function ReportesPage() {
       paymentMethods={paymentMethodsData || []}
       posthog={posthog}
       sentry={sentry}
+      analyticsFresh={analyticsFresh}
+      analyticsError={analyticsError}
+      leadCohort={leadCohort ?? []}
     />
   )
 }
