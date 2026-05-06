@@ -84,24 +84,9 @@ export default async function AdminDashboard() {
     <div className="dashboard-container">
       <style>{STYLES}</style>
 
-      {/* Header */}
+      {/* Header limpio — solo título, fecha y acciones rápidas */}
       <header className="dashboard-header">
         <div className="header-branding">
-          <div className="logo-wrapper">
-            <img 
-              src={LOGO_LIGHT} 
-              alt="Artia Agency" 
-              className="logo-light" 
-              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
-            />
-            <img 
-              src={LOGO_DARK} 
-              alt="Artia Agency" 
-              className="logo-dark" 
-              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
-            />
-            <span className="crm-tag">CRM</span>
-          </div>
           <div className="header-meta">
             <div className="status-badge">
               <span className="pulse-dot" />
@@ -112,7 +97,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
         <div className="header-actions">
-          <Link href="/admin/leads" className="btn-secondary">👥 Leads</Link>
+          <Link href="/admin/leads" className="btn-secondary">👥 Clientes</Link>
           <Link href="/admin/pipeline" className="btn-secondary">🗂️ Pipeline</Link>
           <Link href="/admin/finanzas" className="btn-secondary">💰 Finanzas</Link>
           <a href="https://artiaagency.vercel.app" target="_blank" rel="noopener noreferrer" className="btn-primary">🌐 Ver sitio</a>

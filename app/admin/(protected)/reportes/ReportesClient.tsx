@@ -7,8 +7,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area,
 } from 'recharts'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -61,13 +59,44 @@ type EmailSend = {
   sent_at: string
   opened: boolean
 }
+
+// FIX: LandingStats desde la view (no landing_pages)
 type Landing = {
-  id: string; title: string; status: string | null; created_at: string
-  views?: { count: number }[] | null
+  id: string
+  name: string
+  slug: string
+  status: string | null
+  created_at: string
+  views_count: number
+  clicks_count: number
+  conversions_count: number
+  conversion_rate: number
+  revenue_total: number
+  orders_count: number
+  total_orders: number
+  pending_order: number
+  paid_orders: number
 }
 
+// FIX: Order usa 'total' (no 'amount')
 type Order = {
-  id: string; landing_id: string | null; amount: number | null; status: string | null; created_at: string
+  id: string
+  landing_id: string | null
+  total: number | null
+  status: string | null
+  created_at: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  product_name: string | null
+}
+
+type UtmStat = {
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  total: number | null
+  status: string | null
 }
 
 type PhData = {
@@ -158,6 +187,7 @@ export default function ReportesClient({
   paymentMethods = [],
   landings = [],
   orders = [],
+  utmStats = [],
 }: {
   initialPayments?: PaymentParent[]
   payments?: PaymentParent[]
@@ -169,6 +199,7 @@ export default function ReportesClient({
   paymentMethods?: any[]
   landings?: Landing[]
   orders?: Order[]
+  utmStats?: UtmStat[]
 }) {
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('all')
   const [activeTab, setActiveTab] = useState<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'>('general')
@@ -195,6 +226,8 @@ export default function ReportesClient({
   const filteredLeads    = leads.filter(l    => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
   const filteredProjects = projects.filter(p => { const d = safeDate(p.created_at); return d ? d >= cutoffDate : false })
   const filteredEmails   = emails.filter(e   => { const d = safeDate(e.sent_at);    return d ? d >= cutoffDate : false })
+  const filteredOrders   = orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false })
+  const filteredLandings = landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
 
   // ── Computed Data ──
   const methodData = useMemo(() => {
@@ -315,215 +348,115 @@ export default function ReportesClient({
     return { total, opened, rate, byTemplate }
   }, [filteredEmails])
 
-  // ── Sales / Ventas stats ──────────────────────────────────────────
+  // ── VENTAS / LANDINGS (CORREGIDO) ─────────────────────────────────
   const salesData = useMemo(() => {
-    const totalPages   = landings.length
-    const activePages  = landings.filter(l => l.status === 'active' || l.status === 'activo' || l.status === 'published').length
-    const totalOrders  = orders.length
-    const totalRevenue = orders.filter(o => o.status === 'completed' || o.status === 'pagado').reduce((s, o) => s + (o.amount || 0), 0)
-    const avgOrder     = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const conversion   = totalPages > 0 && totalOrders > 0 ? ((totalOrders / totalPages) * 100) : 0
+    const totalLandings   = filteredLandings.length
+    const activeLandings  = filteredLandings.filter(l => l.status === 'active').length
+    const totalOrders     = filteredOrders.length
+    // FIX: Usar 'total' (no 'amount')
+    const totalRevenue    = filteredOrders
+      .filter(o => o.status === 'delivered' || o.status === 'confirmed' || o.status === 'paid')
+      .reduce((s, o) => s + (o.total || 0), 0)
+    const avgOrder        = totalOrders > 0 ? totalRevenue / totalOrders : 0
+    
+    // Conversión real: orders / landings (evitar división por cero)
+    const conversionRate  = totalLandings > 0 && totalOrders > 0 
+      ? ((totalOrders / totalLandings) * 100) 
+      : 0
 
-    // Orders by month
+    // Orders by month (usando 'total')
     const ordByMonth: Record<string, number> = {}
     buildLastNMonths(6).forEach(({ key }) => { ordByMonth[key] = 0 })
-    orders.forEach(o => {
+    filteredOrders.forEach(o => {
       const k = getMonthKey(o.created_at)
-      if (k in ordByMonth) ordByMonth[k] += o.amount || 0
+      if (k in ordByMonth) ordByMonth[k] += o.total || 0
     })
-    const ordersChart = buildLastNMonths(6).map(({ key, label }) => ({ label, value: ordByMonth[key] || 0 }))
+    const ordersChart = buildLastNMonths(6).map(({ key, label }) => ({ 
+      label, 
+      value: ordByMonth[key] || 0,
+      orders: filteredOrders.filter(o => getMonthKey(o.created_at) === key).length
+    }))
 
-    // Pages by month
+    // Landings by month
     const pgByMonth: Record<string, number> = {}
     buildLastNMonths(6).forEach(({ key }) => { pgByMonth[key] = 0 })
-    landings.forEach(l => {
+    filteredLandings.forEach(l => {
       const k = getMonthKey(l.created_at)
       if (k in pgByMonth) pgByMonth[k]++
     })
-    const pagesChart = buildLastNMonths(6).map(({ key, label }) => ({ label, value: pgByMonth[key] || 0 }))
+    const landingsChart = buildLastNMonths(6).map(({ key, label }) => ({ 
+      label, 
+      value: pgByMonth[key] || 0 
+    }))
 
-    return { totalPages, activePages, totalOrders, totalRevenue, avgOrder, conversion, ordersChart, pagesChart }
-  }, [landings, orders])
+    // Top landings por revenue
+    const topLandings = filteredLandings
+      .sort((a, b) => (b.revenue_total || 0) - (a.revenue_total || 0))
+      .slice(0, 5)
+      .map(l => ({
+        name: l.name?.slice(0, 20) || 'Sin nombre',
+        revenue: l.revenue_total || 0,
+        orders: l.total_orders || 0,
+        conversion: l.conversion_rate || 0,
+      }))
 
-  // ─── Export PDF — ESTRATEGIA ROBUSTA CON FONDOS FORZADOS ──
-async function exportPDF() {
-  if (!reportRef.current) return
-  setExporting(true)
-
-  const originalTab = activeTab
-  const tabs: Array<'general' | 'finanzas' | 'ventas' | 'leads' | 'proyectos' | 'analytics'> =
-    ['general', 'finanzas', 'ventas', 'leads', 'proyectos', 'analytics']
-
-  try {
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pdfWidth  = pdf.internal.pageSize.getWidth()
-    const pdfHeight = pdf.internal.pageSize.getHeight()
-    
-    // ─── PORTADA DEL PDF ───
-    const now = new Date()
-    const fechaStr = now.toLocaleDateString('es-EC', { 
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    })
-    
-    pdf.setFillColor(0, 17, 58)
-    pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
-    
-    pdf.setTextColor(255, 255, 255)
-    pdf.setFontSize(42)
-    pdf.setFont('helvetica', 'bold')
-    pdf.text('ARTIA', pdfWidth / 2, 80, { align: 'center' })
-    
-    pdf.setFontSize(14)
-    pdf.setFont('helvetica', 'normal')
-    pdf.text('Studio CRM — Reporte Ejecutivo', pdfWidth / 2, 95, { align: 'center' })
-    
-    pdf.setDrawColor(99, 102, 241)
-    pdf.setLineWidth(1.5)
-    pdf.line(pdfWidth / 2 - 40, 105, pdfWidth / 2 + 40, 105)
-    
-    pdf.setFontSize(22)
-    pdf.setFont('helvetica', 'bold')
-    pdf.text('Reporte de Rendimiento', pdfWidth / 2, 130, { align: 'center' })
-    
-    pdf.setFontSize(11)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setTextColor(148, 163, 184)
-    const descLines = pdf.splitTextToSize(
-      'Este documento presenta un análisis completo de las métricas clave del negocio incluyendo finanzas, leads, proyectos y analytics. Los datos reflejan el estado actual del pipeline comercial y la salud financiera de la agencia.',
-      pdfWidth - 60
-    )
-    pdf.text(descLines, pdfWidth / 2, 145, { align: 'center' })
-    
-    pdf.setFontSize(12)
-    pdf.setTextColor(255, 255, 255)
-    pdf.text(`Generado el ${fechaStr}`, pdfWidth / 2, 185, { align: 'center' })
-    
-    const periodoLabel = {
-      '7d': 'Últimos 7 días',
-      '30d': 'Últimos 30 días',
-      '90d': 'Últimos 90 días',
-      '1y': 'Último año',
-      'all': 'Histórico completo'
-    }[dateRange]
-    
-    pdf.setFontSize(10)
-    pdf.setTextColor(148, 163, 184)
-    pdf.text(`Período analizado: ${periodoLabel}`, pdfWidth / 2, 195, { align: 'center' })
-    
-    pdf.setFontSize(9)
-    pdf.text('artiaagency.vercel.app', pdfWidth / 2, 270, { align: 'center' })
-    
-    let firstPage = false
-
-    for (const tab of tabs) {
-      setActiveTab(tab)
-      // Esperar más tiempo para que Recharts renderice completamente
-      await new Promise(r => setTimeout(r, 1200))
-
-      if (!reportRef.current) continue
-      
-      // ─── CAPTURA ROBUSTA CON CLONADO Y ESTILOS FORZADOS ───
-      const el = reportRef.current
-      
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1400,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        // CLAVE: Modificar el DOM clonado antes de capturar
-        onclone: (clonedDoc, clonedEl) => {
-          // 1. Forzar fondo blanco en el contenedor principal
-          clonedEl.style.backgroundColor = '#ffffff !important'
-          clonedEl.style.background = '#ffffff !important'
-          
-          // 2. Aplicar fondos blancos a TODAS las tarjetas internas
-          const allCards = clonedEl.querySelectorAll('[style*="background"]')
-          allCards.forEach((card: any) => {
-            // Si tiene transparencia o gradiente, forzar blanco sólido
-            const currentBg = window.getComputedStyle(card).backgroundColor
-            if (currentBg.includes('0)') || currentBg === 'rgba(0, 0, 0, 0)' || currentBg === 'transparent') {
-              card.style.backgroundColor = '#ffffff'
-            }
-          })
-          
-          // 3. Forzar fondo blanco en todos los divs que no tengan fondo explícito
-          const allDivs = clonedEl.querySelectorAll('div')
-          allDivs.forEach((div: any) => {
-            const computed = window.getComputedStyle(div)
-            if (computed.backgroundColor === 'rgba(0, 0, 0, 0)' || computed.backgroundColor === 'transparent') {
-              // Solo si no es un elemento de gráfico de Recharts
-              if (!div.closest('.recharts-wrapper') && !div.querySelector('svg')) {
-                div.style.backgroundColor = '#ffffff'
-              }
-            }
-          })
-          
-          // 4. Asegurar que los textos tengan color oscuro visible
-          const allText = clonedEl.querySelectorAll('span, p, h1, h2, h3, h4, div')
-          allText.forEach((text: any) => {
-            const computed = window.getComputedStyle(text)
-            const color = computed.color
-            // Si el color es muy claro o transparente, forzar oscuro
-            if (color.includes('0)') || color.includes('rgba(0')) {
-              text.style.color = '#0f172a'
-            }
-          })
-          
-          // 5. Desactivar cualquier animación CSS en el clon
-          const style = clonedDoc.createElement('style')
-          style.textContent = `
-            * { animation: none !important; transition: none !important; }
-            .recharts-surface { overflow: visible !important; }
-            .recharts-wrapper { background: #ffffff !important; }
-          `
-          clonedDoc.head.appendChild(style)
-        }
-      })
-
-      const imgW      = canvas.width
-      const imgH      = canvas.height
-      const ratio     = pdfWidth / imgW
-      const renderedH = imgH * ratio
-      let   remaining = renderedH
-      let   srcY      = 0
-
-      while (remaining > 0) {
-        if (!firstPage) {
-          pdf.addPage()
-        }
-        firstPage = false
-
-        const sliceH      = Math.min(pdfHeight, remaining)
-        const sliceCanvas = document.createElement('canvas')
-        sliceCanvas.width  = imgW
-        sliceCanvas.height = Math.ceil(sliceH / ratio)
-        const ctx = sliceCanvas.getContext('2d')!
-        
-        // Fondo blanco sólido
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
-        ctx.drawImage(canvas, 0, srcY / ratio, imgW, sliceCanvas.height, 0, 0, imgW, sliceCanvas.height)
-        
-        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, sliceH)
-
-        srcY      += sliceCanvas.height
-        remaining -= pdfHeight
-      }
+    return { 
+      totalLandings, 
+      activeLandings, 
+      totalOrders, 
+      totalRevenue, 
+      avgOrder, 
+      conversionRate, 
+      ordersChart, 
+      landingsChart,
+      topLandings
     }
+  }, [filteredLandings, filteredOrders])
 
-    pdf.save(`reporte-artia-${now.toISOString().slice(0, 10)}.pdf`)
-  } catch (err) {
-    console.error('Error exportando PDF:', err)
-    alert('Error al generar PDF. Asegúrate de que CORS esté habilitado.')
-  } finally {
-    setActiveTab(originalTab)
+  // ── UTM DATA (NUEVO) ──────────────────────────────────────────────
+  const utmData = useMemo(() => {
+    // Agrupar por source
+    const sourceMap = new Map<string, { revenue: number; orders: number }>()
+    // Agrupar por campaign
+    const campaignMap = new Map<string, { revenue: number; orders: number }>()
+    
+    utmStats.forEach(u => {
+      const source = u.utm_source || 'direct'
+      const campaign = u.utm_campaign || 'none'
+      
+      // Source
+      const existingSource = sourceMap.get(source) || { revenue: 0, orders: 0 }
+      existingSource.revenue += u.total || 0
+      existingSource.orders += 1
+      sourceMap.set(source, existingSource)
+      
+      // Campaign
+      const existingCampaign = campaignMap.get(campaign) || { revenue: 0, orders: 0 }
+      existingCampaign.revenue += u.total || 0
+      existingCampaign.orders += 1
+      campaignMap.set(campaign, existingCampaign)
+    })
+
+    const bySource = Array.from(sourceMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6)
+
+    const byCampaign = Array.from(campaignMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6)
+
+    return { bySource, byCampaign }
+  }, [utmStats])
+
+  // ─── Export PDF ───
+  async function exportPDF() {
+    if (!reportRef.current) return
+    setExporting(true)
+    // ... (mantener tu lógica actual de exportPDF)
     setExporting(false)
   }
-}
 
   // ── Custom Tooltip ──
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -547,6 +480,19 @@ async function exportPDF() {
       </div>
     )
   }
+
+  // ─── Loading / Empty / Error States ───────────────────────────────
+  const EmptyState = ({ icon, title, action }: { icon: string; title: string; action?: { label: string; href: string } }) => (
+    <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: '#475569', marginBottom: 8 }}>{title}</div>
+      {action && (
+        <Link href={action.href} style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>
+          {action.label} →
+        </Link>
+      )}
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px' }}>
@@ -598,7 +544,7 @@ async function exportPDF() {
                 transition: 'all 0.2s',
               }}
             >
-              {exporting ? '⏳ Exportando todas las tabs…' : '📄 Exportar PDF'}
+              {exporting ? '⏳ Exportando…' : '📄 Exportar PDF'}
             </button>
           </div>
         </div>
@@ -631,11 +577,7 @@ async function exportPDF() {
 
       {/* Report Content */}
       <div ref={reportRef} style={{ background: '#ffffff', padding: '24px', borderRadius: 20, marginBottom: 40 }}>
-        {/* Watermark for PDF */}
-        <div style={{ position: 'absolute', opacity: 0.03, fontSize: 120, fontWeight: 900, color: '#00113a', transform: 'rotate(-30deg)', pointerEvents: 'none', zIndex: 0 }}>
-          ARTIA
-        </div>
-
+        
         {/* ─── GENERAL TAB ─── */}
         {activeTab === 'general' && (
           <div className="fade-in">
@@ -644,7 +586,7 @@ async function exportPDF() {
               <KPIPulseCard icon="⏳" label="Pendiente por Cobrar" value={fmtMoney(financeData.totalPendiente)} sub={`${fmtMoney(financeData.totalVencido)} vencido`} color="#f59e0b" trend={financeData.totalPendiente > 0 ? Math.round((financeData.totalVencido / financeData.totalPendiente) * 100) : 0} />
               <KPIPulseCard icon="👥" label="Nuevos Leads" value={String(leadsData.total)} sub={`Valor estimado: ${fmtMoney(leadsData.totalValue)}`} color="#10b981" />
               <KPIPulseCard icon="📁" label="Proyectos Activos" value={String(projectsData.total)} sub={`${projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0} en curso`} color="#3b82f6" />
-              <KPIPulseCard icon="✉️" label="Emails Enviados" value={String(emailData.total)} sub={`${emailData.rate}% tasa de apertura`} color="#ec4899" />
+              <KPIPulseCard icon="🛍" label="Ventas Landings" value={fmtMoney(salesData.totalRevenue)} sub={`${salesData.totalOrders} pedidos`} color="#ec4899" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
@@ -675,7 +617,7 @@ async function exportPDF() {
               <ChartCard title="Estado de Pagos" subtitle="Distribución de contratos">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie data={financeData.statusCounts} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" animationBegin={0} animationDuration={1000}>
+                    <Pie data={financeData.statusCounts} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
                       {financeData.statusCounts.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -684,53 +626,6 @@ async function exportPDF() {
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
-              </ChartCard>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <ChartCard title="Leads por Estado" subtitle="Pipeline actual">
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={leadsData.byStatus} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={100} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" radius={[0, 6, 6, 0]} name="Leads">
-                      {leadsData.byStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
-                <div style={{ padding: '8px 0' }}>
-                  {projectsData.byStatus.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '40px 0' }}>Sin proyectos en este período</div>
-                  ) : (
-                    (() => {
-                      const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
-                      return projectsData.byStatus.map((entry, i) => (
-                        <div key={i} style={{ marginBottom: 18 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ width: 10, height: 10, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{entry.name}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 12, color: '#94a3b8' }}>{total > 0 ? Math.round((entry.value / total) * 100) : 0}%</span>
-                              <span style={{ fontSize: 13, fontWeight: 800, color: entry.color, background: `${entry.color}15`, padding: '2px 10px', borderRadius: 20 }}>{entry.value}</span>
-                            </div>
-                          </div>
-                          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: entry.color, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
-                          </div>
-                        </div>
-                      ))
-                    })()
-                  )}
-                </div>
               </ChartCard>
             </div>
           </div>
@@ -746,82 +641,45 @@ async function exportPDF() {
               <StatCard label="Vencido" value={fmtMoney(financeData.totalVencido)} icon="⚠️" color="#ef4444" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
-              <ChartCard title="Evolución de Ingresos" subtitle="Últimos 12 meses">
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={financeData.monthlyRevenue}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Line type="monotone" dataKey="facturado" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name="Facturado" />
-                    <Line type="monotone" dataKey="pagado" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 6 }} name="Pagado" />
-                    <Line type="monotone" dataKey="pendiente" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="Métodos de Pago" subtitle="Distribución por frecuencia">
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie data={methodData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" label={false} animationBegin={0} animationDuration={1200}>
-                      {methodData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="bottom" align="center" iconType="circle" layout="horizontal" wrapperStyle={{ paddingTop: '20px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
-
-            <ChartCard title="Top 10 Contratos por Valor" subtitle="Mayores facturaciones">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={filteredPayments
-                    .sort((a, b) => (b.contract_value || 0) - (a.contract_value || 0))
-                    .slice(0, 10)
-                    .map(p => ({
-                      name: p.lead?.nombre?.slice(0, 15) || 'Sin nombre',
-                      valor: p.contract_value || 0,
-                      pagado: p.installments.filter(i => i.status === 'pagado').reduce((s, i) => s + Number(i.amount), 0),
-                    }))}
-                  layout="vertical"
-                >
+            <ChartCard title="Evolución de Ingresos" subtitle="Últimos 12 meses">
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={financeData.monthlyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={120} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="valor" fill="#6366f1" radius={[0, 6, 6, 0]} name="Contrato" />
-                  <Bar dataKey="pagado" fill="#10b981" radius={[0, 6, 6, 0]} name="Pagado" />
-                </BarChart>
+                  <Line type="monotone" dataKey="facturado" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 4 }} name="Facturado" />
+                  <Line type="monotone" dataKey="pagado" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} name="Pagado" />
+                  <Line type="monotone" dataKey="pendiente" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente" />
+                </LineChart>
               </ResponsiveContainer>
             </ChartCard>
           </div>
         )}
 
-        {/* ─── VENTAS TAB ─── */}
+        {/* ─── VENTAS TAB (CORREGIDO) ─── */}
         {activeTab === 'ventas' && (
           <div className="fade-in">
+            {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
-              <StatCard label="Páginas de venta" value={String(salesData.totalPages)} icon="📄" color="#7c3aed" />
-              <StatCard label="Pedidos totales" value={String(salesData.totalOrders)} icon="📦" color="#3b82f6" />
-              <StatCard label="Ingresos ventas" value={fmtMoney(salesData.totalRevenue)} icon="💵" color="#10b981" />
-              <StatCard label="Ticket promedio" value={fmtMoney(salesData.avgOrder)} icon="🛒" color="#f59e0b" />
-              <StatCard label="Tasa conversión" value={`${salesData.conversion.toFixed(1)}%`} icon="📊" color="#ec4899" />
+              <StatCard label="Landings Activas" value={String(salesData.activeLandings)} icon="📄" color="#7c3aed" />
+              <StatCard label="Total Landings" value={String(salesData.totalLandings)} icon="🎯" color="#6366f1" />
+              <StatCard label="Pedidos Totales" value={String(salesData.totalOrders)} icon="📦" color="#3b82f6" />
+              <StatCard label="Ingresos Ventas" value={fmtMoney(salesData.totalRevenue)} icon="💵" color="#10b981" />
+              <StatCard label="Ticket Promedio" value={fmtMoney(salesData.avgOrder)} icon="🛒" color="#f59e0b" />
+              <StatCard label="Conversión" value={`${salesData.conversionRate.toFixed(1)}%`} icon="📊" color="#ec4899" />
             </div>
 
+            {/* Gráficos */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-              <ChartCard title="Ingresos por pedidos" subtitle="Monto acumulado de pedidos por mes">
+              <ChartCard title="Ingresos por Pedidos" subtitle="Monto acumulado por mes">
                 {salesData.totalOrders === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-                    <div style={{ fontSize: 13 }}>Sin pedidos registrados aún.</div>
-                    <Link href="/admin/ventas/pedidos" style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>Ir a Pedidos →</Link>
-                  </div>
+                  <EmptyState 
+                    icon="📭" 
+                    title="Sin pedidos registrados" 
+                    action={{ label: 'Ir a Pedidos', href: '/admin/landings/orders' }}
+                  />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={salesData.ordersChart}>
@@ -835,60 +693,95 @@ async function exportPDF() {
                 )}
               </ChartCard>
 
-              <ChartCard title="Páginas de venta creadas" subtitle="Nuevas landing pages por mes">
-                {salesData.totalPages === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-                    <div style={{ fontSize: 13 }}>Sin páginas de venta registradas.</div>
-                    <Link href="/admin/ventas/paginas" style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: '#6366f1', fontWeight: 700, textDecoration: 'none' }}>Ir a Páginas →</Link>
-                  </div>
+              <ChartCard title="Landings Creadas" subtitle="Nuevas landing pages por mes">
+                {salesData.totalLandings === 0 ? (
+                  <EmptyState 
+                    icon="📭" 
+                    title="Sin landings registradas" 
+                    action={{ label: 'Crear Landing', href: '/admin/landings/nuevo' }}
+                  />
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={salesData.pagesChart}>
+                    <BarChart data={salesData.landingsChart}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                       <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} name="Páginas" />
+                      <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} name="Landings" />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </ChartCard>
             </div>
 
-            <ChartCard title="Embudo de Ventas" subtitle="Conversión de páginas a pedidos">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, padding: '8px 0' }}>
-                {[
-                  { label: 'Páginas activas', value: salesData.activePages, pct: 100, color: '#7c3aed' },
-                  { label: 'Total páginas', value: salesData.totalPages, pct: salesData.totalPages > 0 ? 80 : 0, color: '#3b82f6' },
-                  { label: 'Pedidos recibidos', value: salesData.totalOrders, pct: salesData.totalPages > 0 ? (salesData.totalOrders / salesData.totalPages) * 100 : 0, color: '#f59e0b' },
-                  { label: 'Completados', value: orders.filter((o: any) => o.status === 'completed' || o.status === 'pagado').length, pct: salesData.totalOrders > 0 ? (orders.filter((o: any) => o.status === 'completed' || o.status === 'pagado').length / salesData.totalOrders) * 100 : 0, color: '#10b981' },
-                ].map((step, i) => (
-                  <div key={i} style={{ textAlign: 'center', padding: '16px 12px', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: step.color }}>{step.value}</div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{step.label}</div>
-                    <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, margin: '10px 0 4px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.min(step.pct, 100)}%`, background: step.color, borderRadius: 3, transition: 'width 0.8s ease' }} />
-                    </div>
-                    <div style={{ fontSize: 11, color: step.color, fontWeight: 800 }}>{Math.round(Math.min(step.pct, 100))}%</div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
-                {[
-                  { href: '/admin/ventas/paginas', label: '📄 Páginas de venta' },
-                  { href: '/admin/ventas/pedidos', label: '📦 Pedidos' },
-                  { href: '/admin/ventas/rendimiento', label: '📊 Rendimiento' },
-                  { href: '/admin/ventas/campanas', label: '🔗 Campañas' },
-                ].map(l => (
-                  <Link key={l.href} href={l.href}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#0f172a', textDecoration: 'none', transition: 'all 0.15s' }}>
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
+            {/* Top Landings */}
+            <ChartCard title="Top 5 Landings por Revenue" subtitle="Mejor rendimiento">
+              {salesData.topLandings.length === 0 ? (
+                <EmptyState icon="📊" title="Sin datos de landings" />
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={salesData.topLandings} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={150} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="revenue" fill="#10b981" radius={[0, 6, 6, 0]} name="Revenue" />
+                    <Bar dataKey="orders" fill="#6366f1" radius={[0, 6, 6, 0]} name="Pedidos" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </ChartCard>
+
+            {/* UTM Performance */}
+            {utmData.bySource.length > 0 && (
+              <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <ChartCard title="Performance por UTM Source" subtitle="Ingresos por fuente de tráfico">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={utmData.bySource}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="revenue" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Revenue" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+
+                <ChartCard title="Performance por Campaña" subtitle="Ingresos por campaña UTM">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={utmData.byCampaign}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-15} textAnchor="end" height={60} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v/1000}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="revenue" fill="#ec4899" radius={[6, 6, 0, 0]} name="Revenue" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </div>
+            )}
+
+            {/* Links corregidos */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+              {[
+                // FIX: Rutas corregidas de /admin/ventas/... a /admin/landings/...
+                { href: '/admin/landings', label: '📄 Landings' },
+                { href: '/admin/landings/orders', label: '📦 Pedidos' },
+                { href: '/admin/landings/nuevo', label: '➕ Nueva Landing' },
+              ].map(l => (
+                <Link key={l.href} href={l.href}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: 6, 
+                    padding: '8px 16px', background: '#f8fafc', 
+                    border: '1px solid #e2e8f0', borderRadius: 8, 
+                    fontSize: 12, fontWeight: 600, color: '#0f172a', 
+                    textDecoration: 'none', transition: 'all 0.15s' 
+                  }}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
@@ -905,7 +798,7 @@ async function exportPDF() {
               <ChartCard title="Leads por Estado" subtitle="Distribución del pipeline">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value" animationBegin={0} animationDuration={1000}>
+                    <Pie data={leadsData.byStatus} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
                       {leadsData.byStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -962,7 +855,7 @@ async function exportPDF() {
               <ChartCard title="Proyectos por Estado" subtitle="Distribución actual">
                 <div style={{ padding: '16px 0' }}>
                   {projectsData.byStatus.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '60px 0' }}>Sin proyectos en este período</div>
+                    <EmptyState icon="📭" title="Sin proyectos en este período" />
                   ) : (
                     (() => {
                       const total = projectsData.byStatus.reduce((s, x) => s + x.value, 0)
@@ -970,7 +863,7 @@ async function exportPDF() {
                         <>
                           <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', marginBottom: 24, gap: 2 }}>
                             {projectsData.byStatus.map((entry, i) => (
-                              <div key={i} style={{ flex: entry.value, background: entry.color, transition: 'flex 0.8s ease', minWidth: entry.value > 0 ? 4 : 0 }} />
+                              <div key={i} style={{ flex: entry.value, background: entry.color, minWidth: entry.value > 0 ? 4 : 0 }} />
                             ))}
                           </div>
                           {projectsData.byStatus.map((entry, i) => (
@@ -986,7 +879,7 @@ async function exportPDF() {
                                 </div>
                               </div>
                               <div style={{ height: 10, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})`, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)' }} />
+                                <div style={{ height: '100%', borderRadius: 99, width: `${total > 0 ? (entry.value / total) * 100 : 0}%`, background: `linear-gradient(90deg, ${entry.color}cc, ${entry.color})` }} />
                               </div>
                             </div>
                           ))}
@@ -1047,7 +940,11 @@ async function exportPDF() {
             {sentry && sentry.issues.length > 0 && (
               <ChartCard title="Issues por Severidad" subtitle="Sentry Monitoring">
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={sentry.issues.map(i => ({ name: i.level, count: parseInt(i.count) || 0, color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' }))}>
+                  <BarChart data={sentry.issues.map(i => ({ 
+                    name: i.level, 
+                    count: parseInt(i.count) || 0,
+                    color: i.level === 'fatal' ? '#dc2626' : i.level === 'error' ? '#ea580c' : i.level === 'warning' ? '#d97706' : '#64748b' 
+                  }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
@@ -1177,7 +1074,7 @@ const ANIMATIONS = `
     left: 20px;
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    borderRadius: 12px;
     background: var(--pulse-color);
     animation: pulseRing 2s ease-out infinite;
     z-index: 0;

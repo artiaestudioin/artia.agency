@@ -58,9 +58,9 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Pipeline</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Estado de Clientes</h1>
           <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>
-            {leads.length} leads · {fmtMoney(totalCerrado)} cerrado
+            {leads.length} Clientes · {fmtMoney(totalCerrado)} completados
           </p>
         </div>
         <Link href="/admin/leads">
@@ -68,7 +68,7 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
             background: COLORS.primary, color: '#fff', padding: '9px 18px', borderRadius: 10,
             fontSize: 13, fontWeight: 700, textDecoration: 'none', border: 'none', cursor: 'pointer',
           }}>
-            + Nuevo lead
+            + Registrar nuevo Cliente
           </button>
         </Link>
       </header>

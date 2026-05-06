@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   GitBranch,
-  Building2,
   ShoppingBag,
   DollarSign,
   FolderKanban,
@@ -14,7 +13,6 @@ import {
   BarChart3,
   Sparkles,
   ChevronDown,
-  ChevronRight,
   FileText,
   ShoppingCart,
   TrendingUp,
@@ -25,7 +23,6 @@ import {
   Bell,
   Plus,
   HelpCircle,
-  Mail,
   MailOpen,
 } from 'lucide-react'
 
@@ -51,18 +48,13 @@ const NAV_ITEMS: NavGroup[] = [
   },
   {
     href: '/admin/leads',
-    label: 'Contactos',
+    label: 'Clientes',
     icon: <Users size={18} />,
   },
   {
     href: '/admin/pipeline',
     label: 'Proceso de ventas',
     icon: <GitBranch size={18} />,
-  },
-  {
-    href: '/admin/cliente',
-    label: 'Clientes',
-    icon: <Building2 size={18} />,
   },
   {
     label: 'Ventas',
@@ -76,18 +68,13 @@ const NAV_ITEMS: NavGroup[] = [
   },
   {
     href: '/admin/finanzas',
-    label: 'Ingresos',
+    label: 'Sistema Contable',
     icon: <DollarSign size={18} />,
   },
   {
     href: '/admin/proyectos',
     label: 'Proyectos',
     icon: <FolderKanban size={18} />,
-  },
-  {
-    href: '/admin/imagenes',
-    label: 'Media-fotos',
-    icon: <ImageIcon size={18} />,
   },
   {
     href: '/admin/emails',
@@ -104,7 +91,13 @@ const NAV_ITEMS: NavGroup[] = [
     label: 'Asistente IA',
     icon: <Sparkles size={18} />,
   },
+  {
+    href: '/admin/imagenes',
+    label: 'Media-fotos',
+    icon: <ImageIcon size={18} />,
+  },
 ]
+
 const LOGO_LIGHT = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/logo%20artia%20azul.png'
 const LOGO_DARK  = 'https://qnslgtbsilqhcyitskuv.supabase.co/storage/v1/object/public/emails-assets/ARTIA%20blanco.png'
 
@@ -115,7 +108,8 @@ export default function AdminNav({ email }: { email: string }) {
     pathname.startsWith('/admin/landings')
   )
   const [mobileOpen, setMobileOpen] = useState(false)
-const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(false)
+  const [logoError, setLogoError] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
@@ -130,20 +124,37 @@ const [dark, setDark] = useState(false)
   const isActive = (href: string) => href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
   const logo = dark ? LOGO_DARK : LOGO_LIGHT
   const initials = email.slice(0, 2).toUpperCase()
-  const username = email.split('@')[0]
+
+  const LogoBlock = ({ height = 28 }: { height?: number }) => (
+    <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+      {!logoError ? (
+        <img
+          src={logo}
+          alt="Artia CRM"
+          style={{ height, width: 'auto', objectFit: 'contain', maxWidth: 110, display: 'block' }}
+          onError={() => setLogoError(true)}
+        />
+      ) : (
+        <span style={{
+          fontSize: height > 24 ? 20 : 16,
+          fontWeight: 800,
+          color: dark ? '#fff' : '#1e3a8a',
+          letterSpacing: '-0.5px',
+          lineHeight: 1,
+        }}>
+          ARTIA
+        </span>
+      )}
+      <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>CRM</span>
+    </a>
+  )
 
   const SidebarContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '16px 12px', gap: 2 }}>
       {/* Logo */}
-      <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', marginBottom: 18, textDecoration: 'none' }}>
-        <img
-          src={logo}
-          alt="Artia CRM"
-          style={{ height: 28, width: 'auto', objectFit: 'contain', maxWidth: 110 }}
-          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-        />
-        <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>CRM</span>
-      </a>
+      <div style={{ padding: '8px 10px', marginBottom: 18 }}>
+        <LogoBlock height={28} />
+      </div>
 
       {/* Nav Items */}
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -417,9 +428,7 @@ const [dark, setDark] = useState(false)
           padding: '0 16px',
         }}
       >
-        <a href="/admin" style={{ textDecoration: 'none' }}>
-          <img src={logo} alt="Artia" style={{ height: 24, width: 'auto', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        </a>
+        <LogoBlock height={24} />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           style={{

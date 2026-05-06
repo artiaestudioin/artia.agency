@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import nodemailer from 'nodemailer'
 
+// ─── Mapeo de estados a labels amigables (igual que en SeguimientoClient) ───
+const ESTADO_LABELS: Record<string, { label: string; sublabel: string }> = {
+  nuevo:      { label: 'Solicitud recibida',    sublabel: 'Tu solicitud llegó a nuestro equipo' },
+  contactado: { label: 'En revisión',           sublabel: 'Analizando los detalles de tu proyecto' },
+  en_proceso: { label: 'En producción',         sublabel: 'Tu proyecto está siendo desarrollado' },
+  cerrado:    { label: 'Entregado',             sublabel: '¡Tu proyecto fue completado con éxito!' },
+  perdido:    { label: 'Cerrado',               sublabel: 'El proyecto fue archivado' },
+}
+
+function getEstadoLabel(estadoRaw: string | null | undefined): string {
+  if (!estadoRaw) return 'En revisión'
+  const mapped = ESTADO_LABELS[estadoRaw]
+  return mapped?.label ?? estadoRaw.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
+}
+
+function getEstadoSublabel(estadoRaw: string | null | undefined): string {
+  if (!estadoRaw) return 'Tu solicitud está siendo procesada'
+  const mapped = ESTADO_LABELS[estadoRaw]
+  return mapped?.sublabel ?? 'Tu solicitud está siendo procesada'
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -12,6 +33,10 @@ export async function POST(req: NextRequest) {
   if (!to || !asunto || !cuerpo) {
     return NextResponse.json({ error: 'to, asunto y cuerpo son requeridos' }, { status: 400 })
   }
+
+  // Convertir estado crudo a label amigable
+  const estadoLabel = getEstadoLabel(estado)
+  const estadoSublabel = getEstadoSublabel(estado)
 
   try {
     const transporter = nodemailer.createTransport({
@@ -75,8 +100,11 @@ export async function POST(req: NextRequest) {
                     <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">
                       ESTADO ACTUAL
                     </p>
-                    <p style="margin:0;font-size:16px;font-weight:600;color:#0f172a;">
-                      🔍 ${estado || 'En revisión'}
+                    <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#0f172a;">
+                      ${estadoLabel}
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">
+                      ${estadoSublabel}
                     </p>
                   </td>
                 </tr>
