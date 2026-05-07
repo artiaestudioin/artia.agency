@@ -56,3 +56,33 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true })
 }
+
+// DELETE /api/admin/lead-estado?id=...&hard=1 — eliminar lead permanentemente
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id   = searchParams.get('id')
+  const hard = searchParams.get('hard')
+
+  if (!id) {
+    return NextResponse.json({ error: 'id es requerido' }, { status: 400 })
+  }
+
+  // Solo permitir hard delete si se pasa ?hard=1
+  if (hard !== '1') {
+    return NextResponse.json({ error: 'Operación no permitida sin ?hard=1' }, { status: 403 })
+  }
+
+  const { error } = await supabase
+    .from('leads')
+    .delete()
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
+}
