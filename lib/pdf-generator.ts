@@ -1,6 +1,14 @@
 // lib/pdf-generator.ts
 import { jsPDF } from 'jspdf'
 
+// jsPDF has `polygon` at runtime but it's missing from the official type definitions.
+// This augmentation adds it so TypeScript stops complaining.
+declare module 'jspdf' {
+  interface jsPDF {
+    polygon(points: [number, number][], style: string): jsPDF
+  }
+}
+
 // ─── Types ─────────────────────────────────────────────────────────
 
 export interface PDFPayload {

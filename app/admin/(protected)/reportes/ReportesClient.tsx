@@ -250,16 +250,25 @@ export default function ReportesClient({
     }
   }, [dateRange])
 
-  const filteredPayments = payments.filter(p => {
-    const d = safeDate(p.created_at)
-    if (d && d >= cutoffDate) return true
-    return p.installments.some(i => { const id = safeDate(i.payment_date); return id !== null && id >= cutoffDate })
-  })
-  const filteredLeads    = leads.filter(l    => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
-  const filteredProjects = projects.filter(p => { const d = safeDate(p.created_at); return d ? d >= cutoffDate : false })
-  const filteredEmails   = emails.filter(e   => { const d = safeDate(e.sent_at);    return d ? d >= cutoffDate : false })
-  const filteredOrders   = orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false })
-  const filteredLandings = landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false })
+  const {
+    filteredPayments,
+    filteredLeads,
+    filteredProjects,
+    filteredEmails,
+    filteredOrders,
+    filteredLandings,
+  } = useMemo(() => ({
+    filteredPayments: payments.filter(p => {
+      const d = safeDate(p.created_at)
+      if (d && d >= cutoffDate) return true
+      return p.installments.some(i => { const id = safeDate(i.payment_date); return id !== null && id >= cutoffDate })
+    }),
+    filteredLeads:    leads.filter(l    => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false }),
+    filteredProjects: projects.filter(p => { const d = safeDate(p.created_at); return d ? d >= cutoffDate : false }),
+    filteredEmails:   emails.filter(e   => { const d = safeDate(e.sent_at);    return d ? d >= cutoffDate : false }),
+    filteredOrders:   orders.filter(o   => { const d = safeDate(o.created_at); return d ? d >= cutoffDate : false }),
+    filteredLandings: landings.filter(l => { const d = safeDate(l.created_at); return d ? d >= cutoffDate : false }),
+  }), [payments, leads, projects, emails, orders, landings, cutoffDate])
 
     // ── Computed Data: FINANZAS ──
   const methodData = useMemo(() => {
