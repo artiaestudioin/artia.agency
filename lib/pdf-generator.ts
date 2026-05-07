@@ -253,7 +253,7 @@ function drawPolygon(
   for (let i = 1; i < points.length; i++) {
     pdf.lineTo(points[i][0], points[i][1])
   }
-  pdf.closePath()
+  pdf.close()
   if (style === 'FD' || style === 'DF') {
     pdf.fillStroke()
   } else if (style === 'F') {
