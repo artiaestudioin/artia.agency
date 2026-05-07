@@ -20,18 +20,18 @@ export default function NuevoLeadModal() {
   const [error, setError]     = useState('')
 
   const [form, setForm] = useState({
-    nombre:    '',
-    email:     '',
-    telefono:  '',
-    servicio:  '',
-    categoria: 'marketing',
-    mensaje:   '',
+    nombre:          '',
+    email:           '',
+    telefono:        '',
+    servicio:        '',
+    categoria:       'marketing',
+    mensaje:         '',
+    estimated_value: '',
   })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
-    // Si cambia el servicio preestablecido, actualizar categoría automáticamente
     if (name === 'categoria') setForm(prev => ({ ...prev, categoria: value, servicio: SERVICIOS.find(s => s.value === value)?.label ?? '' }))
   }
 
@@ -47,7 +47,10 @@ export default function NuevoLeadModal() {
       const res = await fetch('/api/admin/lead-manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
+        }),
       })
       const data = await res.json()
       if (!res.ok || !data.ok) {
@@ -67,7 +70,7 @@ export default function NuevoLeadModal() {
     setOpen(false)
     setFolio(null)
     setError('')
-    setForm({ nombre: '', email: '', telefono: '', servicio: '', categoria: 'marketing', mensaje: '' })
+    setForm({ nombre: '', email: '', telefono: '', servicio: '', categoria: 'marketing', mensaje: '', estimated_value: '' })
   }
 
   return (
@@ -168,7 +171,7 @@ export default function NuevoLeadModal() {
                   <CopiarLink folio={folio} />
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
                     <button
-                      onClick={() => { setFolio(null); setForm({ nombre: '', email: '', telefono: '', servicio: '', categoria: 'marketing', mensaje: '' }) }}
+                      onClick={() => { setFolio(null); setForm({ nombre: '', email: '', telefono: '', servicio: '', categoria: 'marketing', mensaje: '', estimated_value: '' }) }}
                       style={{ background: '#f8fafc', border: '0.5px solid #e2e8f0', color: '#475569', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                     >
                       Crear otro
@@ -228,15 +231,30 @@ export default function NuevoLeadModal() {
                     />
                   </Field>
 
-                  {/* Mensaje / notas */}
-                  <Field label="Notas del pedido">
-                    <textarea
-                      name="mensaje" value={form.mensaje}
-                      onChange={handleChange}
-                      placeholder="Detalles adicionales, especificaciones, fecha de entrega requerida…"
-                      rows={3}
-                    />
-                  </Field>
+                  {/* Valor estimado + Notas en fila */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                    <Field label="Valor estimado ($)">
+                      <input
+                        name="estimated_value"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.estimated_value}
+                        onChange={handleChange}
+                        placeholder="Ej: 150"
+                        style={{ width: '100%', boxSizing: 'border-box' }}
+                      />
+                    </Field>
+                    <Field label="Notas del pedido">
+                      <input
+                        name="mensaje"
+                        type="text"
+                        value={form.mensaje}
+                        onChange={handleChange}
+                        placeholder="Detalles, fecha de entrega…"
+                      />
+                    </Field>
+                  </div>
 
                   {error && (
                     <p style={{
