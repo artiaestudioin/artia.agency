@@ -239,7 +239,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
           <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: txt1 }}>
             Motor de BI listo
           </h3>
-          <p style={{ margin: 0, fontSize: 14, color: txt2, maxWidth: 420, margin: '0 auto' }}>
+          <p style={{ fontSize: 14, color: txt2, maxWidth: 420, margin: '0 auto' }}>
             Haz clic en <strong>"Ejecutar análisis"</strong> para procesar los datos de Mayo 2026
             con K-Means clustering y ver tu posición en el espacio 3D vs. meses históricos.
           </p>

@@ -946,7 +946,7 @@ export default function ReportesClient({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total Facturado" value={fmtMoney(financeData.totalFacturado)} icon="💵" color="#6366f1" />
               <StatCard label="Total Pagado" value={fmtMoney(financeData.totalPagado)} icon="✅" color="#10b981" />
-              <StatCard label="Pendiente al Dia" value={fmtMoney(financeData.totalPendienteFuturo)} icon="📅" color="#3b82f6" />
+              <StatCard label="Pendiente al Dia" value={fmtMoney(financeData.totalPendienteFuturo)} icon="📅" color="#fae900" />
               <StatCard label="Vencido" value={fmtMoney(financeData.totalVencido)} icon="⚠️" color="#ef4444" />
             </div>
 
@@ -985,7 +985,7 @@ export default function ReportesClient({
                   <Legend />
                   <Line type="monotone" dataKey="facturado" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 4 }} name="Facturado" />
                   <Line type="monotone" dataKey="pagado" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} name="Pagado" />
-                  <Line type="monotone" dataKey="pendiente" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente al Dia" />
+                  <Line type="monotone" dataKey="pendiente" stroke="#fae900" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Pendiente al Dia" />
                   <Line type="monotone" dataKey="vencido" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 3" dot={false} name="Vencido" />
                 </LineChart>
               </ResponsiveContainer>
