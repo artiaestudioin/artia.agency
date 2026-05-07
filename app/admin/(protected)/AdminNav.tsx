@@ -27,6 +27,7 @@ import {
   UserCircle,
   Sun,
   Moon,
+   Brain,  
 } from 'lucide-react'
 
 // ─── NAV STRUCTURE ───────────────────────────────────────────────
@@ -83,9 +84,12 @@ const NAV_ITEMS: NavGroup[] = [
     icon: <MailOpen size={18} />,
   },
   {
-    href: '/admin/reportes',
     label: 'Reportes',
     icon: <BarChart3 size={18} />,
+    children: [
+      { href: '/admin/reportes',    label: 'Vista General',        icon: <BarChart3 size={15} /> },
+      { href: '/admin/reportes/bi', label: 'Business Intelligence', icon: <Brain size={15} /> },
+    ],
   },
   {
     href: '/admin/ia',
@@ -217,7 +221,9 @@ function getTheme(dark: boolean) {
 export default function AdminNav({ email }: { email: string }) {
   const pathname = usePathname()
   const [salesOpen, setSalesOpen] = useState(() => pathname.startsWith('/admin/landings'))
-  const [clientesOpen, setClientesOpen] = useState(() => pathname.startsWith('/admin/leads') || pathname.startsWith('/admin/pipeline'))
+  const [clientesOpen,  setClientesOpen]  = useState(() => pathname.startsWith('/admin/leads') || pathname.startsWith('/admin/pipeline'))
+  // ↓ Reportes abre si estamos en cualquier sub-ruta
+  const [reportesOpen,  setReportesOpen]  = useState(() => pathname.startsWith('/admin/reportes'))
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dark, setDark] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -298,8 +304,12 @@ export default function AdminNav({ email }: { email: string }) {
     // GRUPO CON HIJOS
     if (item.children) {
       const isVentas = item.label === 'Ventas'
-      const open = isVentas ? salesOpen : clientesOpen
-      const setOpen = isVentas ? setSalesOpen : setClientesOpen
+      const isClientes = item.label === 'Clientes'
+    const isReportes = item.label === 'Reportes'
+
+    const open = isVentas? salesOpen : isClientes ? clientesOpen : isReportes ? reportesOpen : false
+    const setOpen = isVentas ? setSalesOpen : isClientes ? setClientesOpen : isReportes ? setReportesOpen : () => {}
+
       const groupActive = item.children.some(c => isActive(c.href))
 
       return (

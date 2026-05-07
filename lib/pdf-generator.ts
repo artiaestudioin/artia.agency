@@ -1,14 +1,6 @@
 // lib/pdf-generator.ts
 import { jsPDF } from 'jspdf'
 
-// jsPDF has `polygon` at runtime but it's missing from the official type definitions.
-// This augmentation adds it so TypeScript stops complaining.
-declare module 'jspdf' {
-  interface jsPDF {
-    polygon(points: [number, number][], style: string): jsPDF
-  }
-}
-
 // ─── Types ─────────────────────────────────────────────────────────
 
 export interface PDFPayload {
@@ -247,6 +239,30 @@ function drawTable(
 
 // ─── Chart Engine (Vectorial PDF) ──────────────────────────────────
 
+/**
+ * Dibuja un polígono cerrado usando el API nativo de jsPDF (moveTo/lineTo/fillStroke).
+ * Reemplaza polygon() que no existe en producción (tree-shaking de la extensión svg).
+ */
+function drawPolygon(
+  pdf: jsPDF,
+  points: [number, number][],
+  style: 'F' | 'S' | 'FD' | 'DF' = 'FD'
+) {
+  if (points.length < 2) return
+  pdf.moveTo(points[0][0], points[0][1])
+  for (let i = 1; i < points.length; i++) {
+    pdf.lineTo(points[i][0], points[i][1])
+  }
+  pdf.closePath()
+  if (style === 'FD' || style === 'DF') {
+    pdf.fillStroke()
+  } else if (style === 'F') {
+    pdf.fill()
+  } else {
+    pdf.stroke()
+  }
+}
+
 function drawPieChart(
   pdf: jsPDF,
   data: { name: string; value: number; color?: string }[],
@@ -291,7 +307,7 @@ function drawPieChart(
       points.push([cx, cy])
     }
 
-    pdf.polygon(points, 'FD')
+    drawPolygon(pdf, points, 'FD')
 
     pdf.setDrawColor(255, 255, 255)
     pdf.setLineWidth(0.5)
@@ -449,7 +465,7 @@ function drawLineChart(
   pdf.setFillColor(fillRgb[0], fillRgb[1], fillRgb[2])
   pdf.setDrawColor(fillRgb[0], fillRgb[1], fillRgb[2])
   pdf.setLineWidth(0.1)
-  pdf.polygon(points, 'F')
+  drawPolygon(pdf, points, 'F')
 
   const lineRgb = hexToRgb(lineColor)
   pdf.setDrawColor(lineRgb[0], lineRgb[1], lineRgb[2])
@@ -1108,7 +1124,7 @@ function renderStatsRow(
 
     pdf.setFontSize(13)
     pdf.setTextColor(15, 23, 42)
-    pdf.setFont('helvetica', 'bold')
+    pdf.setFont('bold')
     pdf.text(stat.value, cardX + 8, y + 24)
   })
 
