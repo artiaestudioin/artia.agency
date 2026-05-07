@@ -139,6 +139,29 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     }
   }
 
+  // ── Hard delete lead (para leads de prueba) ───────────────────
+  async function hardDeleteLead(lead: Lead) {
+    const msg = `¿ELIMINAR PERMANENTEMENTE a "${lead.nombre}"?\n\n⚠️ Esta acción NO se puede deshacer.\nFolio: ${lead.folio ?? 'sin folio'}`
+    if (!confirm(msg)) return
+    setDeleting(lead.id)
+    try {
+      const res = await fetch(`/api/admin/lead-estado?id=${lead.id}&hard=1`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setLeads(prev => prev.filter(l => l.id !== lead.id))
+        showMsg(`"${lead.nombre}" eliminado permanentemente`)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        showMsg(data.error ?? 'Error al eliminar', false)
+      }
+    } catch {
+      showMsg('Error de conexión al eliminar', false)
+    } finally {
+      setDeleting(null)
+    }
+  }
+
   // ── Navigate to Vista360 ──────────────────────────────────────
   function goToLead(lead: Lead) {
     if (lead.folio) router.push(`/admin/cliente/${lead.folio}`)
@@ -286,8 +309,8 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                         {fmtDate(lead.created_at)}
                       </td>
 
-                      {/* Actions — stop propagation so delete doesn't navigate */}
-                      <td style={{ padding: '12px 10px', verticalAlign: 'middle' }} onClick={e => e.stopPropagation()}>
+                      {/* Actions */}
+                      <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', gap: 5 }}>
                           {hasLink && (
                             <a href={`/admin/cliente/${lead.folio}`}
@@ -296,12 +319,21 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                               Ver →
                             </a>
                           )}
+                          {/* Archivar (soft delete) */}
                           <button
-                            onClick={() => deleteLead(lead)}
+                            onClick={(e) => { e.stopPropagation(); deleteLead(lead) }}
                             disabled={deleting === lead.id || lead.estado === 'perdido'}
                             title={lead.estado === 'perdido' ? 'Ya archivado' : 'Archivar contacto'}
                             style={{ fontSize: 10, fontWeight: 700, padding: '5px 8px', borderRadius: 6, background: lead.estado === 'perdido' ? '#f8fafc' : '#fef2f2', color: lead.estado === 'perdido' ? '#cbd5e1' : '#ef4444', border: 'none', cursor: deleting === lead.id || lead.estado === 'perdido' ? 'not-allowed' : 'pointer' }}>
                             {deleting === lead.id ? '…' : '🗑️'}
+                          </button>
+                          {/* Eliminar permanente (hard delete) */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); hardDeleteLead(lead) }}
+                            disabled={deleting === lead.id}
+                            title="Eliminar permanentemente (pruebas)"
+                            style={{ fontSize: 10, fontWeight: 700, padding: '5px 8px', borderRadius: 6, background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca', cursor: deleting === lead.id ? 'not-allowed' : 'pointer' }}>
+                            {deleting === lead.id ? '…' : '✕'}
                           </button>
                         </div>
                       </td>
