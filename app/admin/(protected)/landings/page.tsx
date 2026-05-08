@@ -47,12 +47,16 @@ export default async function LandingsPage({
   const landings = (landingsRaw || []).map(l => ({
     ...l,
     revenue_total: revenueMap[l.id] || 0,
-    views_count: 0, // TODO: implementar tracking de visitas si lo necesitas
+    views_count: 0,       // TODO: implementar tracking de visitas si lo necesitas
     conversions_count: 0, // TODO: implementar tracking de conversiones
-  }))
+    clicks_count: 0,
+    conversion_rate: 0,
+    ctr: 0,
+    total_orders: 0,
+  })) as LandingStats[]
 
   // Filter by search (client-side sobre los resultados)
-  const filtered = (landings || []).filter((l: LandingStats) => {
+  const filtered = (landings || []).filter((l) => {
     if (!q) return true
     const term = q.toLowerCase()
     return l.name?.toLowerCase().includes(term) || l.slug?.toLowerCase().includes(term)
@@ -61,10 +65,10 @@ export default async function LandingsPage({
   // Counts sobre la data completa (antes de filtrar por búsqueda)
   const counts = {
     all: landings?.length || 0,
-    active: landings?.filter((l: LandingStats) => l.status === 'active').length || 0,
-    draft: landings?.filter((l: LandingStats) => l.status === 'draft').length || 0,
-    paused: landings?.filter((l: LandingStats) => l.status === 'paused').length || 0,
-    archived: landings?.filter((l: LandingStats) => l.status === 'archived').length || 0,
+    active: landings?.filter((l) => l.status === 'active').length || 0,
+    draft: landings?.filter((l) => l.status === 'draft').length || 0,
+    paused: landings?.filter((l) => l.status === 'paused').length || 0,
+    archived: landings?.filter((l) => l.status === 'archived').length || 0,
   }
 
   return (
