@@ -19,7 +19,7 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true })
 }
-
+//corregir nuevas
 /** PATCH /api/admin/landings/[id] — update landing page */
 export async function PATCH(
   req: Request,
