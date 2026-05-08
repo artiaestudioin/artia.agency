@@ -1,53 +1,621 @@
-// app/api/admin/landings/[id]/duplicate/route.ts
-// FIX: params debe ser Promise<{ id: string }> en Next.js 15
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+'use client'
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  const supabase = await createClient()
-  const { variant_name, traffic_split = 50 } = await request.json()
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { LandingConfig, LandingFeature, LandingTestimonial, DEFAULT_LANDING_CONFIG } from '@/types/landing'
 
-  const { data: original, error: fetchError } = await supabase
-    .from('landings')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !original) {
-    return NextResponse.json({ error: 'Landing not found' }, { status: 404 })
+interface LandingFormProps {
+  initialData?: {
+    id?: string
+    slug: string
+    name: string
+    description: string
+    config: LandingConfig
+    status: string
+    html_content?: string
   }
+}
 
-  const { data: variant, error: createError } = await supabase
-    .from('landings')
-    .insert({
-      slug: `${original.slug}-v${Date.now()}`,
-      name: `${original.name} (Variante)`,
-      description: original.description,
-      config: original.config,
-      html_content: original.html_content,
-      status: 'draft',
-      conversion_goal: original.conversion_goal,
-      is_variant: true,
-      parent_id: original.id,
-      variant_name: variant_name || 'Variante A',
-      traffic_split,
-    })
-    .select()
-    .single()
+const TABS = [
+  { key: 'general', label: 'General', icon: '📄' },
+  { key: 'content', label: 'Contenido', icon: '🎨' },
+  { key: 'media', label: 'Media', icon: '🖼️' },
+  { key: 'pricing', label: 'Precios', icon: '💰' },
+  { key: 'features', label: 'Features', icon: '✨' },
+  { key: 'testimonials', label: 'Testimonios', icon: '💬' },
+  { key: 'tracking', label: 'Tracking', icon: '📊' },
+  { key: 'advanced', label: 'Avanzado', icon: '⚙️' },
+]
 
-  if (createError) {
-    return NextResponse.json({ error: createError.message }, { status: 500 })
-  }
+export default function LandingForm({ initialData }: LandingFormProps) {
+  const router = useRouter()
+  const isEdit = !!initialData?.id
 
-  await supabase.from('landing_variants').insert({
-    landing_id: original.id,
-    variant_id: variant.id,
-    traffic_split,
+  const [activeTab, setActiveTab] = useState('general')
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
+
+  const [form, setForm] = useState({
+    slug: initialData?.slug || '',
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    status: initialData?.status || 'draft',
+    config: { ...DEFAULT_LANDING_CONFIG, ...(initialData?.config || {}) } as LandingConfig,
+    html_content: initialData?.html_content || '',
   })
 
-  return NextResponse.json({ variant }, { status: 201 })
+  const showMsg = useCallback((msg: string, ok = true) => {
+    setToast({ msg, ok })
+    setTimeout(() => setToast(null), 3500)
+  }, [])
+
+  const updateConfig = (field: string, value: any) => {
+    setForm(f => ({ ...f, config: { ...f.config, [field]: value } as LandingConfig }))
+  }
+
+  const addFeature = () => {
+    updateConfig('features', [...form.config.features, { icon: '✨', title: '', desc: '' }])
+  }
+
+  const updateFeature = (idx: number, field: keyof LandingFeature, value: string) => {
+    const features = [...form.config.features]
+    features[idx] = { ...features[idx], [field]: value }
+    updateConfig('features', features)
+  }
+
+  const removeFeature = (idx: number) => {
+    updateConfig('features', form.config.features.filter((_, i) => i !== idx))
+  }
+
+  const addTestimonial = () => {
+    updateConfig('testimonials', [...form.config.testimonials, { name: '', location: '', text: '', rating: 5, image: '' }])
+  }
+
+  const updateTestimonial = (idx: number, field: keyof LandingTestimonial, value: any) => {
+    const testimonials = [...form.config.testimonials]
+    testimonials[idx] = { ...testimonials[idx], [field]: value }
+    updateConfig('testimonials', testimonials)
+  }
+
+  const removeTestimonial = (idx: number) => {
+    updateConfig('testimonials', form.config.testimonials.filter((_, i) => i !== idx))
+  }
+
+  const addGalleryImage = () => {
+    updateConfig('gallery', [...form.config.gallery, ''])
+  }
+
+  const updateGalleryImage = (idx: number, value: string) => {
+    const gallery = [...form.config.gallery]
+    gallery[idx] = value
+    updateConfig('gallery', gallery)
+  }
+
+  const removeGalleryImage = (idx: number) => {
+    updateConfig('gallery', form.config.gallery.filter((_, i) => i !== idx))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+
+    try {
+      const url = isEdit ? `/api/admin/landings/${initialData!.id}` : '/api/admin/landings'
+      const method = isEdit ? 'PATCH' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: form.slug,
+          name: form.name,
+          description: form.description,
+          config: form.config,
+          status: form.status,
+          html_content: form.html_content || null,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        showMsg(isEdit ? 'Landing actualizada ✓' : 'Landing creada ✓')
+        if (!isEdit) {
+          setTimeout(() => router.push('/admin/landings'), 1000)
+        }
+      } else {
+        showMsg(data.error || 'Error', false)
+      }
+    } catch (e) {
+      showMsg('Error de conexión', false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const duplicateLanding = async () => {
+    if (!initialData?.id) return
+    try {
+      const res = await fetch(`/api/admin/landings/${initialData.id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variant_name: 'Variante A/B', traffic_split: 50 }),
+      })
+
+      if (res.ok) {
+        showMsg('Variante creada para A/B testing ✓')
+        router.refresh()
+      } else {
+        showMsg('Error creando variante', false)
+      }
+    } catch (e) {
+      showMsg('Error', false)
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0',
+    borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff',
+    fontFamily: 'inherit', boxSizing: 'border-box',
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase',
+    color: '#94a3b8', display: 'block', marginBottom: 5,
+  }
+
+  const tabBtn = (key: string) => ({
+    padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+    cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 6,
+    background: activeTab === key ? '#0f172a' : '#f1f5f9',
+    color: activeTab === key ? '#fff' : '#64748b',
+    transition: 'all 0.15s',
+  })
+
+  return (
+    <div style={{ maxWidth: 900 }}>
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 20, right: 20, zIndex: 9999,
+          background: toast.ok ? '#f0fdf4' : '#fef2f2',
+          border: `1px solid ${toast.ok ? '#bbf7d0' : '#fecaca'}`,
+          color: toast.ok ? '#15803d' : '#dc2626',
+          padding: '12px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+        }}>
+          {toast.ok ? '✓' : '✗'} {toast.msg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+            {isEdit ? '✏️ Editar Landing' : '➕ Nueva Landing'}
+          </h1>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
+            {isEdit ? `Slug: /lp/${form.slug}` : 'Configura tu página de conversión'}
+          </p>
+          <p style={{ fontSize: 11, color: '#f59e0b', margin: '6px 0 0', fontWeight: 600 }}>
+            ⚠️ Los cambios en cualquier pestaña se guardan juntos al presionar "Guardar" al final.
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap', borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>
+          {TABS.map(t => (
+            <button key={t.key} type="button" onClick={() => setActiveTab(t.key)} style={tabBtn(t.key)}>
+              <span>{t.icon}</span> {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div style={{ background: '#fff', borderRadius: 14, border: '0.5px solid #e2e8f0', padding: '20px 24px' }}>
+
+          {/* GENERAL */}
+          {activeTab === 'general' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Slug (URL) *</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={form.slug} 
+                    onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                    placeholder="taza-personalizada" 
+                    style={inputStyle} 
+                  />
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: '4px 0 0' }}>URL pública: /lp/{form.slug}</p>
+                </div>
+                <div>
+                  <label style={labelStyle}>Nombre interno *</label>
+                  <input type="text" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Taza Personalizada Q2 2026" style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Descripción</label>
+                <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Notas internas..." style={inputStyle} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Estado</label>
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={inputStyle}>
+                    <option value="draft">📝 Borrador</option>
+                    <option value="active">🟢 Activa</option>
+                    <option value="paused">⏸️ Pausada</option>
+                    <option value="archived">🗄️ Archivada</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Método de pago</label>
+                  <select value={form.config.payment_method} onChange={e => updateConfig('payment_method', e.target.value)} style={inputStyle}>
+                    <option value="whatsapp">WhatsApp Directo</option>
+                    <option value="redirect">Redirección URL</option>
+                    <option value="form">Formulario + Email</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Meta de conversión</label>
+                  <select value={(form.config as any).conversion_goal || 'purchase'} onChange={e => updateConfig('conversion_goal', e.target.value)} style={inputStyle}>
+                    <option value="purchase">Compra</option>
+                    <option value="lead">Lead</option>
+                    <option value="signup">Registro</option>
+                    <option value="call">Llamada</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CONTENT */}
+          {activeTab === 'content' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Headline principal *</label>
+                <input type="text" required value={form.config.headline} onChange={e => updateConfig('headline', e.target.value)}
+                  placeholder="La Taza Que Cuenta TU Historia" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Subheadline</label>
+                <input type="text" value={form.config.subheadline} onChange={e => updateConfig('subheadline', e.target.value)}
+                  placeholder="Personalízala con tu foto favorita..." style={inputStyle} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>CTA Texto</label>
+                  <input type="text" value={form.config.cta_text} onChange={e => updateConfig('cta_text', e.target.value)}
+                    placeholder="¡Quiero la mía ahora!" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>CTA Subtexto</label>
+                  <input type="text" value={form.config.cta_subtext} onChange={e => updateConfig('cta_subtext', e.target.value)}
+                    placeholder="Envío gratis hoy" style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Nombre del producto</label>
+                  <input type="text" value={form.config.product_name} onChange={e => updateConfig('product_name', e.target.value)}
+                    placeholder="Taza Personalizada Premium" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Subtítulo producto</label>
+                  <input type="text" value={form.config.product_subtitle} onChange={e => updateConfig('product_subtitle', e.target.value)}
+                    placeholder="Diseño único con tu foto..." style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Meta Title</label>
+                  <input type="text" value={form.config.meta_title} onChange={e => updateConfig('meta_title', e.target.value)}
+                    placeholder="SEO title..." style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Meta Description</label>
+                  <input type="text" value={form.config.meta_description} onChange={e => updateConfig('meta_description', e.target.value)}
+                    placeholder="SEO description..." style={inputStyle} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MEDIA */}
+          {activeTab === 'media' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Imagen principal *</label>
+                <input type="text" required value={form.config.image} onChange={e => updateConfig('image', e.target.value)}
+                  placeholder="https://..." style={inputStyle} />
+                {form.config.image && (
+                  <img src={form.config.image} alt="Preview" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />
+                )}
+              </div>
+              <div>
+                <label style={labelStyle}>Meta Image (OG)</label>
+                <input type="text" value={form.config.meta_image} onChange={e => updateConfig('meta_image', e.target.value)}
+                  placeholder="https://..." style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Galería de imágenes</label>
+                {form.config.gallery.map((img, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                    <input type="text" value={img} onChange={e => updateGalleryImage(idx, e.target.value)}
+                      placeholder="URL imagen..." style={{ ...inputStyle, flex: 1 }} />
+                    <button type="button" onClick={() => removeGalleryImage(idx)}
+                      style={{ background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={addGalleryImage}
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  + Añadir imagen
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Color primario</label>
+                  <input type="color" value={form.config.color_primary} onChange={e => updateConfig('color_primary', e.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Color secundario</label>
+                  <input type="color" value={form.config.color_secondary} onChange={e => updateConfig('color_secondary', e.target.value)} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PRICING */}
+          {activeTab === 'pricing' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Precio actual *</label>
+                  <input type="number" step="0.01" required value={form.config.price} onChange={e => updateConfig('price', parseFloat(e.target.value))}
+                    style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Precio anterior</label>
+                  <input type="number" step="0.01" value={form.config.old_price} onChange={e => updateConfig('old_price', parseFloat(e.target.value))}
+                    style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Descuento</label>
+                  <input type="text" value={form.config.discount} onChange={e => updateConfig('discount', e.target.value)}
+                    placeholder="50%" style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Moneda</label>
+                  <select value={form.config.currency} onChange={e => updateConfig('currency', e.target.value)} style={inputStyle}>
+                    <option value="$">$ USD</option>
+                    <option value="€">€ EUR</option>
+                    <option value="£">£ GBP</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>WhatsApp número</label>
+                  <input type="text" value={form.config.whatsapp} onChange={e => updateConfig('whatsapp', e.target.value)}
+                    placeholder="593969937265" style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Stock total</label>
+                  <input type="number" value={form.config.stock_total} onChange={e => updateConfig('stock_total', parseInt(e.target.value))}
+                    style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Stock actual</label>
+                  <input type="number" value={form.config.stock_current} onChange={e => updateConfig('stock_current', parseInt(e.target.value))}
+                    style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Horas countdown</label>
+                  <input type="number" value={form.config.countdown_hours} onChange={e => updateConfig('countdown_hours', parseInt(e.target.value))}
+                    style={inputStyle} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FEATURES */}
+          {activeTab === 'features' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={labelStyle}>Características del producto</label>
+                <button type="button" onClick={addFeature}
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  + Añadir feature
+                </button>
+              </div>
+              {form.config.features.map((f, idx) => (
+                <div key={idx} style={{ background: '#f8fafc', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Feature #{idx + 1}</span>
+                    <button type="button" onClick={() => removeFeature(idx)}
+                      style={{ background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+                      Eliminar
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 8 }}>
+                    <input type="text" value={f.icon} onChange={e => updateFeature(idx, 'icon', e.target.value)}
+                      placeholder="🎨" style={inputStyle} />
+                    <input type="text" value={f.title} onChange={e => updateFeature(idx, 'title', e.target.value)}
+                      placeholder="Título..." style={inputStyle} />
+                    <input type="text" value={f.desc} onChange={e => updateFeature(idx, 'desc', e.target.value)}
+                      placeholder="Descripción..." style={inputStyle} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* TESTIMONIALS */}
+          {activeTab === 'testimonials' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={labelStyle}>Testimonios</label>
+                <button type="button" onClick={addTestimonial}
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  + Añadir testimonio
+                </button>
+              </div>
+              {form.config.testimonials.map((t, idx) => (
+                <div key={idx} style={{ background: '#f8fafc', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>Testimonio #{idx + 1}</span>
+                    <button type="button" onClick={() => removeTestimonial(idx)}
+                      style={{ background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+                      Eliminar
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <input type="text" value={t.name} onChange={e => updateTestimonial(idx, 'name', e.target.value)}
+                      placeholder="Nombre..." style={inputStyle} />
+                    <input type="text" value={t.location} onChange={e => updateTestimonial(idx, 'location', e.target.value)}
+                      placeholder="Ciudad..." style={inputStyle} />
+                  </div>
+                  <input type="text" value={t.image} onChange={e => updateTestimonial(idx, 'image', e.target.value)}
+                    placeholder="URL foto..." style={inputStyle} />
+                  <textarea value={t.text} onChange={e => updateTestimonial(idx, 'text', e.target.value)}
+                    placeholder="Texto del testimonio..." rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                  <div>
+                    <label style={{ ...labelStyle, marginBottom: 2 }}>Rating: {t.rating}/5</label>
+                    <input type="range" min="1" max="5" value={t.rating} onChange={e => updateTestimonial(idx, 'rating', parseInt(e.target.value))}
+                      style={{ width: '100%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* TRACKING */}
+          {activeTab === 'tracking' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Meta Pixel ID</label>
+                  <input type="text" value={form.config.pixel_id} onChange={e => updateConfig('pixel_id', e.target.value)}
+                    placeholder="1234567890..." style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>CAPI Access Token</label>
+                  <input type="password" value={form.config.capi_token} onChange={e => updateConfig('capi_token', e.target.value)}
+                    placeholder="Token secreto..." style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>PostHog Project API Key</label>
+                <input type="text" value={form.config.posthog_key} onChange={e => updateConfig('posthog_key', e.target.value)}
+                  placeholder="phc_..." style={inputStyle} />
+              </div>
+              <div style={{ background: '#eff6ff', borderRadius: 10, padding: 14, border: '1px solid #bfdbfe' }}>
+                <p style={{ fontSize: 12, color: '#1e40af', margin: 0, lineHeight: 1.6 }}>
+                  <strong>💡 Tip:</strong> Configura tanto Pixel como CAPI para tracking híbrido. 
+                  El Pixel captura eventos del navegador y CAPI envía conversiones server-side para 
+                  evitar bloqueadores de anuncios. [^3^] [^4^]
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ADVANCED */}
+          {activeTab === 'advanced' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Viewers mínimos</label>
+                  <input type="number" value={form.config.viewers_min} onChange={e => updateConfig('viewers_min', parseInt(e.target.value))}
+                    style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Viewers máximos</label>
+                  <input type="number" value={form.config.viewers_max} onChange={e => updateConfig('viewers_max', parseInt(e.target.value))}
+                    style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Campos del formulario (JSON)</label>
+                <textarea value={JSON.stringify(form.config.form_fields, null, 2)} 
+                  onChange={e => {
+                    try { updateConfig('form_fields', JSON.parse(e.target.value)) } catch {}
+                  }}
+                  rows={4} style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 12 }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {[
+                  { key: 'show_stock_bar', label: 'Barra stock' },
+                  { key: 'show_countdown', label: 'Countdown' },
+                  { key: 'show_testimonials', label: 'Testimonios' },
+                  { key: 'show_features', label: 'Features' },
+                  { key: 'show_gallery', label: 'Galería' },
+                  { key: 'sticky_cta', label: 'Sticky CTA' },
+                ].map(opt => (
+                  <label key={opt.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
+                    <input type="checkbox" checked={form.config[opt.key as keyof LandingConfig] as boolean}
+                      onChange={e => updateConfig(opt.key as keyof LandingConfig, e.target.checked)}
+                      style={{ width: 16, height: 16 }} />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+              <div>
+                <label style={labelStyle}>Custom CSS</label>
+                <textarea value={form.config.custom_css} onChange={e => updateConfig('custom_css', e.target.value)}
+                  rows={4} placeholder="/* CSS personalizado */" style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={labelStyle}>Custom JS</label>
+                <textarea value={form.config.custom_js} onChange={e => updateConfig('custom_js', e.target.value)}
+                  rows={4} placeholder="// JavaScript personalizado" style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={labelStyle}>HTML Override (opcional)</label>
+                <textarea value={form.html_content} onChange={e => setForm(f => ({ ...f, html_content: e.target.value }))}
+                  rows={6} placeholder="<html>...</html>" style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 12 }} />
+                <p style={{ fontSize: 11, color: '#94a3b8', margin: '4px 0 0' }}>
+                  Si se proporciona, reemplaza completamente el renderizado dinámico.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Botones de acción (al final, guardan TODO el formulario) ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {isEdit && (
+              <button type="button" onClick={duplicateLanding}
+                style={{
+                  padding: '9px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+                  background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                🔄 Duplicar (A/B)
+              </button>
+            )}
+          </div>
+          <button type="submit" disabled={saving}
+            style={{
+              padding: '11px 28px', borderRadius: 8, border: 'none',
+              background: saving ? '#93c5fd' : '#0f172a', color: '#fff',
+              fontSize: 14, fontWeight: 700,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: saving ? 'none' : '0 4px 14px rgba(15,23,42,0.25)',
+              transition: 'all 0.15s',
+            }}>
+            {saving ? '⏳ Guardando cambios...' : '💾 Guardar todos los cambios'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
 }

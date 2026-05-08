@@ -190,36 +190,16 @@ export default function LandingForm({ initialData }: LandingFormProps) {
 
       <form onSubmit={handleSubmit}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
-              {isEdit ? '✏️ Editar Landing' : '➕ Nueva Landing'}
-            </h1>
-            <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
-              {isEdit ? `Slug: /lp/${form.slug}` : 'Configura tu página de conversión'}
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {isEdit && (
-              <button type="button" onClick={duplicateLanding}
-                style={{
-                  padding: '9px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0',
-                  background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                🔄 Duplicar (A/B)
-              </button>
-            )}
-            <button type="submit" disabled={saving}
-              style={{
-                padding: '9px 20px', borderRadius: 8, border: 'none',
-                background: '#0f172a', color: '#fff', fontSize: 13, fontWeight: 700,
-                cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-              {saving ? '⏳ Guardando...' : '💾 Guardar'}
-            </button>
-          </div>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+            {isEdit ? '✏️ Editar Landing' : '➕ Nueva Landing'}
+          </h1>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
+            {isEdit ? `Slug: /lp/${form.slug}` : 'Configura tu página de conversión'}
+          </p>
+          <p style={{ fontSize: 11, color: '#f59e0b', margin: '6px 0 0', fontWeight: 600 }}>
+            ⚠️ Los cambios en cualquier pestaña se guardan juntos al presionar "Guardar" al final.
+          </p>
         </div>
 
         {/* Tabs */}
@@ -606,6 +586,34 @@ export default function LandingForm({ initialData }: LandingFormProps) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ── Botones de acción (al final, guardan TODO el formulario) ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {isEdit && (
+              <button type="button" onClick={duplicateLanding}
+                style={{
+                  padding: '9px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+                  background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                🔄 Duplicar (A/B)
+              </button>
+            )}
+          </div>
+          <button type="submit" disabled={saving}
+            style={{
+              padding: '11px 28px', borderRadius: 8, border: 'none',
+              background: saving ? '#93c5fd' : '#0f172a', color: '#fff',
+              fontSize: 14, fontWeight: 700,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: saving ? 'none' : '0 4px 14px rgba(15,23,42,0.25)',
+              transition: 'all 0.15s',
+            }}>
+            {saving ? '⏳ Guardando cambios...' : '💾 Guardar todos los cambios'}
+          </button>
         </div>
       </form>
     </div>
