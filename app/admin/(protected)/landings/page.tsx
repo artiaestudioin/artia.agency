@@ -47,13 +47,15 @@ export default async function LandingsPage({
   const landings = (landingsRaw || []).map(l => ({
     ...l,
     revenue_total: revenueMap[l.id] || 0,
-    views_count: 0,       // TODO: implementar tracking de visitas si lo necesitas
-    conversions_count: 0, // TODO: implementar tracking de conversiones
+    views_count: 0,
+    conversions_count: 0,
     clicks_count: 0,
     conversion_rate: 0,
     ctr: 0,
     total_orders: 0,
-  })) as LandingStats[]
+    pending_orders: 0,
+    paid_orders: 0,
+  })) as unknown as LandingStats[]
 
   // Filter by search (client-side sobre los resultados)
   const filtered = (landings || []).filter((l) => {
