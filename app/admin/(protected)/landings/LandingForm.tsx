@@ -55,7 +55,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
       // Auto-generar slug si está vacío y el nombre cambió
       if (!next.slug?.trim() && next.name?.trim()) {
         next.slug = next.name.toLowerCase()
-          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
           .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60)
       }
       return next
@@ -63,17 +63,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
     setDirty(true)
   }, [])
 
-  // Ref para comparar cambios (inicializado después de que form existe)
-  const initialFormRef = useRef(JSON.stringify({
-    slug: initialData?.slug || '',
-    name: initialData?.name || '',
-    description: initialData?.description || '',
-    status: initialData?.status || 'draft',
-    config: { ...DEFAULT_LANDING_CONFIG, ...(initialData?.config || {}) },
-    html_content: initialData?.html_content || '',
-  }))
-
-  // Ref para comparar cambios (inicializado después de que form existe)
+  // Ref para comparar cambios (DESPUÉS de form)
   const initialFormRef = useRef(JSON.stringify({
     slug: initialData?.slug || '',
     name: initialData?.name || '',
@@ -233,25 +223,6 @@ export default function LandingForm({ initialData }: LandingFormProps) {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0',
-    borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff',
-    fontFamily: 'inherit', boxSizing: 'border-box',
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 10, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase',
-    color: '#94a3b8', display: 'block', marginBottom: 5,
-  }
-
-  const tabBtn = (key: string) => ({
-    padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-    cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 6,
-    background: activeTab === key ? '#0f172a' : '#f1f5f9',
-    color: activeTab === key ? '#fff' : '#64748b',
-    transition: 'all 0.15s',
-  })
-
   // ── beforeunload: avisar si hay cambios sin guardar ───────────
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -275,8 +246,28 @@ export default function LandingForm({ initialData }: LandingFormProps) {
     return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current) }
   }, [dirty, isEdit, initialData?.id])
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', border: '1.5px solid #e2e8f0',
+    borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff',
+    fontFamily: 'inherit', boxSizing: 'border-box',
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase',
+    color: '#94a3b8', display: 'block', marginBottom: 5,
+  }
+
+  const tabBtn = (key: string) => ({
+    padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+    cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 6,
+    background: activeTab === key ? '#0f172a' : '#f1f5f9',
+    color: activeTab === key ? '#fff' : '#64748b',
+    transition: 'all 0.15s',
+  })
+
   return (
     <div style={{ maxWidth: 900 }}>
+
       {/* Modal: resultado de duplicar */}
       {dupeResult && (
         <div style={{
@@ -346,35 +337,22 @@ export default function LandingForm({ initialData }: LandingFormProps) {
 
       <form onSubmit={handleSubmit}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
-              {isEdit ? '✏️ Editar Landing' : '➕ Nueva Landing'}
-            </h1>
-            <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
-              {isEdit ? `Slug: /lp/${form.slug}` : 'Configura tu página de conversión'}
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {isEdit && (
-              <button type="button" onClick={duplicateLanding}
-                style={{
-                  padding: '9px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0',
-                  background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                🔄 Duplicar (A/B)
-              </button>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0 }}>
+            {isEdit ? '✏️ Editar Landing' : '➕ Nueva Landing'}
+          </h1>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
+            {isEdit ? `Slug: /lp/${form.slug}` : 'Configura tu página de conversión'}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+            {dirty && (
+              <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                ● Cambios sin guardar
+              </span>
             )}
-            <button type="submit" disabled={saving}
-              style={{
-                padding: '9px 20px', borderRadius: 8, border: 'none',
-                background: '#0f172a', color: '#fff', fontSize: 13, fontWeight: 700,
-                cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-              {saving ? '⏳ Guardando...' : '💾 Guardar'}
-            </button>
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              {dirty ? 'Presiona Guardar al final para aplicar todo.' : 'Todo guardado ✓'}
+            </span>
           </div>
         </div>
 
@@ -400,7 +378,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                     type="text" 
                     required 
                     value={form.slug} 
-                    onChange={e => { clearFieldError('slug'); setFormDirty(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })) }}
+                    onChange={e => { clearFieldError('slug'); setFormDirty(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}}
                     placeholder="taza-personalizada" 
                     style={inputStyle} 
                   />
@@ -411,7 +389,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                 </div>
                 <div>
                   <label style={labelStyle}>Nombre interno *</label>
-                  <input type="text" required value={form.name} onChange={e => { clearFieldError('name'); setFormDirty(f => ({ ...f, name: e.target.value })) }}
+                  <input type="text" required value={form.name} onChange={e => { clearFieldError('name'); setFormDirty(f => ({ ...f, name: e.target.value }))}}
                     placeholder="Taza Personalizada Q2 2026" style={inputStyle} />
                   {fieldErrors.name && (
                     <p style={{ fontSize: 11, color: '#dc2626', margin: '4px 0 0', fontWeight: 600 }}>✗ {fieldErrors.name}</p>
@@ -714,7 +692,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                 <p style={{ fontSize: 12, color: '#1e40af', margin: 0, lineHeight: 1.6 }}>
                   <strong>💡 Tip:</strong> Configura tanto Pixel como CAPI para tracking híbrido. 
                   El Pixel captura eventos del navegador y CAPI envía conversiones server-side para 
-                  evitar bloqueadores de anuncios. [^3^] [^4^]
+                  evitar bloqueadores de anuncios.
                 </p>
               </div>
             </div>
@@ -780,6 +758,34 @@ export default function LandingForm({ initialData }: LandingFormProps) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ── Botones de acción (al final, guardan TODO el formulario) ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {isEdit && (
+              <button type="button" onClick={duplicateLanding}
+                style={{
+                  padding: '9px 16px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+                  background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                🔄 Duplicar (A/B)
+              </button>
+            )}
+          </div>
+          <button type="submit" disabled={saving}
+            style={{
+              padding: '11px 28px', borderRadius: 8, border: 'none',
+              background: saving ? '#93c5fd' : dirty ? '#0f172a' : '#64748b', color: '#fff',
+              fontSize: 14, fontWeight: 700,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: saving || !dirty ? 'none' : '0 4px 14px rgba(15,23,42,0.25)',
+              transition: 'all 0.15s',
+            }}>
+            {saving ? '⏳ Guardando cambios...' : dirty ? '💾 Guardar todos los cambios' : '✓ Todo guardado'}
+          </button>
         </div>
       </form>
     </div>
