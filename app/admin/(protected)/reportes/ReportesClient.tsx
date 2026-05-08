@@ -851,7 +851,7 @@ export default function ReportesClient({
             { key: 'general', label: 'General' },
             { key: 'finanzas', label: 'Finanzas' },
             { key: 'ventas', label: 'Ventas' },
-            { key: 'leads', label: 'Leads' },
+            { key: 'leads', label: 'Clientes' },
             { key: 'proyectos', label: 'Proyectos' },
             { key: 'analytics', label: 'Analytics' },
           ].map(t => (
@@ -1028,7 +1028,7 @@ export default function ReportesClient({
                 )}
               </ChartCard>
 
-              <ChartCard title="Landings Creadas" subtitle="Nuevas landing pages por mes">
+              <ChartCard title="Páginas Creadas" subtitle="Nuevas páginas de ventas por mes">
                 {salesData.totalLandings === 0 ? (
                   <EmptyState 
                     icon="📭" 
@@ -1049,7 +1049,7 @@ export default function ReportesClient({
               </ChartCard>
             </div>
 
-            <ChartCard title="Top 5 Landings por Revenue" subtitle="Mejor rendimiento">
+            <ChartCard title="Top 5 páginas por ganancia" subtitle="Mejor rendimiento">
               {salesData.topLandings.length === 0 ? (
                 <EmptyState icon="📊" title="Sin datos de landings" />
               ) : (

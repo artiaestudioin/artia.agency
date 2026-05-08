@@ -59,10 +59,10 @@ const NAV_ITEMS: NavGroup[] = [
     ],
   },
   {
-    label: 'Ventas',
+    label: 'Ofertas Express',
     icon: <ShoppingBag size={18} />,
     children: [
-      { href: '/admin/landings', label: 'Páginas de venta', icon: <FileText size={15} /> },
+      { href: '/admin/landings', label: 'Páginas de ofertas', icon: <FileText size={15} /> },
       { href: '/admin/landings/orders', label: 'Pedidos', icon: <ShoppingCart size={15} /> },
       { href: '/admin/landings/analytics', label: 'Rendimiento', icon: <TrendingUp size={15} /> },
       { href: '/admin/landings/utm', label: 'Campañas', icon: <Link2 size={15} /> },

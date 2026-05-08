@@ -690,7 +690,7 @@ export default function LandingRenderer({ landing, isEditMode, utmParams }: Land
                 <code className="text-lg font-bold text-purple-600">{folio}</code>
               </div>
               <p className="text-gray-600 mb-4">
-                <a href={`/seguimiento/${folio}`} className="text-purple-600 font-bold hover:underline">
+                <a href={`/seguimiento/pedido/${folio}`} className="text-purple-600 font-bold hover:underline">
                   Seguir mi pedido →
                 </a>
               </p>

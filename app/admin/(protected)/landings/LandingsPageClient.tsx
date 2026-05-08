@@ -107,7 +107,7 @@ export default function LandingsPageClient({
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Landing Pages</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: COLORS.primary, margin: '0 0 4px' }}>Páginas de Ventas</h1>
           <p style={{ fontSize: 13, color: COLORS.textMuted, margin: 0 }}>
             {counts.all} paginas · {counts.active} activas · ${totalRevenue.toFixed(2)} de ganancia
           </p>

@@ -13,14 +13,43 @@ export default async function LandingsPage({
   const { status, q } = await searchParams
   const supabase = await createClient()
 
-  // Get stats from view
-  let query = supabase.from('landing_stats').select('*').order('created_at', { ascending: false })
+  // Get landings with real revenue from orders
+  let landingsQuery = supabase
+    .from('landings')
+    .select('id, name, slug, status, created_at, updated_at')
+    .order('created_at', { ascending: false })
 
   if (status && status !== 'all') {
-    query = query.eq('status', status)
+    landingsQuery = landingsQuery.eq('status', status)
   }
 
-  const { data: landings } = await query
+  const { data: landingsRaw } = await landingsQuery
+
+  // Get real revenue per landing from delivered & paid orders
+  const landingIds = (landingsRaw || []).map(l => l.id)
+  let revenueMap: Record<string, number> = {}
+
+  if (landingIds.length > 0) {
+    const { data: ordersRevenue } = await supabase
+      .from('landing_orders')
+      .select('landing_id, total')
+      .in('landing_id', landingIds)
+      .eq('status', 'delivered')
+      .eq('payment_status', 'paid')
+
+    revenueMap = (ordersRevenue || []).reduce((acc: Record<string, number>, o) => {
+      acc[o.landing_id] = (acc[o.landing_id] || 0) + (o.total || 0)
+      return acc
+    }, {})
+  }
+
+  // Merge landings with real revenue
+  const landings = (landingsRaw || []).map(l => ({
+    ...l,
+    revenue_total: revenueMap[l.id] || 0,
+    views_count: 0, // TODO: implementar tracking de visitas si lo necesitas
+    conversions_count: 0, // TODO: implementar tracking de conversiones
+  }))
 
   // Filter by search (client-side sobre los resultados)
   const filtered = (landings || []).filter((l: LandingStats) => {
