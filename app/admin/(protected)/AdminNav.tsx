@@ -303,7 +303,7 @@ export default function AdminNav({ email }: { email: string }) {
   const NavItem = ({ item }: { item: NavGroup }) => {
     // GRUPO CON HIJOS
     if (item.children) {
-      const isVentas = item.label === 'Ventas'
+      const isVentas = item.label === 'Ofertas Express'
       const isClientes = item.label === 'Clientes'
     const isReportes = item.label === 'Reportes'
 
