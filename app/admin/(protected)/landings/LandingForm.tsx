@@ -38,7 +38,6 @@ export default function LandingForm({ initialData }: LandingFormProps) {
   const [dupeResult, setDupeResult] = useState<{ slug: string; id: string } | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const initialFormRef = useRef(JSON.stringify(form))
 
   const [form, setForm] = useState({
     slug: initialData?.slug || '',
@@ -63,6 +62,26 @@ export default function LandingForm({ initialData }: LandingFormProps) {
     })
     setDirty(true)
   }, [])
+
+  // Ref para comparar cambios (inicializado después de que form existe)
+  const initialFormRef = useRef(JSON.stringify({
+    slug: initialData?.slug || '',
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    status: initialData?.status || 'draft',
+    config: { ...DEFAULT_LANDING_CONFIG, ...(initialData?.config || {}) },
+    html_content: initialData?.html_content || '',
+  }))
+
+  // Ref para comparar cambios (inicializado después de que form existe)
+  const initialFormRef = useRef(JSON.stringify({
+    slug: initialData?.slug || '',
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    status: initialData?.status || 'draft',
+    config: { ...DEFAULT_LANDING_CONFIG, ...(initialData?.config || {}) },
+    html_content: initialData?.html_content || '',
+  }))
 
   const showMsg = useCallback((msg: string, ok = true) => {
     setToast({ msg, ok })
