@@ -7,12 +7,53 @@ export const metadata = { title: 'Analytics Landings — Artia Admin' }
 export default async function LandingAnalyticsPage() {
   const supabase = await createClient()
 
-  // Get stats
-  const { data: stats } = await supabase
-    .from('landing_stats')
-    .select('*')
-    .order('revenue_total', { ascending: false })
-    .limit(10)
+  // Get landings
+  const { data: landingsRaw } = await supabase
+    .from('landings')
+    .select('id, name, slug, status, created_at')
+    .order('created_at', { ascending: false })
+
+  // Get real revenue per landing from delivered & paid orders
+  const landingIds = (landingsRaw || []).map(l => l.id)
+  let revenueMap: Record<string, number> = {}
+  let ordersCountMap: Record<string, number> = {}
+
+  if (landingIds.length > 0) {
+    const { data: ordersRevenue } = await supabase
+      .from('landing_orders')
+      .select('landing_id, total')
+      .in('landing_id', landingIds)
+      .eq('status', 'delivered')
+      .eq('payment_status', 'paid')
+
+    revenueMap = (ordersRevenue || []).reduce((acc: Record<string, number>, o) => {
+      acc[o.landing_id] = (acc[o.landing_id] || 0) + (o.total || 0)
+      return acc
+    }, {})
+
+    // Contar total de pedidos por landing (todos los estados)
+    const { data: allOrders } = await supabase
+      .from('landing_orders')
+      .select('landing_id')
+      .in('landing_id', landingIds)
+
+    ordersCountMap = (allOrders || []).reduce((acc: Record<string, number>, o) => {
+      acc[o.landing_id] = (acc[o.landing_id] || 0) + 1
+      return acc
+    }, {})
+  }
+
+  // Merge landings with real revenue
+  const stats = (landingsRaw || []).map(l => ({
+    ...l,
+    revenue_total: revenueMap[l.id] || 0,
+    views_count: 0,
+    conversions_count: 0,
+    clicks_count: 0,
+    conversion_rate: 0,
+    ctr: 0,
+    total_orders: ordersCountMap[l.id] || 0,
+  })).sort((a, b) => b.revenue_total - a.revenue_total)
 
   // Get daily events for chart
   const { data: dailyEvents } = await supabase
@@ -71,7 +112,7 @@ export default async function LandingAnalyticsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Páginas', 'visitas', 'CTR', 'Conv. Rate', 'Ganancia', 'Estado'].map(h => (
+                {['Páginas', 'Pedidos', 'Visitas', 'CTR', 'Conv. Rate', 'Ganancia', 'Estado'].map(h => (
                   <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     {h}
                   </th>
@@ -85,6 +126,7 @@ export default async function LandingAnalyticsPage() {
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{landing.name}</div>
                     <div style={{ fontSize: 11, color: '#94a3b8' }}>/lp/{landing.slug}</div>
                   </td>
+                  <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 700 }}>{landing.total_orders || 0}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, fontWeight: 700 }}>{landing.views_count?.toLocaleString() || 0}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#3b82f6' }}>{landing.ctr || 0}%</span>
