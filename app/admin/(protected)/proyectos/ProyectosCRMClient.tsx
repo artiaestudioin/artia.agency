@@ -389,7 +389,7 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
   }
 
   return (
-    <div style={{ display: 'flex', gap: 20, height: 'calc(100vh - 120px)' }}>
+    <div className="proyectos-layout" style={{ display: 'flex', gap: 20, height: 'clamp(500px, calc(100vh - 120px), 900px)' }}>
 
       {/* Toast */}
       {toast && (
@@ -798,6 +798,12 @@ export default function ProyectosCRMClient({ projects: init }: { projects: Proje
           </div>
         </div>
       )}
+      <style>{`
+        @media (max-width: 768px) {
+          .proyectos-layout { flex-direction: column !important; height: auto !important; }
+          .proyectos-layout > div:first-of-type { width: 100% !important; max-height: 300px; overflow-y: auto; }
+        }
+      `}</style>
     </div>
   )
 }

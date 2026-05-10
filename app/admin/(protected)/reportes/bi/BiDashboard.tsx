@@ -58,6 +58,7 @@ const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 
 // ── Componente Principal ───────────────────────────────────────────────────
+// Responsive handled via admin-responsive.css classes
 export default function BiDashboard({ reportData }: { reportData: Record<string, any> }) {
   const [result, setResult]     = useState<ApiResult | null>(null)
   const [loading, setLoading]   = useState(false)
@@ -268,7 +269,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
       {/* Loading skeleton */}
       {loading && (
         <div style={{ padding: 28 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 20 }}>
             <SkeletonBlock height={520} dark={dark} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <SkeletonBlock height={100} dark={dark} />
@@ -313,7 +314,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
           </div>
 
           {/* Grid: Gráfico 3D + Panel lateral */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 24, alignItems: 'start' }}>
 
             {/* Gráfico 3D */}
             <div style={{ background: dark ? '#0d111c' : '#f8fafc', borderRadius: 16, border: `1px solid ${border}`, overflow: 'hidden', padding: 8 }}>
@@ -377,7 +378,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
             <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: txt2, textTransform: 'uppercase', letterSpacing: '1px' }}>
               💡 Insights automáticos
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
               {result.insights.map((ins, i) => {
                 const s = INSIGHT_STYLES[ins.type] ?? INSIGHT_STYLES.info
                 return (

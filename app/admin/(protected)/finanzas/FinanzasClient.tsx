@@ -1390,10 +1390,15 @@ async function exportarExcel() {
 
       {/* Responsive CSS — stack a una sola columna en pantallas pequeñas */}
       <style>{`
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
           .finanzas-grid {
             grid-template-columns: 1fr !important;
           }
+        }
+        @media (max-width: 600px) {
+          .finanzas-kpi-row { flex-direction: column !important; }
+          .finanzas-filter-bar { flex-direction: column !important; }
+          .finanzas-filter-bar input { max-width: 100% !important; }
         }
       `}</style>
     </div>

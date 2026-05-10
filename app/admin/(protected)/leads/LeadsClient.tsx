@@ -498,7 +498,8 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
 
           {/* Table */}
           <div style={{ borderRadius: 10, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 580 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
                   {['Contacto', 'Servicio', 'Estado', 'Pago', 'Valor est.', 'Fecha', 'Acciones'].map(h => (
@@ -651,6 +652,7 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Pagination */}
@@ -767,6 +769,11 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
       <style>{`
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @media (max-width: 900px) { .leads-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 640px) {
+          .leads-filter-bar { flex-direction: column !important; }
+          .leads-filter-bar > * { width: 100% !important; max-width: 100% !important; }
+          .leads-action-bar { flex-direction: column !important; gap: 8px !important; }
+        }
       `}</style>
     </div>
   )

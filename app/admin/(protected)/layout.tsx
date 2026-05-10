@@ -12,39 +12,33 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
 
   return (
     <div
+      className="admin-shell"
       style={{
-        minHeight: '100vh',
-        background: '#F8FAFC',
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-        display: 'flex',
       }}
     >
       <AdminNav email={user.email ?? ''} />
 
       {/* Main content area — offset by sidebar + topbar */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Desktop top bar spacer */}
-        <div className="admin-topbar-spacer" style={{ height: 60 }} />
+      <div className="admin-content-area">
+        {/* Top bar height spacer */}
+        <div className="admin-spacer-topbar" />
+        <div className="admin-spacer-mobile" style={{ display: 'none' }} />
 
-        <main
-          className="admin-main"
-          style={{
-            flex: 1,
-            padding: '28px 32px',
-            maxWidth: 1400,
-            width: '100%',
-            margin: '0 auto',
-            boxSizing: 'border-box',
-          }}
-        >
+        <main className="admin-main-content">
           {children}
         </main>
       </div>
 
       <style>{`
+        /* Ensure spacers are correct in layout context */
         @media (max-width: 1024px) {
-          .admin-topbar-spacer { height: 56px !important; }
-          .admin-main { padding: 20px 16px !important; }
+          .admin-content-area .admin-spacer-topbar { display: none !important; }
+          .admin-content-area .admin-spacer-mobile { display: block !important; }
+        }
+        @media (min-width: 1025px) {
+          .admin-content-area .admin-spacer-topbar { display: block !important; }
+          .admin-content-area .admin-spacer-mobile { display: none !important; }
         }
       `}</style>
     </div>

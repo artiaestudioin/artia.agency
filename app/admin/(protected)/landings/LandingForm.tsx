@@ -371,7 +371,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
           {/* GENERAL */}
           {activeTab === 'general' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Slug (URL) *</label>
                   <input 
@@ -401,7 +401,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                 <input type="text" value={form.description} onChange={e => setFormDirty(f => ({ ...f, description: e.target.value }))}
                   placeholder="Notas internas..." style={inputStyle} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Estado</label>
                   <select value={form.status} onChange={e => setFormDirty(f => ({ ...f, status: e.target.value }))} style={inputStyle}>
@@ -448,7 +448,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                 <input type="text" value={form.config.subheadline} onChange={e => updateConfig('subheadline', e.target.value)}
                   placeholder="Personalízala con tu foto favorita..." style={inputStyle} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>CTA Texto</label>
                   <input type="text" value={form.config.cta_text} onChange={e => updateConfig('cta_text', e.target.value)}
@@ -460,7 +460,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                     placeholder="Envío gratis hoy" style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Nombre del producto</label>
                   <input type="text" value={form.config.product_name} onChange={e => updateConfig('product_name', e.target.value)}
@@ -472,7 +472,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                     placeholder="Diseño único con tu foto..." style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Meta Title</label>
                   <input type="text" value={form.config.meta_title} onChange={e => updateConfig('meta_title', e.target.value)}
@@ -523,7 +523,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                   + Añadir imagen
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Color primario</label>
                   <input type="color" value={form.config.color_primary} onChange={e => updateConfig('color_primary', e.target.value)} style={inputStyle} />
@@ -539,7 +539,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
           {/* PRICING */}
           {activeTab === 'pricing' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Precio actual *</label>
                   <input type="number" step="0.01" required value={form.config.price} onChange={e => updateConfig('price', parseFloat(e.target.value || '0'))}
@@ -559,7 +559,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                     placeholder="50%" style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Moneda</label>
                   <select value={form.config.currency} onChange={e => updateConfig('currency', e.target.value)} style={inputStyle}>
@@ -577,7 +577,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                   )}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Stock total</label>
                   <input type="number" value={form.config.stock_total} onChange={e => updateConfig('stock_total', parseInt(e.target.value || '0'))}
@@ -648,7 +648,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                       Eliminar
                     </button>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
                     <input type="text" value={t.name} onChange={e => updateTestimonial(idx, 'name', e.target.value)}
                       placeholder="Nombre..." style={inputStyle} />
                     <input type="text" value={t.location} onChange={e => updateTestimonial(idx, 'location', e.target.value)}
@@ -671,7 +671,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
           {/* TRACKING */}
           {activeTab === 'tracking' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Meta Pixel ID</label>
                   <input type="text" value={form.config.pixel_id} onChange={e => updateConfig('pixel_id', e.target.value)}
@@ -701,7 +701,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
           {/* ADVANCED */}
           {activeTab === 'advanced' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Viewers mínimos</label>
                   <input type="number" value={form.config.viewers_min} onChange={e => updateConfig('viewers_min', parseInt(e.target.value || '0'))}
@@ -721,7 +721,7 @@ export default function LandingForm({ initialData }: LandingFormProps) {
                   }}
                   rows={4} style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 12 }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
                 {[
                   { key: 'show_stock_bar', label: 'Barra stock' },
                   { key: 'show_countdown', label: 'Countdown' },

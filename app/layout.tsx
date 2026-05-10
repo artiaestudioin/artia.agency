@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { PostHogProvider } from '@/components/PostHogProvider'
 import './globals.css'
+import './admin-responsive.css'
 
 const inter = Inter({ 
   subsets: ['latin'],

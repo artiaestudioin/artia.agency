@@ -888,7 +888,7 @@ export default function ReportesClient({
               <KPIPulseCard icon="🛍" label="Ventas Landings" value={fmtMoney(salesData.totalRevenue)} sub={`${salesData.totalOrders} pedidos`} color="#ec4899" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'clamp(200px, 60%, 2fr) 1fr', gap: 20, marginBottom: 20 }}>
               <ChartCard title="Ingresos Mensuales" subtitle="Facturado vs Pagado vs Pendiente">
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={financeData.monthlyRevenue}>
@@ -943,7 +943,7 @@ export default function ReportesClient({
                 {/* ─── FINANZAS TAB ─── */}
         {activeTab === 'finanzas' && (
           <div className="fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total Facturado" value={fmtMoney(financeData.totalFacturado)} icon="💵" color="#6366f1" />
               <StatCard label="Total Pagado" value={fmtMoney(financeData.totalPagado)} icon="✅" color="#10b981" />
               <StatCard label="Pendiente al Dia" value={fmtMoney(financeData.totalPendienteFuturo)} icon="📅" color="#fae900" />
@@ -1119,13 +1119,13 @@ export default function ReportesClient({
                 {/* ─── LEADS TAB ─── */}
         {activeTab === 'leads' && (
           <div className="fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total de Clientes" value={String(leadsData.total)} icon="👥" color="#6366f1" />
               <StatCard label="Valor Estimado" value={fmtMoney(leadsData.totalValue)} icon="💎" color="#8b5cf6" />
               <StatCard label="Tasa Conversion" value={`${leadsData.byStatus.find(s => s.name === 'Cerrado')?.value || 0}%`} icon="🎯" color="#10b981" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
               <StatCard label="Lead→Proyecto" value={`${cohortData.conversionProject}%`} icon="🔄" color="#8b5cf6" />
               <StatCard label="Proyecto→Pago" value={`${cohortData.conversionPayment}%`} icon="💰" color="#10b981" />
               <StatCard label="Fuga Funnel" value={`${cohortData.funnelDrop.toFixed(1)}%`} icon="⚠️" color="#f59e0b" />
@@ -1184,7 +1184,7 @@ export default function ReportesClient({
             {/* ─── PROYECTOS TAB ─── */}
         {activeTab === 'proyectos' && (
           <div className="fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
               <StatCard label="Total Proyectos" value={String(projectsData.total)} icon="📁" color="#3b82f6" />
               <StatCard label="En Curso" value={String(projectsData.byStatus.find(s => s.name === 'Activo')?.value || 0)} icon="🚀" color="#10b981" />
               <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
@@ -1549,5 +1549,17 @@ const ANIMATIONS = `
   }
   @media (max-width: 768px) {
     .kpi-pulse { padding: 16px !important; }
+  }
+  @media (max-width: 900px) {
+    .reportes-main-grid { grid-template-columns: 1fr !important; }
+    .reportes-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 600px) {
+    .reportes-kpi-grid { grid-template-columns: 1fr !important; }
+    .reportes-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .reportes-filter-bar { flex-direction: column !important; }
+    .reportes-filter-bar > * { width: 100% !important; }
+    .reportes-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .reportes-table-wrap table { min-width: 480px; }
   }
 `

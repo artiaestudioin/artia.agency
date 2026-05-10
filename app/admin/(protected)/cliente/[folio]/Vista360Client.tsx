@@ -546,7 +546,7 @@ export default function Vista360Client({
         )}
 
         {/* KPI grid — wider, centered */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 14 }}>
           {[
             { label: 'Valor contrato', value: fmtMoneyCompact(dashboard.totalContrato), sub: fmtMoney(dashboard.totalContrato), accent: '#0f172a' },
             { label: 'Cobrado',        value: fmtMoneyCompact(dashboard.totalPagado),   sub: `${dashboard.cuotasPagadas} cuotas`,    accent: '#10b981' },
@@ -614,7 +614,7 @@ export default function Vista360Client({
       </div>
 
       {/* Main grid */}
-      <div className="vista360-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 18, alignItems: 'start' }}>
+      <div className="vista360-grid" style={{ display: 'grid', gridTemplateColumns: '1fr clamp(260px, 300px, 340px)', gap: 18, alignItems: 'start' }}>
 
         {/* ── Left column ─────────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
@@ -876,7 +876,7 @@ export default function Vista360Client({
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>Calculado en tiempo real</div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 6 }}>
               <div style={{ background: '#fff', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
                 <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>CUOTAS</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>{dashboard.totalCuotas}</div>
@@ -950,8 +950,14 @@ export default function Vista360Client({
 
       <style>{`
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @media (max-width: 820px) { .vista360-grid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 700px) { .kpi-grid-4 { grid-template-columns: repeat(2,1fr) !important; } }
+        @media (max-width: 900px) {
+          .vista360-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .kpi-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
+          .vista360-tab-bar { overflow-x: auto !important; flex-wrap: nowrap !important; }
+          .vista360-header-meta { flex-direction: column !important; gap: 8px !important; }
+        }
       `}</style>
     </div>
   )

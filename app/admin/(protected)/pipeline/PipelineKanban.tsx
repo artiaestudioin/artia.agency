@@ -74,7 +74,8 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
       </header>
 
       {/* Kanban Board */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(220px, 1fr))', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+      <div className="kanban-board-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 8, marginBottom: -8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(210px, 1fr))', gap: 12, paddingBottom: 8, minWidth: 'max-content', width: '100%' }}>
         {COLS.map(col => {
           const colLeads = byCol(col.id)
           const isOver = over === col.id
@@ -168,6 +169,7 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
             </div>
           )
         })}
+      </div>
       </div>
     </div>
   )

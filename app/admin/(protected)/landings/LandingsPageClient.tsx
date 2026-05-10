@@ -191,7 +191,7 @@ export default function LandingsPageClient({
       </form>
 
       {/* Landings Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: 16 }}>
         {landings.length === 0 ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
@@ -235,7 +235,7 @@ export default function LandingsPageClient({
 
                 {/* Stats */}
                 <div style={{ padding: '16px 18px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 10, marginBottom: 14 }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>{landing.views_count?.toLocaleString() || 0}</div>
                       <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Visitas</div>

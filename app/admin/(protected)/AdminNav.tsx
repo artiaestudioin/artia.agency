@@ -549,27 +549,32 @@ export default function AdminNav({ email }: { email: string }) {
     <>
       {/* ─── Desktop Sidebar ─── */}
       <aside
-        className="admin-sidebar-desktop"
+        className={`admin-sidebar-desktop${mobileOpen ? ' is-open' : ''}`}
         style={{
           position: 'fixed', top: 0, left: 0, bottom: 0, width: 220,
           background: t.sidebar,
           borderRight: `1px solid ${t.sidebarBorder}`,
           zIndex: 100, overflowY: 'auto', overflowX: 'hidden',
-          transition: 'background 0.2s, border-color 0.2s',
+          transition: 'background 0.2s, border-color 0.2s, transform 0.25s ease',
         }}
       >
         <SidebarContent />
       </aside>
 
+      {/* ─── Mobile overlay backdrop ─── */}
+      {mobileOpen && (
+        <div
+          className="admin-sidebar-overlay is-open"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* ─── Mobile Header ─── */}
       <header
         className="admin-header-mobile"
         style={{
-          display: 'none', position: 'fixed', top: 0, left: 0, right: 0,
-          height: 56, background: t.mobileHeader,
+          background: t.mobileHeader,
           borderBottom: `1px solid ${t.sidebarBorder}`,
-          zIndex: 100, alignItems: 'center',
-          justifyContent: 'space-between', padding: '0 16px',
           transition: 'background 0.2s',
         }}
       >
@@ -587,12 +592,15 @@ export default function AdminNav({ email }: { email: string }) {
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
             style={{
               background: t.hamburgerBg,
               border: `1px solid ${t.hamburgerBorder}`,
               borderRadius: 8, padding: '6px 12px',
               cursor: 'pointer', fontSize: 13, fontWeight: 600,
               color: t.hamburgerColor,
+              display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.15s',
             }}
           >
             {mobileOpen ? '✕' : '☰'}
@@ -600,35 +608,12 @@ export default function AdminNav({ email }: { email: string }) {
         </div>
       </header>
 
-      {/* ─── Mobile Drawer ─── */}
-      {mobileOpen && (
-        <div style={{ position: 'fixed', top: 56, left: 0, right: 0, bottom: 0, zIndex: 99, display: 'flex' }}>
-          <div
-            style={{
-              width: 260, background: t.sidebar,
-              borderRight: `1px solid ${t.sidebarBorder}`,
-              overflowY: 'auto',
-            }}
-            onClick={() => setMobileOpen(false)}
-          >
-            <SidebarContent />
-          </div>
-          <div
-            style={{ flex: 1, background: 'rgba(15,23,42,0.5)' }}
-            onClick={() => setMobileOpen(false)}
-          />
-        </div>
-      )}
-
       {/* ─── Topbar (desktop) ─── */}
       <div
         className="admin-topbar-desktop"
         style={{
-          position: 'fixed', top: 0, left: 220, right: 0, height: 60,
           background: t.topbar,
           borderBottom: `1px solid ${t.topbarBorder}`,
-          zIndex: 90, display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', padding: '0 28px', gap: 16,
           transition: 'background 0.2s, border-color 0.2s',
         }}
       >
@@ -638,6 +623,7 @@ export default function AdminNav({ email }: { email: string }) {
           background: t.searchBg, border: `1px solid ${t.searchBorder}`,
           borderRadius: 10, padding: '0 14px', height: 36,
           flex: '1', maxWidth: 320,
+          transition: 'border-color 0.15s',
         }}>
           <Search size={14} color={t.textMuted} />
           <span style={{ fontSize: 13, color: t.textMuted }}>Buscar...</span>
@@ -687,33 +673,20 @@ export default function AdminNav({ email }: { email: string }) {
             background: '#7c3aed', border: 'none', borderRadius: 9,
             padding: '7px 14px', color: '#fff',
             fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          }}>
+            transition: 'background 0.15s, transform 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#6d28d9' }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#7c3aed' }}
+          >
             <Plus size={15} />
-            Nuevo
+            <span>Nuevo</span>
           </button>
         </div>
       </div>
 
       {/* ─── Spacers ─── */}
-      <div className="admin-spacer-desktop" style={{ width: 220, flexShrink: 0 }} />
-      <div className="admin-spacer-mobile" style={{ height: 56, display: 'none' }} />
-
-      <style>{`
-        @media (max-width: 1024px) {
-          .admin-sidebar-desktop { display: none !important; }
-          .admin-topbar-desktop  { display: none !important; }
-          .admin-header-mobile   { display: flex !important; }
-          .admin-spacer-desktop  { display: none !important; }
-          .admin-spacer-mobile   { display: block !important; }
-        }
-        @media (min-width: 1025px) {
-          .admin-sidebar-desktop { display: block !important; }
-          .admin-topbar-desktop  { display: flex !important; }
-          .admin-header-mobile   { display: none !important; }
-          .admin-spacer-desktop  { display: block !important; }
-          .admin-spacer-mobile   { display: none !important; }
-        }
-      `}</style>
+      <div className="admin-spacer-sidebar" />
+      <div className="admin-spacer-mobile" />
     </>
   )
 }

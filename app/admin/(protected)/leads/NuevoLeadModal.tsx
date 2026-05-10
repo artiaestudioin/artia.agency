@@ -197,7 +197,7 @@ export default function NuevoLeadModal() {
                   </Field>
 
                   {/* Email + Teléfono en fila */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                     <Field label="Email">
                       <input
                         name="email" type="email" value={form.email}
@@ -232,7 +232,7 @@ export default function NuevoLeadModal() {
                   </Field>
 
                   {/* Valor estimado + Notas en fila */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
                     <Field label="Valor estimado ($)">
                       <input
                         name="estimated_value"

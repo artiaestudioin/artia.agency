@@ -1,7 +1,10 @@
 /* ============================================
    ARTIA STUDIO - Global Styles
-   Portal de Clientes - Galería de Fotos
+   CRM Admin + Portal de Clientes
    ============================================ */
+
+/* Responsive system is in app/admin-responsive.css
+   imported via layout.tsx */
 
 /* ─── Reset & Base ────────────────────────── */
 *,

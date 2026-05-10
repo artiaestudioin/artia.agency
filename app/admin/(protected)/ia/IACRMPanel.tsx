@@ -383,9 +383,9 @@ export default function IACRMPanel() {
       </div>
 
       {/* Chat area */}
-      <div style={{
+      <div className="ia-chat-panel" style={{
         background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', height: 'calc(100vh - 320px)',
+        display: 'flex', flexDirection: 'column', height: 'clamp(400px, calc(100vh - 300px), 700px)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
       }}>
         {/* Messages */}
@@ -567,6 +567,11 @@ export default function IACRMPanel() {
       <style>{`
         @keyframes spin { 
           to { transform: rotate(360deg) } 
+        }
+        @media (max-width: 600px) {
+          .ia-chat-panel { height: clamp(360px, calc(100vh - 260px), 600px) !important; border-radius: 14px !important; }
+          .ia-quick-queries { flex-direction: column !important; }
+          .ia-quick-queries button { width: 100% !important; text-align: left !important; }
         }
       `}</style>
     </div>

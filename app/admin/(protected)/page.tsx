@@ -473,15 +473,12 @@ const STYLES = `
   /* ─── KPI Grid ─── */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 16px;
     margin-bottom: 28px;
   }
-  @media (max-width: 1200px) {
-    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (max-width: 768px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 640px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   }
   
   .kpi-card {
@@ -633,12 +630,12 @@ const STYLES = `
   /* ─── Main Grid ─── */
   .main-grid {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr 300px;
     gap: 24px;
     margin-bottom: 24px;
     align-items: start;
   }
-  @media (max-width: 1024px) {
+  @media (max-width: 1100px) {
     .main-grid { grid-template-columns: 1fr; }
   }
 
