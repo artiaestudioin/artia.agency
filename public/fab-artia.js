@@ -375,24 +375,38 @@
     fabBtn.setAttribute('aria-expanded', 'false');
   }
 
-  // Click outside
-  document.addEventListener('click', function (e) {
-    if (panelOpen && !fabRoot.contains(e.target)) closePanel();
-  });
-
+  // ESC closes everything
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closePanel(); closeModal(); }
   });
 
-  // Desktop toggle
+  // Click outside panel to close (desktop)
+  document.addEventListener('click', function (e) {
+    if (panelOpen && !fabRoot.contains(e.target)) closePanel();
+  });
+
+  /* ── Touch vs click guard ──────────────────────────────
+     On mobile, a tap fires: touchstart → touchend → (300ms) → click.
+     We handle the toggle entirely in touchend and set `touchHandled`
+     to suppress the subsequent synthetic click on fabBtn, preventing
+     the double-toggle that causes the panel to open then immediately
+     close (making it appear as if nothing happened).
+  ───────────────────────────────────────────────────────── */
+  let touchHandled = false;
+
+  // Desktop-only click handler (skipped when touch already handled it)
   fabBtn.addEventListener('click', function () {
+    if (touchHandled) { touchHandled = false; return; }
     panelOpen ? closePanel() : openPanel();
   });
 
-  // Open email modal from panel
-  emailBtn.addEventListener('click', function () { closePanel(); openModal(); });
+  // Email button: click works on desktop; touchend fallback for iOS
+  // (onclick is unreliable on position:fixed elements in iOS Safari)
+  emailBtn.addEventListener('click', function () {
+    closePanel();
+    openModal();
+  });
 
-  // iOS touchend fallback (onclick unreliable on position:fixed)
   document.addEventListener('touchend', function (e) {
     if (emailBtn && (e.target === emailBtn || emailBtn.contains(e.target))) {
       e.preventDefault();
@@ -401,7 +415,7 @@
     }
   }, { passive: false });
 
-  /* ── Drag (entire fabRoot) ─────────────────────────── */
+  /* ── Drag (entire fabRoot, touch only) ─────────────── */
   let dragging = false, moved = false, ox, oy, sl, st;
 
   // Restore saved position
@@ -427,21 +441,32 @@
     if (!dragging) return;
     const t = e.touches[0];
     const dx = t.clientX - ox, dy = t.clientY - oy;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) { moved = true; if (panelOpen) closePanel(); }
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      moved = true;
+      if (panelOpen) closePanel();
+    }
     const sz = 48, mX = window.innerWidth - sz - 8, mY = window.innerHeight - sz - 8;
     fabRoot.style.right  = 'auto'; fabRoot.style.bottom = 'auto';
     fabRoot.style.left   = Math.max(8, Math.min(mX, sl + dx)) + 'px';
     fabRoot.style.top    = Math.max(8, Math.min(mY, st + dy)) + 'px';
   }, { passive: true });
 
-  window.addEventListener('touchend', function () {
+  window.addEventListener('touchend', function (e) {
     if (!dragging) return;
     dragging = false;
+
     try {
       const r = fabRoot.getBoundingClientRect();
       localStorage.setItem('artia_fab_v3', JSON.stringify({ x: r.left, y: r.top }));
     } catch (_) {}
-    if (!moved) panelOpen ? closePanel() : openPanel();
+
+    if (!moved) {
+      // Only toggle if the touch ended on the fab button itself
+      if (fabBtn.contains(e.target) || e.target === fabBtn) {
+        touchHandled = true; // suppress the upcoming synthetic click
+        panelOpen ? closePanel() : openPanel();
+      }
+    }
     moved = false;
   });
 
