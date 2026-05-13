@@ -269,31 +269,36 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   line-height: 1.55;
 }
 
-/* CTA "Ver más videos" */
-#sv-cta-wrap {
-  max-width: 72rem;
-  margin: 48px auto 0;
+/* ── Per-card CTA (replaces global #sv-cta-wrap) ──── */
+.sv-card-cta {
   display: flex;
   justify-content: center;
+  padding: 0 22px 20px;
+  background: #ffffff;
+  /* Hidden by default; GSAP animates in after play */
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(10px);
   pointer-events: none;
-  transition: none; /* GSAP controla esto */
+  /* height: 0 collapses the space until revealed */
+  max-height: 0;
+  overflow: hidden;
+  transition: none; /* GSAP owns this */
 }
 
-#sv-cta-wrap.visible {
+.sv-card-cta.sv-cta-visible {
   pointer-events: auto;
+  max-height: 80px;
 }
 
 .sv-cta-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 15px 32px;
+  padding: 12px 26px;
   background: #FF0000;
   color: #ffffff;
   font-family: 'Manrope', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -301,6 +306,8 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   border-radius: 100px;
   border: none;
   cursor: pointer;
+  width: 100%;
+  justify-content: center;
   box-shadow:
     0 4px 20px rgba(255,0,0,0.35),
     0 2px 6px rgba(255,0,0,0.2);
@@ -323,8 +330,8 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 
 /* Ícono YouTube SVG inline */
 .sv-yt-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -656,7 +663,16 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <div class="sv-info">
         <p class="sv-info-title">Producción Corporativa</p>
         <p class="sv-info-desc">Contenido audiovisual de alto impacto para marcas que quieren diferenciarse.</p>
+      <!-- CTA individual — visible 3s después de presionar Play -->
+      <div class="sv-card-cta">
+        <a href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD" target="_blank" rel="noopener noreferrer" class="sv-cta-btn">
+          <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white" aria-hidden="true">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+          Ver más videos
+        </a>
       </div>
+    </div>
     </div>
 
     <!-- ── Tarjeta 2 ── -->
@@ -687,11 +703,20 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <div class="sv-info">
         <p class="sv-info-title">Cobertura de Eventos</p>
         <p class="sv-info-desc">Conectamos experiencias.</p>
+      <!-- CTA individual — visible 3s después de presionar Play -->
+      <div class="sv-card-cta">
+        <a href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD" target="_blank" rel="noopener noreferrer" class="sv-cta-btn">
+          <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white" aria-hidden="true">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+          Ver más videos
+        </a>
       </div>
+    </div>
     </div>
 
     <!-- ── Tarjeta 3 ── -->
-    <div class="sv-card" id="sv-card-2">
+    <div class="sv-card" id="sv-card-3">
       <div class="sv-video-wrap">
         <!-- Reemplaza VIDEO_ID_2 con el ID real de tu segundo video -->
         <img
@@ -718,11 +743,20 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <div class="sv-info">
         <p class="sv-info-title">Producción Emocional</p>
         <p class="sv-info-desc">Capturamos cada momento especial con la calidad cinematográfica que merece.</p>
+      <!-- CTA individual — visible 3s después de presionar Play -->
+      <div class="sv-card-cta">
+        <a href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD" target="_blank" rel="noopener noreferrer" class="sv-cta-btn">
+          <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white" aria-hidden="true">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+          Ver más videos
+        </a>
       </div>
+    </div>
     </div>
 
     <!-- ── Tarjeta 4 ── -->
-    <div class="sv-card" id="sv-card-3">
+    <div class="sv-card" id="sv-card-4">
       <div class="sv-video-wrap">
         <!-- Reemplaza VIDEO_ID_3 con el ID real de tu tercer video -->
         <img
@@ -749,27 +783,19 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
       <div class="sv-info">
         <p class="sv-info-title">Identidad de Marca</p>
         <p class="sv-info-desc">Videos que comunican los valores de tu marca de forma auténtica y memorable.</p>
+      <!-- CTA individual — visible 3s después de presionar Play -->
+      <div class="sv-card-cta">
+        <a href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD" target="_blank" rel="noopener noreferrer" class="sv-cta-btn">
+          <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white" aria-hidden="true">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+          Ver más videos
+        </a>
       </div>
+    </div>
     </div>
 
   </div><!-- /sv-grid -->
-
-  <!-- CTA "Ver más videos" — aparece 3s después de presionar play -->
-  <div id="sv-cta-wrap">
-    <a
-      href="https://www.youtube.com/@ARTIAMARKETINGYPUBLICIDAD"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="sv-cta-btn"
-    >
-      <!-- Ícono YouTube -->
-      <svg class="sv-yt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white">
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-      </svg>
-      Ver más videos
-    </a>
-  </div>
-
 </section>
 <!-- /SECCIÓN DE VIDEOS -->
 
@@ -823,7 +849,19 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
   </div>
 </footer>
 </main>
+<script>
+  // Bloquear click derecho
+  document.addEventListener('contextmenu', event => event.preventDefault());
 
+  // Bloquear atajos de teclado para inspeccionar
+  document.onkeydown = function(e) {
+    if(e.keyCode == 123) return false; // F12
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+    if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+  };
+</script>
 <!-- ══════════════════════════════════════════════════
      SCRIPTS
 ══════════════════════════════════════════════════ -->
@@ -993,317 +1031,165 @@ tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b
 })();
 </script>
 
-<!-- Sección de Videos -->
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN DE VIDEOS — lógica unificada (v2)
+     · Un solo bloque de listeners (sin duplicados)
+     · CTA individual por tarjeta (no global)
+     · GSAP para todas las animaciones
+══════════════════════════════════════════════════ -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
+  'use strict';
 
-  /* ── Registro de GSAP plugins ─────────────────────── */
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-    gsap.registerPlugin(ScrollTrigger);
-  }
+  function initVideoSection() {
+    /* ── GSAP plugins ─────────────────────────────── */
+    var hasGsap = (typeof gsap !== 'undefined');
+    var hasST   = hasGsap && (typeof ScrollTrigger !== 'undefined');
+    if (hasST) gsap.registerPlugin(ScrollTrigger);
 
-  /* ── Estado ───────────────────────────────────────── */
-  var ctaShown   = false;
-  var ctaTimeout = null;
+    /* ── DOM refs ─────────────────────────────────── */
+    var svHeader = document.getElementById('sv-header');
+    var svGrid   = document.querySelector('.sv-grid');
+    var svCards  = document.querySelectorAll('.sv-card');
+    var playBtns = document.querySelectorAll('.sv-play-btn');
 
-  /* ── Referencias DOM ──────────────────────────────── */
-  var ctaWrap   = document.getElementById('sv-cta-wrap');
-  var svHeader  = document.getElementById('sv-header');
-  var svCards   = document.querySelectorAll('.sv-card');
-  var playBtns  = document.querySelectorAll('.sv-play-btn');
-
-  /* ── Animaciones de entrada con ScrollTrigger ─────── */
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-
-    // Header de la sección
-    gsap.from(svHeader, {
-      scrollTrigger: {
-        trigger: svHeader,
-        start: 'top 85%',
-        once: true,
-      },
-      y: 40,
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power3.out',
-    });
-
-    // Tarjetas en stagger
-    gsap.from(svCards, {
-      scrollTrigger: {
-        trigger: document.querySelector('.sv-grid'),
-        start: 'top 80%',
-        once: true,
-      },
-      y: 60,
-      opacity: 0,
-      duration: 0.75,
-      stagger: 0.14,
-      ease: 'power3.out',
-    });
-
-    // Paralax 3D sutil al mover el mouse sobre cada tarjeta
-    svCards.forEach(function (card) {
-      card.addEventListener('mousemove', function (e) {
-        var rect   = card.getBoundingClientRect();
-        var cx     = rect.left + rect.width  / 2;
-        var cy     = rect.top  + rect.height / 2;
-        var dx     = (e.clientX - cx) / (rect.width  / 2);  // -1 a 1
-        var dy     = (e.clientY - cy) / (rect.height / 2);  // -1 a 1
-        var rotX   = -dy * 5;   // máximo 5°
-        var rotY   =  dx * 5;
-
-        gsap.to(card, {
-          rotateX: rotX,
-          rotateY: rotY,
-          duration: 0.35,
-          ease: 'power2.out',
-          transformPerspective: 900,
-          transformOrigin: 'center center',
-        });
+    /* ── Scroll-triggered entrance animations ──────── */
+    if (hasST) {
+      // Section header
+      gsap.from(svHeader, {
+        scrollTrigger: { trigger: svHeader, start: 'top 85%', once: true },
+        y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
       });
 
-      card.addEventListener('mouseleave', function () {
-        gsap.to(card, {
-          rotateX: 0,
-          rotateY: 0,
-          duration: 0.55,
-          ease: 'elastic.out(1, 0.5)',
+      // Cards — staggered reveal
+      gsap.from(svCards, {
+        scrollTrigger: { trigger: svGrid, start: 'top 80%', once: true },
+        y: 60, opacity: 0, duration: 0.75, stagger: 0.14, ease: 'power3.out',
+      });
+    }
+
+    /* ── 3-D parallax tilt per card ────────────────── */
+    if (hasGsap) {
+      svCards.forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+          var r   = card.getBoundingClientRect();
+          var dx  = (e.clientX - (r.left + r.width  / 2)) / (r.width  / 2);
+          var dy  = (e.clientY - (r.top  + r.height / 2)) / (r.height / 2);
+          gsap.to(card, {
+            rotateX: -dy * 5, rotateY: dx * 5,
+            duration: 0.35, ease: 'power2.out',
+            transformPerspective: 900, transformOrigin: 'center center',
+          });
+        });
+        card.addEventListener('mouseleave', function () {
+          gsap.to(card, {
+            rotateX: 0, rotateY: 0,
+            duration: 0.55, ease: 'elastic.out(1, 0.5)',
+          });
         });
       });
-    });
-  }
+    }
 
-  /* ── Función: mostrar CTA con animación ───────────── */
-  function showCta() {
-    if (ctaShown) return;
-    ctaShown = true;
-    ctaWrap.classList.add('visible');
+    /* ── Per-card CTA reveal ───────────────────────── */
+    /**
+     * Each .sv-card has its own .sv-card-cta div (inside .sv-info).
+     * We track shown state per card via a WeakMap so no state leaks
+     * between cards and no global variable can be accidentally shared.
+     */
+    var ctaState = new WeakMap(); // card element → { shown, timer }
 
-    gsap.to(ctaWrap, {
-      opacity: 1,
-      y: 0,
-      duration: 0.7,
-      ease: 'power3.out',
-    });
-  }
+    function showCardCta(card) {
+      var state = ctaState.get(card);
+      if (!state || state.shown) return;
+      state.shown = true;
 
-  /* ── Lógica de cada botón Play ────────────────────── */
-  playBtns.forEach(function (btn) {
-    btn.addEventListener('click', function () {
+      var ctaDiv = card.querySelector('.sv-card-cta');
+      if (!ctaDiv) return;
 
-      var videoId  = btn.getAttribute('data-video-id');
-      var iframeId = btn.getAttribute('data-iframe');
-      var cardId   = btn.getAttribute('data-card');
+      ctaDiv.classList.add('sv-cta-visible');
 
-      var iframe   = document.getElementById(iframeId);
-      var card     = document.getElementById(cardId);
-      var thumb    = card.querySelector('.sv-thumbnail');
-      var overlay  = card.querySelector('.sv-overlay');
+      if (hasGsap) {
+        gsap.to(ctaDiv, {
+          opacity: 1, y: 0,
+          duration: 0.6, ease: 'power3.out',
+        });
+      } else {
+        ctaDiv.style.opacity   = '1';
+        ctaDiv.style.transform = 'translateY(0)';
+      }
+    }
 
-      /* Animación pulse GSAP en la tarjeta */
-      gsap.fromTo(card,
-        { scale: 1 },
-        { scale: 1.03, duration: 0.18, ease: 'power2.out',
-          yoyo: true, repeat: 1, onComplete: function () {
-            gsap.set(card, { scale: 1 });
+    /* ── Single unified Play listener ──────────────── */
+    playBtns.forEach(function (btn) {
+      var card     = document.getElementById(btn.getAttribute('data-card'));
+      var iframeEl = document.getElementById(btn.getAttribute('data-iframe'));
+
+      // Initialise per-card state
+      ctaState.set(card, { shown: false, timer: null });
+
+      btn.addEventListener('click', function onPlayClick() {
+        // Remove this listener so it can only fire once per card
+        btn.removeEventListener('click', onPlayClick);
+
+        var videoId = btn.getAttribute('data-video-id');
+        var thumb   = card.querySelector('.sv-thumbnail');
+        var overlay = card.querySelector('.sv-overlay');
+        var badge   = card.querySelector('.sv-badge');
+
+        /* Pulse animation on the card */
+        if (hasGsap) {
+          gsap.fromTo(card,
+            { scale: 1 },
+            { scale: 1.03, duration: 0.18, ease: 'power2.out',
+              yoyo: true, repeat: 1,
+              onComplete: function () { gsap.set(card, { scale: 1 }); }
+            }
+          );
+
+          /* Cinematic fade-out of thumbnail layer */
+          gsap.to([thumb, overlay, btn, badge].filter(Boolean), {
+            opacity: 0,
+            duration: 0.35,
+            ease: 'power2.inOut',
+            onComplete: activatePlayer,
+          });
+        } else {
+          activatePlayer();
+        }
+
+        function activatePlayer() {
+          // Add is-playing class (CSS handles visibility)
+          card.classList.add('is-playing');
+
+          // Explicitly hide elements for browsers that need it
+          [thumb, overlay, btn, badge].forEach(function (el) {
+            if (el) el.style.display = 'none';
+          });
+
+          // Inject YouTube embed with autoplay
+          iframeEl.src = 'https://www.youtube.com/embed/' + videoId
+                       + '?autoplay=1&rel=0&modestbranding=1&enablejsapi=0';
+          iframeEl.style.display = 'block';
+
+          // Schedule this card's own CTA
+          var state = ctaState.get(card);
+          if (state && !state.shown) {
+            clearTimeout(state.timer);
+            state.timer = setTimeout(function () { showCardCta(card); }, 3000);
           }
         }
-      );
-
-      /* Ocultar thumbnail y overlay con fade */
-      gsap.to([thumb, overlay, btn], {
-        opacity: 0,
-        duration: 0.35,
-        ease: 'power2.inOut',
-        onComplete: function () {
-          thumb.style.display   = 'none';
-          overlay.style.display = 'none';
-          btn.style.display     = 'none';
-
-          /* Insertar src del iframe con autoplay */
-          iframe.src = 'https://www.youtube.com/embed/' + videoId
-                     + '?autoplay=1&rel=0&modestbranding=1';
-          iframe.style.display = 'block';
-        }
       });
-
-      /* A los 3 segundos aparece el CTA */
-      if (!ctaShown) {
-        clearTimeout(ctaTimeout);
-        ctaTimeout = setTimeout(showCta, 3000);
-      }
     });
-  });
+  }
 
-});
-</script>
+  /* ── Bootstrap ────────────────────────────────────── */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initVideoSection);
+  } else {
+    initVideoSection();
+  }
 
-<!-- Modales y formularios -->
-<form id="whatsappForm" class="p-8 space-y-4">
-  <input type="hidden" id="selectedPlan">
-  <div>
-    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
-    <input type="text" id="userName" required placeholder="Ej. Carlitos"
-           class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
-  </div>
-  <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
-    Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
-  </button>
-</form>
-
-<!-- Modal de Reserva -->
-<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
-    <div class="bg-blue-600 p-8 text-white relative">
-      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
-      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
-    </div>
-    <form id="reservaMenuForm" class="p-8 space-y-6">
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
-        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido"
-               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
-      </div>
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
-        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
-          <option value="" disabled selected>Selecciona una opción...</option>
-          <option value="Páginas Webs">Páginas Webs</option>
-          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
-          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
-          <option value="Branding Corporativo">Branding Corporativo</option>
-          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
-          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Email</label>
-        <input type="email" id="reservaMenuEmail" required placeholder="tu@email.com"
-               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
-        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
-      </button>
-    </form>
-  </div>
-</div>
-
-<script>
-/* Modal genérico (plan) */
-function openModal(planName) {
-  var modal   = document.getElementById('planModal');
-  var content = document.getElementById('modalContent');
-  var displayPlan = document.getElementById('displayPlanName');
-  var hiddenInput = document.getElementById('selectedPlan');
-  if (!modal) return;
-  displayPlan.innerText = planName;
-  hiddenInput.value = planName;
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  setTimeout(function () {
-    content.classList.remove('scale-95', 'opacity-0');
-    content.classList.add('scale-100', 'opacity-100');
-  }, 10);
-}
-
-function closeModal() {
-  var modal   = document.getElementById('planModal');
-  var content = document.getElementById('modalContent');
-  if (!modal) return;
-  content.classList.add('scale-95', 'opacity-0');
-  setTimeout(function () {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }, 300);
-}
-
-/* Formulario WhatsApp */
-document.getElementById('whatsappForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const nombre = document.getElementById('userName').value;
-    const plan   = document.getElementById('selectedPlan').value;
-
-    // Guardar lead en Supabase (no bloquea si falla)
-    fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nombre,
-            servicio: 'Plan Social Media — ' + plan,
-            fuente: 'Formulario WhatsApp — Fotografía'
-        })
-    }).catch(() => {});
-
-    const mensajeFinal = `*¡Hola Artia!*
-Mi nombre es *${nombre}*.
-Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
-¿Podríamos agendar una breve reunión para revisar los detalles?
-
-Muchas gracias.`;
-
-    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
-    window.open(url, '_blank');
-    if(typeof closeModal === 'function') closeModal();
-});
-
-/* Modal reserva */
-function openReservaMenu() {
-  var modal   = document.getElementById('reservaMenuModal');
-  var content = document.getElementById('reservaMenuContent');
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  setTimeout(function () {
-    content.classList.remove('scale-95', 'opacity-0');
-    content.classList.add('scale-100', 'opacity-100');
-  }, 10);
-}
-
-function closeReservaMenu() {
-  var modal   = document.getElementById('reservaMenuModal');
-  var content = document.getElementById('reservaMenuContent');
-  content.classList.add('scale-95', 'opacity-0');
-  setTimeout(function () {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }, 300);
-}
-
-document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {{
-    e.preventDefault();
-    
-    const nombre   = document.getElementById('reservaMenuNombre').value;
-    const email    = document.getElementById('reservaMenuEmail').value;
-    const servicio = document.getElementById('reservaMenuServicio').value;
-
-    // Guardar lead en Supabase (no bloquea si falla)
-    fetch('/api/leads', {{
-        method: 'POST',
-        headers: {{ 'Content-Type': 'application/json' }},
-        body: JSON.stringify({{ nombre, email, servicio, fuente: 'Reserva de Consultoría — Fotografía' }})
-    }}).catch(() => {{}});
-
-    // Abrir WhatsApp como siempre
-    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
-
-*Nombre:* ${{nombre}}
-*Email:* ${{email}}
-*Servicio:* ${{servicio}}
-
-Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
-
-¡Quedo atento/a!`;
-
-    const url = `https://wa.me/593969937265?text=${{encodeURIComponent(mensajeFinal)}}`;
-    window.open(url, '_blank');
-    closeReservaMenu();
-}});
+}());
 </script>
 
 <!-- Menú móvil -->
@@ -1344,20 +1230,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-<script>
-  document.querySelectorAll('.sv-play-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const videoId = this.dataset.videoId;
-    const iframe = document.getElementById(this.dataset.iframe);
-    const card = document.getElementById(this.dataset.card);
 
-    // Inyectamos la URL de inserción oficial
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-    
-    card.classList.add('is-playing');
-  });
-});
-</script>
-
+<!-- ═══ Artia Unified Modal System ═══ -->
+<script src="artia-modal.js"></script>
 </body>
 </html>

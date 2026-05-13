@@ -503,7 +503,7 @@ function rastrearFolio() {
     </div>
 </footer>
 </main>
-<<script>
+<script>
   // Bloquear click derecho
   document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -530,195 +530,7 @@ function rastrearFolio() {
   document.querySelectorAll('[data-sr]').forEach(function(el){gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%',once:true},y:50,opacity:0,duration:0.8,delay:parseFloat(el.dataset.srDelay||0),ease:'power3.out'});});
 })();
 </script>
-<!-- Modal Overlay -->
-<div id="planModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
-    
-    <!-- Cabecera -->
-    <div class="bg-primary p-6 text-white relative">
-      <button onclick="closeModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h3 class="text-xl font-bold">Solicitar Información</h3>
-      <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Plan: <span id="displayPlanName" class="text-secondary font-black"></span></p>
-    </div>
 
-    <!-- Formulario -->
-    <form id="whatsappForm" class="p-8 space-y-4">
-      <input type="hidden" id="selectedPlan">
-      
-      <div>
-        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Tu Nombre</label>
-        <input type="text" id="userName" required placeholder="Ej. Carlitos" 
-               class="w-full border-b-2 border-slate-100 py-2 focus:border-primary outline-none transition-colors text-sm">
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all mt-4 flex items-center justify-center gap-2">
-        Enviar a WhatsApp <span class="material-symbols-outlined text-sm">send</span>
-      </button>
-    </form>
-  </div>
-</div>
-<!-- Modal de Reserva de Menú -->
-<div id="reservaMenuModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 backdrop-blur-md p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transform transition-all scale-95 opacity-0" id="reservaMenuContent">
-    
-    <!-- Header Estilo Agencia -->
-    <div class="bg-blue-600 p-8 text-white relative">
-      <button onclick="closeReservaMenu()" class="absolute top-4 right-4 hover:rotate-90 transition-transform duration-300">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h3 class="text-2xl font-black tracking-tighter">ARTIA STUDIO</h3>
-      <p class="text-blue-100 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">Reserva de Consultoría</p>
-    </div>
-
-    <!-- Formulario -->
-    <form id="reservaMenuForm" class="p-8 space-y-6">
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Nombre</label>
-        <input type="text" id="reservaMenuNombre" required placeholder="Nombre y Apellido" 
-               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
-      </div>
-
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Servicio Requerido</label>
-        <select id="reservaMenuServicio" required class="w-full border-b-2 border-slate-100 py-2 bg-transparent focus:border-blue-600 outline-none text-sm cursor-pointer font-medium">
-          <option value="" disabled selected>Selecciona una opción...</option>
-          <option value="Páginas Webs">Páginas Webs</option>
-          <option value="Planes de Redes Sociales">Planes de Redes Sociales</option>
-          <option value="Impresión o Sublimados">Impresión o Sublimados</option>
-          <option value="Branding Corporativo">Branding Corporativo</option>
-          <option value="Fotografía o Video Profesionales">Fotografía o Video Profesionales</option>
-          <option value="Vuelos de Drone Profesional">Vuelos de Drone profesional</option>
-        </select>
-      </div>
-
-
-      <div>
-        <label class="text-[10px] uppercase font-black text-slate-400 tracking-widest block mb-2">Tu Email</label>
-        <input type="email" id="reservaMenuEmail" required placeholder="tu@email.com"
-               class="w-full border-b-2 border-slate-100 py-2 focus:border-blue-600 outline-none transition-colors text-sm font-medium">
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
-        Confirmar Reserva <span class="material-symbols-outlined text-sm">event_available</span>
-      </button>
-    </form>
-  </div>
-</div>
-<script>
-function openModal(planName) {
-    const modal = document.getElementById('planModal');
-    const content = document.getElementById('modalContent');
-    const displayPlan = document.getElementById('displayPlanName');
-    const hiddenInput = document.getElementById('selectedPlan');
-
-    displayPlan.innerText = planName;
-    hiddenInput.value = planName;
-
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    // Animación de entrada
-    setTimeout(() => {
-        content.classList.remove('scale-95', 'opacity-0');
-        content.classList.add('scale-100', 'opacity-100');
-    }, 10);
-}
-
-function closeModal() {
-    const modal = document.getElementById('planModal');
-    const content = document.getElementById('modalContent');
-    
-    content.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }, 300);
-}
-
-// Lógica del Formulario
-document.getElementById('whatsappForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const nombre = document.getElementById('userName').value;
-    const plan   = document.getElementById('selectedPlan').value;
-
-    // Guardar lead en Supabase (no bloquea si falla)
-    fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            nombre,
-            servicio: 'Plan Social Media — ' + plan,
-            fuente: 'Formulario WhatsApp — Impresión'
-        })
-    }).catch(() => {});
-
-    const mensajeFinal = `*¡Hola Artia!*
-Mi nombre es *${nombre}*.
-Quiero potenciar mi marca con el *Plan ${plan}* de Social Media.
-¿Podríamos agendar una breve reunión para revisar los detalles?
-
-Muchas gracias.`;
-
-    const url = `https://wa.me/593969937265?text=${encodeURIComponent(mensajeFinal)}`;
-    window.open(url, '_blank');
-    if(typeof closeModal === 'function') closeModal();
-});
-</script>
-<script>
-function openReservaMenu() {
-    const modal = document.getElementById('reservaMenuModal');
-    const content = document.getElementById('reservaMenuContent');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(() => {
-        content.classList.remove('scale-95', 'opacity-0');
-        content.classList.add('scale-100', 'opacity-100');
-    }, 10);
-}
-
-function closeReservaMenu() {
-    const modal = document.getElementById('reservaMenuModal');
-    const content = document.getElementById('reservaMenuContent');
-    content.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }, 300);
-}
-
-document.getElementById('reservaMenuForm').addEventListener('submit', function(e) {{
-    e.preventDefault();
-    
-    const nombre   = document.getElementById('reservaMenuNombre').value;
-    const email    = document.getElementById('reservaMenuEmail').value;
-    const servicio = document.getElementById('reservaMenuServicio').value;
-
-    // Guardar lead en Supabase (no bloquea si falla)
-    fetch('/api/leads', {{
-        method: 'POST',
-        headers: {{ 'Content-Type': 'application/json' }},
-        body: JSON.stringify({{ nombre, email, servicio, fuente: 'Reserva de Consultoría — Impresión' }})
-    }}).catch(() => {{}});
-
-    // Abrir WhatsApp como siempre
-    const mensajeFinal = `✨ *NUEVA RESERVA - ARTIA*
-
-*Nombre:* ${{nombre}}
-*Email:* ${{email}}
-*Servicio:* ${{servicio}}
-
-Hola Artia, me gustaría agendar una reunión para profundizar en los detalles de este servicio. ¿Tienen disponibilidad?
-
-¡Quedo atento/a!`;
-
-    const url = `https://wa.me/593969937265?text=${{encodeURIComponent(mensajeFinal)}}`;
-    window.open(url, '_blank');
-    closeReservaMenu();
-}});
-</script>
 <!-- =========================================
      MODAL PAPELERÍA PREMIUM — ENTREGA EXPRESS
      ========================================= -->
@@ -1063,5 +875,8 @@ ${resumen}
 ();
 
 </script>
+
+<!-- ═══ Artia Unified Modal System ═══ -->
+<script src="artia-modal.js"></script>
 </body>
 </html>
