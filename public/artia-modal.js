@@ -492,34 +492,85 @@
     }, 600);
   };
 
-  /* ── Email handler ──────────────────────────────────── */
+  /* ── Email handler — POST /api/send-email ──────────── */
+  /**
+   * Sends lead data via the shared artiaSendConsultation utility,
+   * which POSTs to /api/send-email (route.ts / handleConsultoria).
+   * The server:
+   *   1. Inserts lead in Supabase + generates a folio (ASMKT-XXXX)
+   *   2. Sends internal notification → artia.estudioin@gmail.com
+   *   3. Sends confirmation email    → client (v.email)
+   *
+   * artiaSendConsultation is defined in fab-artia.js and exposed on
+   * window so both scripts share the exact same API contract.
+   * Load order: fab-artia.js first, then artia-modal.js.
+   * Fallback: if fab-artia.js isn't loaded, we define a local copy.
+   */
+  if (typeof window.artiaSendConsultation !== 'function') {
+    window.artiaSendConsultation = async function (payload) {
+      var res  = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Error del servidor');
+      return data;
+    };
+  }
+
   window.artiaReservarEmail = function () {
     if (!validateForm()) return;
     var v = getFormValues();
 
     setLoading('artiaEmailBtn', true);
 
-    var serviceDisplay = v.plan ? v.plan + ' — ' + v.servicio : v.servicio;
+    var serviceDisplay = v.plan ? v.plan + ' \u2014 ' + v.servicio : v.servicio;
 
-    var subject = encodeURIComponent('Reserva de Consultoría — ' + serviceDisplay + ' | ' + v.nombre);
-    var body = encodeURIComponent(
-      'Hola equipo de Artia Studio,\n\n'
-      + 'Mi nombre es ' + v.nombre + ' y me gustaría solicitar una consultoría para el siguiente servicio:\n\n'
-      + '  ▸ Servicio: ' + serviceDisplay + '\n'
-      + '  ▸ Mi email de contacto: ' + v.email + '\n\n'
-      + 'Quedo atento/a a su respuesta para coordinar disponibilidad.\n\n'
-      + 'Muchas gracias,\n'
-      + v.nombre
-    );
-
-    var mailto = 'mailto:' + ARTIA_EMAIL + '?subject=' + subject + '&body=' + body;
-
-    setTimeout(function () {
-      window.location.href = mailto;
+    window.artiaSendConsultation({
+      name:      v.nombre,
+      emailFrom: v.email,
+      service:   serviceDisplay,
+      message:   v.plan ? 'Plan seleccionado: ' + v.plan : '',
+    })
+    .then(function (data) {
       setLoading('artiaEmailBtn', false);
-      // Don't close modal immediately on email — allow user to see it opened
-      setTimeout(closeReservaMenu, 1200);
-    }, 600);
+      // Show brief success state on button before closing
+      var btn = document.getElementById('artiaEmailBtn');
+      if (btn) {
+        var orig = btn.innerHTML;
+        btn.style.background = 'rgba(5,150,105,0.15)';
+        btn.style.borderColor = 'rgba(5,150,105,0.4)';
+        btn.style.color = '#6ee7b7';
+        btn.innerHTML = '\u2714\ufe0f Solicitud enviada \u2014 Folio ' + data.folio;
+        setTimeout(function () {
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+          btn.innerHTML = orig;
+          closeReservaMenu();
+        }, 2400);
+      } else {
+        closeReservaMenu();
+      }
+    })
+    .catch(function () {
+      setLoading('artiaEmailBtn', false);
+      var btn = document.getElementById('artiaEmailBtn');
+      if (btn) {
+        var orig = btn.innerHTML;
+        btn.style.background = 'rgba(239,68,68,0.12)';
+        btn.style.borderColor = 'rgba(239,68,68,0.4)';
+        btn.style.color = '#fca5a5';
+        btn.innerHTML = '\u2715 Error al enviar. Intenta de nuevo.';
+        setTimeout(function () {
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+          btn.innerHTML = orig;
+        }, 3000);
+      }
+    });
   };
 
   /* ── Service lock helpers ───────────────────────────── */

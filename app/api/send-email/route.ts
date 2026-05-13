@@ -137,7 +137,7 @@ async function handleImpresion({ name, emailFrom, phone, products }: Record<stri
       from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
       to: 'artia.estudioin@gmail.com',
       replyTo: cleanEmail,
-      subject: `[${folio}] Nuevo pedido Papelería Express — ${cleanName}`,
+      subject: `[${folio}] Nuevo pedido Papelería Premium — ${cleanName}`,
       html: buildImpresionInternalEmail({ cleanName, cleanEmail, cleanPhone, cleanProducts, folio, year }),
     })
 
