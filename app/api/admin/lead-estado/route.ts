@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// PATCH /api/admin/lead-estado — actualizar estado por id (desde pipeline/vista360/leads)
+// PATCH /api/admin/lead-estado — actualizar estado por id (desde pipeline/vista360)
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-// DELETE /api/admin/lead-estado?id=...&hard=1 — eliminar lead permanentemente de la BD
+// DELETE /api/admin/lead-estado?id=...&hard=1 — eliminar lead permanentemente
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient()
 
@@ -72,20 +72,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'id es requerido' }, { status: 400 })
   }
 
-  // Require explicit ?hard=1 to prevent accidental deletes
+  // Solo permitir hard delete si se pasa ?hard=1
   if (hard !== '1') {
     return NextResponse.json({ error: 'Operación no permitida sin ?hard=1' }, { status: 403 })
-  }
-
-  // Verify the lead exists before deleting (helps diagnose RLS issues)
-  const { data: existing, error: fetchErr } = await supabase
-    .from('leads')
-    .select('id, nombre')
-    .eq('id', id)
-    .single()
-
-  if (fetchErr || !existing) {
-    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para eliminarlo' }, { status: 404 })
   }
 
   const { error } = await supabase
@@ -93,10 +82,7 @@ export async function DELETE(req: NextRequest) {
     .delete()
     .eq('id', id)
 
-  if (error) {
-    console.error('[DELETE lead] Supabase error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ ok: true, deleted: existing.nombre })
+  return NextResponse.json({ ok: true })
 }

@@ -31,8 +31,8 @@ const ESTADO_CFG: Record<string, { label: string; color: string; bg: string; bor
 const PAY_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pagado:       { label: '✓ Pagado',       color: '#10b981', bg: '#f0fdf4' },
   parcial:      { label: '◐ Parcial',      color: '#3b82f6', bg: '#eff6ff' },
-  pendiente:    { label: '⏳ Pendiente',    color: '#f59e0b', bg: '#fefce8' },
-  vencido:      { label: '⚠️ Vencido',     color: '#ef4444', bg: '#fef2f2' },
+  pendiente:    { label: '⏳ Pendiente',   color: '#f59e0b', bg: '#fefce8' },
+  vencido:      { label: '⚠️ Vencido',    color: '#ef4444', bg: '#fef2f2' },
   sin_contrato: { label: '○ Sin contrato', color: '#94a3b8', bg: '#f1f5f9' },
 }
 
@@ -64,12 +64,20 @@ function avatarBg(name: string) {
 // ─── Edit Modal ───────────────────────────────────────────────────
 
 type EditForm = {
-  nombre: string; email: string; telefono: string; servicio: string
-  estado: string; payment_status: string; estimated_value: string; notes: string
+  nombre: string
+  email: string
+  telefono: string
+  servicio: string
+  estado: string
+  payment_status: string
+  estimated_value: string
+  notes: string
 }
 
 function EditModal({
-  lead, onClose, onSaved,
+  lead,
+  onClose,
+  onSaved,
 }: {
   lead: Lead
   onClose: () => void
@@ -96,7 +104,8 @@ function EditModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
-    setLoading(true); setError('')
+    setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/admin/lead-edit', {
         method: 'PATCH',
@@ -126,47 +135,96 @@ function EditModal({
         estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
         notes:           form.notes.trim() || null,
       })
-    } catch { setError('Error de conexión.') }
-    finally   { setLoading(false) }
+    } catch {
+      setError('Error de conexión.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const lbl: React.CSSProperties = {
     display: 'block', fontSize: 10, fontWeight: 700,
-    color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 5,
+    color: '#94a3b8', textTransform: 'uppercase',
+    letterSpacing: '1px', marginBottom: 5,
   }
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', fontSize: 13,
     border: '1.5px solid #e2e8f0', borderRadius: 9,
-    outline: 'none', background: '#fff', boxSizing: 'border-box', fontFamily: 'inherit',
+    outline: 'none', background: '#fff', boxSizing: 'border-box',
+    fontFamily: 'inherit',
   }
 
   return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 540, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-        <div style={{ background: 'linear-gradient(135deg, #00113a 0%, #2552ca 100%)', padding: '18px 24px', borderRadius: '20px 20px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+    >
+      <div style={{
+        background: '#fff', borderRadius: 20, width: '100%', maxWidth: 540,
+        maxHeight: '92vh', overflowY: 'auto',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+      }}>
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #00113a 0%, #2552ca 100%)',
+          padding: '18px 24px', borderRadius: '20px 20px 0 0',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
           <div>
-            <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 800, color: '#fff' }}>✏️ Editar cliente</p>
-            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>{lead.folio ?? lead.id}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 800, color: '#fff' }}>
+              ✏️ Editar cliente
+            </p>
+            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
+              {lead.folio ?? lead.id}
+            </p>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '50%', width: 32, height: 32, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff',
+            borderRadius: '50%', width: 32, height: 32, fontSize: 16,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '22px 24px 26px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Nombre */}
           <div>
             <label style={lbl}>Nombre del cliente *</label>
             <input name="nombre" value={form.nombre} onChange={handleChange} style={inp} placeholder="Ej: Juan Pérez" required />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            <div><label style={lbl}>Email</label><input name="email" type="email" value={form.email} onChange={handleChange} style={inp} placeholder="cliente@ejemplo.com" /></div>
-            <div><label style={lbl}>Teléfono / WhatsApp</label><input name="telefono" value={form.telefono} onChange={handleChange} style={inp} placeholder="+593 99 000 0000" /></div>
+
+          {/* Email + Teléfono */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={lbl}>Email</label>
+              <input name="email" type="email" value={form.email} onChange={handleChange} style={inp} placeholder="cliente@ejemplo.com" />
+            </div>
+            <div>
+              <label style={lbl}>Teléfono / WhatsApp</label>
+              <input name="telefono" value={form.telefono} onChange={handleChange} style={inp} placeholder="+593 99 000 0000" />
+            </div>
           </div>
-          <div><label style={lbl}>Servicio</label><input name="servicio" value={form.servicio} onChange={handleChange} style={inp} placeholder="Ej: 500 tarjetas de presentación" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+
+          {/* Servicio */}
+          <div>
+            <label style={lbl}>Servicio</label>
+            <input name="servicio" value={form.servicio} onChange={handleChange} style={inp} placeholder="Ej: 500 tarjetas de presentación" />
+          </div>
+
+          {/* Estado + Pago */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={lbl}>Estado</label>
               <select name="estado" value={form.estado} onChange={handleChange} style={inp}>
-                {Object.entries(ESTADO_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                {Object.entries(ESTADO_CFG).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -180,14 +238,45 @@ function EditModal({
               </select>
             </div>
           </div>
-          <div><label style={lbl}>Valor estimado ($)</label><input name="estimated_value" type="number" min="0" step="0.01" value={form.estimated_value} onChange={handleChange} style={inp} placeholder="Ej: 250" /></div>
-          <div><label style={lbl}>Notas internas</label><textarea name="notes" value={form.notes} onChange={handleChange} rows={3} style={{ ...inp, resize: 'vertical' }} placeholder="Observaciones, detalles del pedido, fecha de entrega…" /></div>
 
-          {error && <p style={{ margin: 0, padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: 13, color: '#dc2626' }}>{error}</p>}
+          {/* Valor estimado */}
+          <div>
+            <label style={lbl}>Valor estimado ($)</label>
+            <input
+              name="estimated_value" type="number" min="0" step="0.01"
+              value={form.estimated_value} onChange={handleChange}
+              style={inp} placeholder="Ej: 250"
+            />
+          </div>
+
+          {/* Notas */}
+          <div>
+            <label style={lbl}>Notas internas</label>
+            <textarea
+              name="notes" value={form.notes} onChange={handleChange}
+              rows={3} style={{ ...inp, resize: 'vertical' }}
+              placeholder="Observaciones, detalles del pedido, fecha de entrega…"
+            />
+          </div>
+
+          {error && (
+            <p style={{ margin: 0, padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: 13, color: '#dc2626' }}>
+              {error}
+            </p>
+          )}
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-            <button type="button" onClick={onClose} style={{ background: '#f8fafc', border: '0.5px solid #e2e8f0', color: '#475569', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-            <button type="submit" disabled={loading} style={{ background: loading ? '#93c5fd' : '#00113a', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}>
+            <button type="button" onClick={onClose} style={{
+              background: '#f8fafc', border: '0.5px solid #e2e8f0', color: '#475569',
+              borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+              Cancelar
+            </button>
+            <button type="submit" disabled={loading} style={{
+              background: loading ? '#93c5fd' : '#00113a', color: '#fff',
+              border: 'none', borderRadius: 8, padding: '10px 24px',
+              fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+            }}>
               {loading ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
@@ -202,14 +291,14 @@ function EditModal({
 export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
   const router = useRouter()
 
-  const [leads, setLeads]               = useState<Lead[]>(initLeads)
-  const [search, setSearch]             = useState('')
-  const [folioSearch, setFolioSearch]   = useState('')
+  const [leads, setLeads]             = useState<Lead[]>(initLeads)
+  const [search, setSearch]           = useState('')
+  const [folioSearch, setFolioSearch] = useState('')
   const [filterEstado, setFilterEstado] = useState('todos')
-  const [page, setPage]                 = useState(1)
-  const [toast, setToast]               = useState<{ msg: string; ok: boolean } | null>(null)
-  const [deleting, setDeleting]         = useState<string | null>(null)
-  const [editingLead, setEditingLead]   = useState<Lead | null>(null)
+  const [page, setPage]               = useState(1)
+  const [toast, setToast]             = useState<{ msg: string; ok: boolean } | null>(null)
+  const [deleting, setDeleting]       = useState<string | null>(null)
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
 
   function showMsg(msg: string, ok = true) {
     setToast({ msg, ok })
@@ -252,10 +341,9 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     vencido: leads.filter(l => l.payment_status === 'vencido').length,
   }), [leads])
 
-  // ── Soft delete (archivar → estado perdido) ───────────────────
-  //    Nota: este NO elimina de BD, solo cambia el estado.
+  // ── Soft delete (archivar) ────────────────────────────────────
 
-  async function archiveLead(lead: Lead) {
+  async function deleteLead(lead: Lead) {
     const msg = `¿Archivar a "${lead.nombre}"?\n\nSe marcará como "Perdido" para conservar el historial.\nSu folio ${lead.folio ?? ''} quedará registrado pero inactivo.`
     if (!confirm(msg)) return
     setDeleting(lead.id)
@@ -266,47 +354,34 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         body: JSON.stringify({ id: lead.id, estado: 'perdido' }),
       })
       if (res.ok) {
-        // Actualizar UI localmente
         setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, estado: 'perdido' } : l))
         showMsg(`"${lead.nombre}" archivado como Perdido`)
-        // Sincronizar con servidor para que el cambio persista en F5
+        // Invalidate server cache so F5 reflects the change immediately
         router.refresh()
       } else {
-        const data = await res.json().catch(() => ({}))
-        showMsg(data.error ?? 'Error al archivar', false)
+        showMsg('Error al archivar', false)
       }
-    } catch {
-      showMsg('Error de conexión al archivar', false)
     } finally {
       setDeleting(null)
     }
   }
 
-  // ── Hard delete (eliminar permanente de BD) ───────────────────
-  //    FIX: router.refresh() después de DELETE exitoso para que
-  //    el servidor re-lea la BD y F5 ya no muestre el registro.
+  // ── Hard delete ───────────────────────────────────────────────
 
   async function hardDeleteLead(lead: Lead) {
     const msg = `¿ELIMINAR PERMANENTEMENTE a "${lead.nombre}"?\n\n⚠️ Esta acción NO se puede deshacer.\nFolio: ${lead.folio ?? 'sin folio'}`
     if (!confirm(msg)) return
     setDeleting(lead.id)
     try {
-      const res = await fetch(`/api/admin/lead-estado?id=${encodeURIComponent(lead.id)}&hard=1`, {
-        method: 'DELETE',
-      })
+      const res = await fetch(`/api/admin/lead-estado?id=${lead.id}&hard=1`, { method: 'DELETE' })
       if (res.ok) {
-        // 1. Quitar del estado local para feedback inmediato
         setLeads(prev => prev.filter(l => l.id !== lead.id))
         showMsg(`"${lead.nombre}" eliminado permanentemente`)
-        // 2. CRÍTICO: refrescar caché del servidor para que F5 ya no lo muestre
+        // Invalidate server cache so F5 doesn't restore the deleted lead
         router.refresh()
       } else {
-        let errMsg = 'Error al eliminar'
-        try {
-          const data = await res.json()
-          errMsg = data.error ?? errMsg
-        } catch { /* ignorar */ }
-        showMsg(errMsg, false)
+        const data = await res.json().catch(() => ({}))
+        showMsg(data.error ?? 'Error al eliminar', false)
       }
     } catch {
       showMsg('Error de conexión al eliminar', false)
@@ -321,7 +396,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))
     setEditingLead(null)
     showMsg(`"${updated.nombre}" actualizado correctamente`)
-    router.refresh()
   }
 
   // ── Navigate to Vista360 ──────────────────────────────────────
@@ -340,7 +414,11 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
 
       {/* Edit Modal */}
       {editingLead && (
-        <EditModal lead={editingLead} onClose={() => setEditingLead(null)} onSaved={handleSaved} />
+        <EditModal
+          lead={editingLead}
+          onClose={() => setEditingLead(null)}
+          onSaved={handleSaved}
+        />
       )}
 
       {/* Toast */}
@@ -352,7 +430,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
           color: toast.ok ? '#15803d' : '#dc2626',
           padding: '12px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)', animation: 'slideIn 0.3s ease',
-          maxWidth: 340,
         }}>
           {toast.ok ? '✓' : '✗'} {toast.msg}
         </div>
@@ -372,9 +449,9 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         {[
           { label: 'Total',    value: stats.total,   color: '#0f172a', icon: '📋' },
           { label: 'Nuevos',   value: stats.nuevo,   color: '#3b82f6', icon: '🆕' },
-          { label: 'Cerrados', value: stats.cerrado, color: '#10b981', icon: '✅' },
-          { label: 'Perdidos', value: stats.perdido, color: '#ef4444', icon: '❌' },
-          { label: 'Vencidos', value: stats.vencido, color: '#f59e0b', icon: '⚠️' },
+          { label: 'Cerrados', value: stats.cerrado,  color: '#10b981', icon: '✅' },
+          { label: 'Perdidos', value: stats.perdido,  color: '#ef4444', icon: '❌' },
+          { label: 'Vencidos', value: stats.vencido,  color: '#f59e0b', icon: '⚠️' },
         ].map(k => (
           <div key={k.label} style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 4 }}>{k.icon} {k.label}</div>
@@ -391,8 +468,7 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
           {/* Filters */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <input
-              type="text" value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1) }}
+              type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
               placeholder="🔍 Buscar por nombre, email, servicio…"
               style={{ ...inp, flex: '1 1 200px', minWidth: 180 }}
             />
@@ -404,7 +480,14 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                 const active = filterEstado === e
                 return (
                   <button key={e} onClick={() => { setFilterEstado(e); setPage(1) }}
-                    style={{ padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `1.5px solid ${active ? cfg.color : '#e2e8f0'}`, background: active ? cfg.color : '#fff', color: active ? '#fff' : '#64748b', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                    style={{
+                      padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer',
+                      border: `1.5px solid ${active ? cfg.color : '#e2e8f0'}`,
+                      background: active ? cfg.color : '#fff',
+                      color: active ? '#fff' : '#64748b',
+                      whiteSpace: 'nowrap', transition: 'all 0.15s',
+                    }}>
                     {cfg.label}
                   </button>
                 )
@@ -414,148 +497,171 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
 
           {/* Results count */}
           <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10, fontWeight: 500 }}>
-            Mostrando {paginated.length} de {filtered.length} contactos
+            Mostrando {Math.min(paginated.length, PAGE_SIZE)} de {filtered.length} contactos
           </div>
 
           {/* Table */}
           <div style={{ borderRadius: 10, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'] }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 580 }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc' }}>
-                    {['Contacto', 'Servicio', 'Estado', 'Pago', 'Valor est.', 'Fecha', 'Acciones'].map(h => (
-                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#94a3b8', whiteSpace: 'nowrap', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
-                        Sin contactos que coincidan
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 580 }}>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
+                  {['Contacto', 'Servicio', 'Estado', 'Pago', 'Valor est.', 'Fecha', 'Acciones'].map(h => (
+                    <th key={h} style={{
+                      padding: '10px 14px', textAlign: 'left', fontSize: 10,
+                      fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px',
+                      color: '#94a3b8', whiteSpace: 'nowrap', borderBottom: '1px solid #e2e8f0',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
+                    Sin contactos que coincidan
+                  </td></tr>
+                ) : paginated.map(lead => {
+                  const ec      = ESTADO_CFG[lead.estado ?? 'nuevo'] ?? ESTADO_CFG.nuevo
+                  const pc      = PAY_CFG[lead.payment_status ?? 'sin_contrato'] ?? PAY_CFG.sin_contrato
+                  const hasLink = !!lead.folio
+                  return (
+                    <tr
+                      key={lead.id}
+                      onClick={() => hasLink && goToLead(lead)}
+                      style={{ borderBottom: '1px solid #f1f5f9', cursor: hasLink ? 'pointer' : 'default', transition: 'background 0.12s' }}
+                      onMouseEnter={e => { if (hasLink) e.currentTarget.style.background = '#f8fafc' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '' }}
+                    >
+                      {/* Contacto */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 36, height: 36, borderRadius: '50%',
+                            background: avatarBg(lead.nombre),
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0,
+                          }}>
+                            {initials(lead.nombre)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{lead.nombre}</div>
+                            {lead.folio && <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#94a3b8' }}>{lead.folio}</div>}
+                            {lead.email && <div style={{ fontSize: 11, color: '#64748b' }}>{lead.email}</div>}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Servicio */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+                        <span style={{ fontSize: 12, color: '#475569' }}>{lead.servicio ?? '—'}</span>
+                      </td>
+
+                      {/* Estado */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+                        <span style={{
+                          display: 'inline-block', fontSize: 10, fontWeight: 800,
+                          padding: '3px 10px', borderRadius: 20,
+                          background: ec.bg, color: ec.color, border: `1px solid ${ec.border}`,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {ec.label}
+                        </span>
+                      </td>
+
+                      {/* Pago */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+                        <span style={{
+                          display: 'inline-block', fontSize: 10, fontWeight: 700,
+                          padding: '3px 10px', borderRadius: 20,
+                          background: pc.bg, color: pc.color, whiteSpace: 'nowrap',
+                        }}>
+                          {pc.label}
+                        </span>
+                      </td>
+
+                      {/* Valor est */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        {fmtMoney(lead.estimated_value)}
+                      </td>
+
+                      {/* Fecha */}
+                      <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                        {fmtDate(lead.created_at)}
+                      </td>
+
+                      {/* Acciones */}
+                      <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
+                        <div style={{ display: 'flex', gap: 5 }} onClick={e => e.stopPropagation()}>
+
+                          {/* Ver Vista 360 */}
+                          {hasLink && (
+                            <a
+                              href={`/admin/cliente/${lead.folio}`}
+                              title="Ver Vista 360"
+                              style={{
+                                fontSize: 10, fontWeight: 700, padding: '5px 10px',
+                                borderRadius: 6, background: '#eff6ff', color: '#2563eb',
+                                textDecoration: 'none', whiteSpace: 'nowrap',
+                              }}>
+                              Ver →
+                            </a>
+                          )}
+
+                          {/* Editar */}
+                          <button
+                            onClick={() => setEditingLead(lead)}
+                            title="Editar cliente"
+                            style={{
+                              fontSize: 12, padding: '5px 8px', borderRadius: 6,
+                              background: '#fefce8', color: '#b45309',
+                              border: '1px solid #fde68a', cursor: 'pointer',
+                            }}>
+                            ✏️
+                          </button>
+
+                          {/* Archivar (soft delete) */}
+                          <button
+                            onClick={() => deleteLead(lead)}
+                            disabled={deleting === lead.id || lead.estado === 'perdido'}
+                            title={lead.estado === 'perdido' ? 'Ya archivado' : 'Archivar como Perdido'}
+                            style={{
+                              fontSize: 12, padding: '5px 8px', borderRadius: 6,
+                              background: lead.estado === 'perdido' ? '#f8fafc' : '#fef2f2',
+                              color: lead.estado === 'perdido' ? '#cbd5e1' : '#ef4444',
+                              border: 'none',
+                              cursor: deleting === lead.id || lead.estado === 'perdido' ? 'not-allowed' : 'pointer',
+                            }}>
+                            {deleting === lead.id ? '…' : '🗑️'}
+                          </button>
+
+                          {/* Eliminar permanente */}
+                          <button
+                            onClick={() => hardDeleteLead(lead)}
+                            disabled={deleting === lead.id}
+                            title="Eliminar permanentemente"
+                            style={{
+                              fontSize: 12, padding: '5px 8px', borderRadius: 6,
+                              background: '#fee2e2', color: '#b91c1c',
+                              border: '1px solid #fecaca',
+                              cursor: deleting === lead.id ? 'not-allowed' : 'pointer',
+                            }}>
+                            {deleting === lead.id ? '…' : '✕'}
+                          </button>
+
+                        </div>
                       </td>
                     </tr>
-                  ) : paginated.map(lead => {
-                    const ec      = ESTADO_CFG[lead.estado ?? 'nuevo'] ?? ESTADO_CFG.nuevo
-                    const pc      = PAY_CFG[lead.payment_status ?? 'sin_contrato'] ?? PAY_CFG.sin_contrato
-                    const hasLink = !!lead.folio
-                    const isDeleting = deleting === lead.id
-                    return (
-                      <tr
-                        key={lead.id}
-                        onClick={() => hasLink && goToLead(lead)}
-                        style={{ borderBottom: '1px solid #f1f5f9', cursor: hasLink ? 'pointer' : 'default', transition: 'background 0.12s', opacity: isDeleting ? 0.5 : 1 }}
-                        onMouseEnter={e => { if (hasLink && !isDeleting) e.currentTarget.style.background = '#f8fafc' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '' }}
-                      >
-                        {/* Contacto */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: '50%', background: avatarBg(lead.nombre), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                              {initials(lead.nombre)}
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{lead.nombre}</div>
-                              {lead.folio && <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#94a3b8' }}>{lead.folio}</div>}
-                              {lead.email && <div style={{ fontSize: 11, color: '#64748b' }}>{lead.email}</div>}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Servicio */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ fontSize: 12, color: '#475569' }}>{lead.servicio ?? '—'}</span>
-                        </td>
-
-                        {/* Estado */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 20, background: ec.bg, color: ec.color, border: `1px solid ${ec.border}`, whiteSpace: 'nowrap' }}>
-                            {ec.label}
-                          </span>
-                        </td>
-
-                        {/* Pago */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
-                          <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: pc.bg, color: pc.color, whiteSpace: 'nowrap' }}>
-                            {pc.label}
-                          </span>
-                        </td>
-
-                        {/* Valor */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                          {fmtMoney(lead.estimated_value)}
-                        </td>
-
-                        {/* Fecha */}
-                        <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                          {fmtDate(lead.created_at)}
-                        </td>
-
-                        {/* Acciones */}
-                        <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
-                          <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-
-                            {/* Ver Vista 360 */}
-                            {hasLink && (
-                              <a href={`/admin/cliente/${lead.folio}`} title="Ver Vista 360"
-                                style={{ fontSize: 10, fontWeight: 700, padding: '5px 10px', borderRadius: 6, background: '#eff6ff', color: '#2563eb', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                                Ver →
-                              </a>
-                            )}
-
-                            {/* Editar */}
-                            <button
-                              onClick={() => setEditingLead(lead)}
-                              title="Editar cliente"
-                              disabled={isDeleting}
-                              style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, background: '#fefce8', color: '#b45309', border: '1px solid #fde68a', cursor: isDeleting ? 'not-allowed' : 'pointer' }}>
-                              ✏️
-                            </button>
-
-                            {/* Archivar (soft delete → estado perdido) */}
-                            <button
-                              onClick={() => archiveLead(lead)}
-                              disabled={isDeleting || lead.estado === 'perdido'}
-                              title={lead.estado === 'perdido' ? 'Ya archivado' : 'Archivar como Perdido'}
-                              style={{
-                                fontSize: 12, padding: '5px 8px', borderRadius: 6,
-                                background: lead.estado === 'perdido' ? '#f8fafc' : '#fef2f2',
-                                color: lead.estado === 'perdido' ? '#cbd5e1' : '#ef4444',
-                                border: 'none',
-                                cursor: isDeleting || lead.estado === 'perdido' ? 'not-allowed' : 'pointer',
-                              }}>
-                              {isDeleting ? '…' : '🗑️'}
-                            </button>
-
-                            {/* Eliminar permanente */}
-                            <button
-                              onClick={() => hardDeleteLead(lead)}
-                              disabled={isDeleting}
-                              title="Eliminar permanentemente de la base de datos"
-                              style={{
-                                fontSize: 12, padding: '5px 8px', borderRadius: 6,
-                                background: '#fee2e2', color: '#b91c1c',
-                                border: '1px solid #fecaca',
-                                cursor: isDeleting ? 'not-allowed' : 'pointer',
-                                fontWeight: 700,
-                              }}>
-                              {isDeleting ? '…' : '✕'}
-                            </button>
-
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                  )
+                })}
+              </tbody>
+            </table>
             </div>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 16 }}>
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 12, color: '#475569', fontWeight: 600, opacity: page === 1 ? 0.4 : 1 }}>
                 ← Anterior
@@ -602,7 +708,8 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                           Ver Vista 360 →
                         </a>
                       )}
-                      <button onClick={() => setEditingLead(folioResult)}
+                      <button
+                        onClick={() => setEditingLead(folioResult)}
                         style={{ padding: '8px 10px', background: '#fefce8', color: '#b45309', border: '1px solid #fde68a', borderRadius: 8, fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
                         ✏️
                       </button>
@@ -650,7 +757,9 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                     </div>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: ec.bg, color: ec.color, whiteSpace: 'nowrap' }}>{ec.label}</span>
                   </a>
-                  <button onClick={() => setEditingLead(lead)} title="Editar"
+                  <button
+                    onClick={() => setEditingLead(lead)}
+                    title="Editar"
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, padding: '2px 4px', flexShrink: 0 }}>
                     ✏️
                   </button>
@@ -663,11 +772,11 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
 
       <style>{`
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @media (max-width: 900px) {
-          .leads-grid { grid-template-columns: 1fr !important; }
-        }
+        @media (max-width: 900px) { .leads-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 640px) {
-          .leads-grid > div:first-child input[type="text"] { min-width: 100% !important; }
+          .leads-filter-bar { flex-direction: column !important; }
+          .leads-filter-bar > * { width: 100% !important; max-width: 100% !important; }
+          .leads-action-bar { flex-direction: column !important; gap: 8px !important; }
         }
       `}</style>
     </div>

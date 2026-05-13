@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import ProyectosCRMClient from './ProyectosCRMClient'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Proyectos CRM — Artia Admin' }
 
 export default async function ProyectosCRMPage() {

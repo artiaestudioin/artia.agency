@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { PostHogWidget, SentryWidget } from './AnalyticsWidgets'
 
+export const dynamic = 'force-dynamic'
+
 const ESTADO_COLORS: Record<string, { bg: string; text: string; dot: string; label: string }> = {
   nuevo:      { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6', label: 'Nuevo'      },
   contactado: { bg: '#fefce8', text: '#92400e', dot: '#f59e0b', label: 'Contactado' },

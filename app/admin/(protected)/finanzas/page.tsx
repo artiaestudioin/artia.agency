@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import FinanzasClient from './FinanzasClient'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Finanzas — Sistema Contable' }
 
 export default async function FinanzasPage() {

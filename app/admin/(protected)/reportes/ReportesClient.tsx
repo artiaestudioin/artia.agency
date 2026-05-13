@@ -888,7 +888,7 @@ export default function ReportesClient({
               <KPIPulseCard icon="🛍" label="Ventas Landings" value={fmtMoney(salesData.totalRevenue)} sub={`${salesData.totalOrders} pedidos`} color="#ec4899" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'clamp(200px, 60%, 2fr) 1fr', gap: 20, marginBottom: 20 }}>
+            <div className="reportes-chart-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
               <ChartCard title="Ingresos Mensuales" subtitle="Facturado vs Pagado vs Pendiente">
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={financeData.monthlyRevenue}>
@@ -1005,7 +1005,7 @@ export default function ReportesClient({
               <StatCard label="Conversion" value={`${salesData.conversionRate.toFixed(1)}%`} icon="📊" color="#ec4899" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+            <div className="reportes-chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
               <ChartCard title="Ingresos por Pedidos" subtitle="Monto acumulado por mes">
                 {salesData.totalOrders === 0 ? (
                   <EmptyState 
@@ -1068,7 +1068,7 @@ export default function ReportesClient({
             </ChartCard>
 
             {utmData.bySource.length > 0 && (
-              <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div className="reportes-chart-grid" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <ChartCard title="Performance por UTM Source" subtitle="Ingresos por fuente de trafico">
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={utmData.bySource}>
@@ -1190,7 +1190,7 @@ export default function ReportesClient({
               <StatCard label="Lead Time Promedio" value={`${projectsData.avgLeadTime}d`} icon="⏱️" color="#f59e0b" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <div className="reportes-chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <ChartCard title="Proyectos por Estado" subtitle="Distribucion actual">
                 <div style={{ padding: '16px 0' }}>
                   {projectsData.byStatus.length === 0 ? (
@@ -1561,5 +1561,11 @@ const ANIMATIONS = `
     .reportes-filter-bar > * { width: 100% !important; }
     .reportes-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .reportes-table-wrap table { min-width: 480px; }
+  }
+  /* ── Chart grids: stack on mobile so charts are always visible ── */
+  @media (max-width: 768px) {
+    .reportes-chart-grid {
+      grid-template-columns: 1fr !important;
+    }
   }
 `

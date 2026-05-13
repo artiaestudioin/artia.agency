@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import PipelineKanban from './PipelineKanban'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Pipeline — Artia Admin' }
 
 export default async function PipelinePage() {

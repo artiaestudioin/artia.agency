@@ -269,7 +269,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
       {/* Loading skeleton */}
       {loading && (
         <div style={{ padding: 28 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 20 }}>
+          <div className="bi-main-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 20 }}>
             <SkeletonBlock height={520} dark={dark} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <SkeletonBlock height={100} dark={dark} />
@@ -314,7 +314,7 @@ export default function BiDashboard({ reportData }: { reportData: Record<string,
           </div>
 
           {/* Grid: Gráfico 3D + Panel lateral */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 24, alignItems: 'start' }}>
+          <div className="bi-main-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 24, alignItems: 'start' }}>
 
             {/* Gráfico 3D */}
             <div style={{ background: dark ? '#0d111c' : '#f8fafc', borderRadius: 16, border: `1px solid ${border}`, overflow: 'hidden', padding: 8 }}>

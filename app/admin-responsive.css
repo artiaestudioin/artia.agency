@@ -1111,3 +1111,28 @@ body {
   .admin-main-content { padding: 0 !important; }
   body { background: white; }
 }
+
+/* ─── Reportes: chart grids stack on mobile ─────────────────────── */
+@media (max-width: 768px) {
+  .reportes-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── BI Dashboard: 2-column grids stack on tablet ──────────────── */
+@media (max-width: 900px) {
+  .bi-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Finanzas: ensure chart table scrolls on small screens ─────── */
+@media (max-width: 640px) {
+  .finanzas-pagos-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .finanzas-pagos-table table { min-width: 560px; }
+}
+
+/* ─── Leads: mobile card actions wrap neatly ────────────────────── */
+@media (max-width: 480px) {
+  .leads-row-actions { flex-wrap: wrap !important; gap: 4px !important; }
+}

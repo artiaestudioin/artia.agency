@@ -4,6 +4,9 @@ import ReportesClient from './ReportesClient'
 
 export const metadata = { title: 'Reportes — Artia Admin' }
 
+// Force fresh server render — financial data must always be current after mutations.
+export const dynamic = 'force-dynamic'
+
 export default async function ReportesPage() {
   const supabase = await createClient()
 
