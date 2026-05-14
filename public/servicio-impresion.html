@@ -6,12 +6,12 @@
 <title>ARTIA | Medios Impresos — Impresión Premium</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Syne","sans-serif"],body:["DM Sans","sans-serif"],label:["DM Sans","sans-serif"]}}}}</script>
+<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-fixed-dim":"#b3c5ff","success-dark-green":"#388e3c","on-primary-container":"#758dd5","tertiary":"#051522","primary":"#00113a","outline-variant":"#c5c6d2","on-error":"#ffffff","background":"#f7f9fb","tertiary-container":"#1a2a37","surface-container-low":"#f2f4f6","on-error-container":"#93000a","tertiary-fixed":"#d4e4f6","on-tertiary-fixed-variant":"#394857","on-primary-fixed-variant":"#2a4386","surface-variant":"#e0e3e5","surface-tint":"#435b9f","surface-container":"#eceef0","surface-dim":"#d8dadc","tertiary-fixed-dim":"#b8c8da","on-secondary-container":"#fffbff","on-primary-fixed":"#00174a","inverse-surface":"#2d3133","surface":"#f7f9fb","surface-container-lowest":"#ffffff","secondary-container":"#446ce4","secondary":"#2552ca","on-tertiary":"#ffffff","secondary-fixed":"#dce1ff","error":"#ba1a1a","on-background":"#191c1e","on-secondary":"#ffffff","surface-container-high":"#e6e8ea","inverse-primary":"#b3c5ff","error-container":"#ffdad6","secondary-fixed-dim":"#b6c4ff","on-tertiary-fixed":"#0d1d2a","surface-container-highest":"#e0e3e5","on-primary":"#ffffff","primary-container":"#002366","surface-bright":"#f7f9fb","primary-fixed":"#dbe1ff","inverse-on-surface":"#eff1f3","on-surface-variant":"#444650","on-secondary-fixed-variant":"#003baf","outline":"#757682","on-surface":"#191c1e","on-tertiary-container":"#8191a2","on-secondary-fixed":"#00164e"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},fontFamily:{headline:["Manrope","sans-serif"],body:["Inter","sans-serif"],label:["Inter","sans-serif"]}}}}</script>
 
 <style>
 /* ═══ DESIGN SYSTEM ═══ */
@@ -30,13 +30,13 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: var(--cream);
   color: var(--ink);
   overflow-x: hidden;
 }
 
-.font-headline { font-family: 'Syne', sans-serif; }
+.font-headline { font-family: 'Manrope', sans-serif; }
 
 /* Material icons */
 .material-symbols-outlined {
@@ -47,8 +47,18 @@ body {
 /* ═══ SIDEBAR ═══ */
 .tonal-layering-no-borders { box-shadow: none; border-right: 1px solid rgba(197,198,210,0.12); }
 
-/* ═══ SCROLL REVEAL BASE ═══ */
+/* ═══ SCROLL REVEAL — ROBUSTO ═══ */
 [data-sr] { opacity: 0; transform: translateY(40px); }
+[data-sr].sr-visible { opacity: 1; transform: translateY(0); transition: opacity 0.9s cubic-bezier(0.23,1,0.32,1), transform 0.9s cubic-bezier(0.23,1,0.32,1); }
+[data-sr].sr-delay-1 { transition-delay: 0.1s; }
+[data-sr].sr-delay-2 { transition-delay: 0.2s; }
+[data-sr].sr-delay-3 { transition-delay: 0.3s; }
+
+/* Fallback: si después de 2s GSAP no cargó, mostrar todo */
+body.gsap-fallback [data-sr] {
+  opacity: 1 !important;
+  transform: none !important;
+}
 
 /* ═══ NOISE OVERLAY ═══ */
 .noise-overlay::before {
@@ -95,7 +105,7 @@ body {
   gap: 20px;
   padding: 0 40px;
   white-space: nowrap;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.25em;
@@ -105,7 +115,7 @@ body {
 }
 .marquee-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
 
-/* ═══ PRODUCT CARDS ═══ */
+/* ═══ PRODUCT CARDS — ROBUSTO, SIN ABSOLUTE CRÍTICO ═══ */
 .product-card {
   position: relative;
   border-radius: 20px;
@@ -113,9 +123,22 @@ body {
   background: white;
   transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.45s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 30px 70px rgba(0,17,58,0.14); }
-.product-card .card-img { transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1); }
+.product-card .card-img-wrap {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.product-card .card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+  display: block;
+}
 .product-card:hover .card-img { transform: scale(1.06); }
 .product-badge {
   position: absolute;
@@ -143,7 +166,7 @@ body {
 
 /* ═══ STAT COUNTER ═══ */
 .stat-number {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(42px, 6vw, 72px);
   font-weight: 800;
   line-height: 1;
@@ -187,7 +210,7 @@ body {
 .big-cta-section::before {
   content: 'IMPRIME';
   position: absolute;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(120px, 18vw, 260px);
   font-weight: 800;
   color: rgba(255,255,255,0.025);
@@ -204,7 +227,7 @@ body {
 .process-step { counter-increment: steps; }
 .process-step::before {
   content: '0' counter(steps);
-  font-family: 'Syne', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 72px;
   font-weight: 800;
   color: rgba(0,17,58,0.07);
@@ -363,11 +386,85 @@ body {
 
 /* ═══ RESPONSIVE SIDE NAV ═══ */
 @media (min-width: 1024px) { .main-content { margin-left: 280px; } }
+
+/* ═══ HERO PRODUCT SHOWCASE ═══ */
+.hero-product-showcase {
+  position: relative;
+  width: 340px;
+  flex-shrink: 0;
+  display: none;
+}
+@media (min-width: 1024px) {
+  .hero-product-showcase { display: block; }
+}
+.hero-product-frame {
+  position: relative;
+  aspect-ratio: 3/4;
+  width: 340px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.hero-product-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  display: block;
+}
+.hero-product-frame .hero-product-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0,17,58,0.7) 100%);
+  pointer-events: none;
+}
+.hero-product-frame .hero-product-caption {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  z-index: 2;
+}
+
+/* ═══ SCROLL HINT ═══ */
+@keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(0.6);transform-origin:top;} 50%{opacity:1;transform:scaleY(1);} }
+
+/* ═══ SPIN ANIMATION ═══ */
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ PRODUCT STRIP CARDS ═══ */
+.product-strip {
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+}
+.product-strip-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.product-strip-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.product-strip-content {
+  position: relative;
+  z-index: 10;
+  padding: 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 </style>
 </head>
 <body>
 
-<!-- ═══ DESKTOP SIDEBAR ═══ -->
 <aside class="fixed left-0 top-0 h-screen w-[280px] bg-white/90 backdrop-blur-xl hidden lg:flex flex-col justify-between py-20 px-6 tonal-layering-no-borders z-50" style="border-right:1px solid rgba(0,17,58,0.07);">
   <div>
     <a href="inicio.html" class="block w-32 mb-12">
@@ -398,7 +495,6 @@ body {
   </div>
 </aside>
 
-<!-- ═══ MOBILE HEADER ═══ -->
 <header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/95 backdrop-blur-md lg:hidden flex justify-between items-center px-5 h-16" style="border-bottom:1px solid rgba(0,17,58,0.07);">
   <div class="w-10"></div>
   <a href="inicio.html" class="block w-28 mt-1">
@@ -409,7 +505,6 @@ body {
   </button>
 </header>
 
-<!-- ═══ MOBILE MENU ═══ -->
 <div class="fixed inset-0 z-[60] bg-white/97 backdrop-blur-xl flex flex-col items-center justify-center p-10 lg:hidden text-center" id="mobile-menu" style="display:none">
   <button id="mobile-menu-close" class="absolute top-6 right-6 text-primary p-2">
     <span class="material-symbols-outlined text-3xl">close</span>
@@ -440,23 +535,17 @@ body {
   </div>
 </div>
 
-<!-- ═══ MAIN CONTENT ═══ -->
 <main class="main-content min-h-screen">
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- HERO — IMMERSIVE FULL SCREEN                       -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="hero-section hero-grain noise-overlay relative min-h-screen flex flex-col justify-center" style="padding-top: 80px;">
   <div class="hero-grid-lines"></div>
 
-  <!-- Floating abstract shapes -->
   <div class="absolute top-20 right-0 w-[500px] h-[500px] opacity-10 pointer-events-none" style="background: radial-gradient(circle, #2552ca 0%, transparent 70%); filter: blur(40px);"></div>
   <div class="absolute bottom-0 left-1/4 w-[300px] h-[300px] opacity-8 pointer-events-none" style="background: radial-gradient(circle, #b3c5ff 0%, transparent 70%); filter: blur(60px);"></div>
 
   <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 w-full pt-20 pb-24 lg:pt-0">
     <div class="grid lg:grid-cols-[1fr_auto] gap-16 items-center">
       
-      <!-- Hero Copy -->
       <div class="max-w-3xl">
         <div class="flex items-center gap-3 mb-8" data-hero-el>
           <div class="ticker-tag" style="background:rgba(37,82,202,0.25); color:#b3c5ff;">★ ARTIA STUDIO</div>
@@ -484,7 +573,6 @@ body {
           </a>
         </div>
 
-        <!-- Trust indicators -->
         <div class="mt-12 flex flex-wrap gap-6 items-center" data-hero-el>
           <div class="flex items-center gap-2">
             <div class="flex">
@@ -507,49 +595,37 @@ body {
         </div>
       </div>
 
-      <!-- Hero Product Showcase -->
-      <div class="hidden lg:block relative w-[340px] flex-shrink-0" data-hero-el>
-        <div class="relative" style="aspect-ratio: 3/4; width: 340px;">
-          <!-- Main product image -->
-          <div class="absolute inset-0 rounded-3xl overflow-hidden" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-            <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Producto impreso premium" class="w-full h-full object-cover opacity-80">
-            <div class="absolute inset-0" style="background: linear-gradient(to bottom, transparent 50%, rgba(0,17,58,0.7) 100%);"></div>
-            <div class="absolute bottom-6 left-6 right-6">
-              <p class="text-white font-headline text-sm font-bold uppercase tracking-widest mb-1">Sublimado Premium</p>
-              <p class="text-white/50 text-xs">Alta fidelidad de color · Duración máxima</p>
-            </div>
+      <div class="hero-product-showcase" data-hero-el>
+        <div class="hero-product-frame">
+          <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Producto impreso premium">
+          <div class="hero-product-overlay"></div>
+          <div class="hero-product-caption">
+            <p class="text-white font-headline text-sm font-bold uppercase tracking-widest mb-1">Sublimado Premium</p>
+            <p class="text-white/50 text-xs">Alta fidelidad de color · Duración máxima</p>
           </div>
-          <!-- Floating mini card -->
-          <div class="absolute -left-16 top-1/3 glass-card p-4 w-[130px]">
-            <span class="material-symbols-outlined text-[#b3c5ff] text-xl block mb-1" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
-            <p class="text-white text-xs font-bold font-headline">Acabado Premium</p>
-            <p class="text-white/50 text-[10px] mt-0.5">Producción élite</p>
+        </div>
+        <div class="absolute -left-16 top-1/3 glass-card p-4 w-[130px]">
+          <span class="material-symbols-outlined text-[#b3c5ff] text-xl block mb-1" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+          <p class="text-white text-xs font-bold font-headline">Acabado Premium</p>
+          <p class="text-white/50 text-[10px] mt-0.5">Producción élite</p>
+        </div>
+        <div class="absolute -right-8 bottom-1/4 glass-card p-3 flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: #25D366;">
+            <span class="material-symbols-outlined text-white text-sm">check</span>
           </div>
-          <!-- Floating badge -->
-          <div class="absolute -right-8 bottom-1/4 glass-card p-3 flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: #25D366;">
-              <span class="material-symbols-outlined text-white text-sm">check</span>
-            </div>
-            <p class="text-white text-[11px] font-bold">Entrega<br>Express</p>
-          </div>
+          <p class="text-white text-[11px] font-bold">Entrega<br>Express</p>
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Scroll hint -->
   <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
     <span class="text-white text-[9px] uppercase tracking-widest font-bold">Descubre más</span>
     <div class="w-px h-8 bg-white/30" style="animation: scrollPulse 2s ease-in-out infinite;"></div>
   </div>
 </section>
 
-<style>
-@keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(0.6);transform-origin:top;} 50%{opacity:1;transform:scaleY(1);} }
-</style>
-
-<!-- ═══ MARQUEE TICKER ═══ -->
 <div class="marquee-wrap py-5" style="background: var(--navy); border-bottom: 1px solid rgba(255,255,255,0.06);">
   <div class="marquee-track">
     <div class="marquee-item"><span class="marquee-dot"></span> Tarjetas de presentación</div>
@@ -562,7 +638,6 @@ body {
     <div class="marquee-item"><span class="marquee-dot"></span> Carpetas corporativas</div>
     <div class="marquee-item"><span class="marquee-dot"></span> Merchandising premium</div>
     <div class="marquee-item"><span class="marquee-dot"></span> Identidad corporativa</div>
-    <!-- Duplicate for seamless loop -->
     <div class="marquee-item"><span class="marquee-dot"></span> Tarjetas de presentación</div>
     <div class="marquee-item"><span class="marquee-dot"></span> Tazas sublimadas</div>
     <div class="marquee-item"><span class="marquee-dot"></span> Camisetas personalizadas</div>
@@ -576,9 +651,6 @@ body {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- PRODUCT MOSAIC — "WHAT WE MAKE"                   -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="py-24 px-6 lg:px-16 max-w-7xl mx-auto">
   <div class="mb-16" data-sr>
     <div class="section-label">Nuestros Productos</div>
@@ -588,17 +660,15 @@ body {
     <p class="text-slate-500 mt-5 max-w-lg text-base font-light leading-relaxed">Desde papelería corporativa de élite hasta merchandising que conecta con tus clientes. Calidad sin compromiso.</p>
   </div>
 
-  <!-- MAIN PRODUCT GRID -->
   <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
 
-    <!-- CARD 1 — Sublimado HERO -->
     <div class="md:col-span-5 product-card group" data-sr style="min-height: 520px;">
-      <div class="absolute inset-0">
-        <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Tazas sublimadas" class="card-img w-full h-full object-cover">
+      <div class="card-img-wrap" style="position: absolute; inset: 0;">
+        <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Tazas sublimadas" class="card-img">
         <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,17,58,0.9) 0%, rgba(0,17,58,0.3) 55%, transparent 100%);"></div>
       </div>
       <div class="product-badge">★ Más Vendido</div>
-      <div class="absolute bottom-0 left-0 right-0 p-8 z-10">
+      <div class="absolute bottom-0 left-0 right-0 p-8 z-10 mt-auto">
         <span class="text-blue-300 text-[10px] font-bold uppercase tracking-widest block mb-2">Sublimado High-End</span>
         <h3 class="font-headline text-white text-3xl font-bold tracking-tight leading-tight mb-3">Tazas &<br>Textiles Custom</h3>
         <p class="text-white/60 text-sm mb-5 font-light">Fidelidad de color absoluta. Tu diseño exactamente como lo imaginaste.</p>
@@ -608,13 +678,11 @@ body {
       </div>
     </div>
 
-    <!-- RIGHT COLUMN -->
     <div class="md:col-span-7 grid grid-cols-2 gap-5">
 
-      <!-- CARD 2 — Papelería -->
       <div class="product-card group col-span-2" data-sr style="min-height: 220px;">
-        <div class="absolute inset-0">
-          <img src="https://images.unsplash.com/photo-1635405074683-96d6921a2a68?q=80&w=1000&auto=format&fit=crop" alt="Papelería corporativa" class="card-img w-full h-full object-cover">
+        <div class="card-img-wrap" style="position: absolute; inset: 0;">
+          <img src="https://images.unsplash.com/photo-1635405074683-96d6921a2a68?q=80&w=1000&auto=format&fit=crop" alt="Papelería corporativa" class="card-img">
           <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(0,17,58,0.92) 0%, rgba(0,17,58,0.4) 60%, transparent 100%);"></div>
         </div>
         <div class="absolute inset-0 flex items-center p-8 z-10">
@@ -629,10 +697,9 @@ body {
         </div>
       </div>
 
-      <!-- CARD 3 — Merchandising -->
       <div class="product-card group" data-sr style="min-height: 260px; overflow:hidden;">
-        <div class="absolute inset-0">
-          <img src="https://i.ibb.co/LdC9wzV8/HOODIE2-compressed-1.jpg" alt="Merchandising" class="card-img w-full h-full object-cover">
+        <div class="card-img-wrap" style="position: absolute; inset: 0;">
+          <img src="https://i.ibb.co/LdC9wzV8/HOODIE2-compressed-1.jpg" alt="Merchandising" class="card-img">
           <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,17,58,0.88) 0%, transparent 65%);"></div>
         </div>
         <div class="product-badge" style="top:12px;left:12px;">Merch</div>
@@ -645,10 +712,9 @@ body {
         </div>
       </div>
 
-      <!-- CARD 4 — Gran Formato -->
       <div class="product-card group" data-sr style="min-height: 260px;">
-        <div class="absolute inset-0" style="background: linear-gradient(135deg, #00113a 0%, #1a3a7a 100%);">
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1XtIXPbVdrU8mfhilXBuhYgagZNaCLujm9nUAi9asG8Bbp7n-Jx-Atks1UugfckilXZrGTTF_ipGW25O7ZwakCLHSHwxoZHW8Rn023aDd1GjYv9Dkgqf1isw97_Em5ei8bCQI94u4_udti9q5j06tCYsrepILdvOE1nnw5fMMNEkLKt8J0N7Vgr-FEayvjDph3W1jkPUyQV_wQEITkS4Nb3tK36tH49anIWDALbj1WjWP9Yq7soCrXZaT1mR6pSo1esqxthgwuOOk" alt="Gran formato" class="card-img w-full h-full object-cover opacity-30">
+        <div class="card-img-wrap" style="position: absolute; inset: 0; background: linear-gradient(135deg, #00113a 0%, #1a3a7a 100%);">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1XtIXPbVdrU8mfhilXBuhYgagZNaCLujm9nUAi9asG8Bbp7n-Jx-Atks1UugfckilXZrGTTF_ipGW25O7ZwakCLHSHwxoZHW8Rn023aDd1GjYv9Dkgqf1isw97_Em5ei8bCQI94u4_udti9q5j06tCYsrepILdvOE1nnw5fMMNEkLKt8J0N7Vgr-FEayvjDph3W1jkPUyQV_wQEITkS4Nb3tK36tH49anIWDALbj1WjWP9Yq7soCrXZaT1mR6pSo1esqxthgwuOOk" alt="Gran formato" class="card-img" style="opacity:0.3;">
         </div>
         <div class="absolute inset-0 flex flex-col justify-end p-6 z-10">
           <span class="material-symbols-outlined text-[#b3c5ff] text-3xl mb-3 group-hover:scale-110 transition-transform" style="font-variation-settings:'FILL' 0;">aspect_ratio</span>
@@ -662,7 +728,6 @@ body {
 
     </div>
 
-    <!-- CARD 5 — Diseño Gráfico — FULL WIDTH -->
     <div class="md:col-span-12 product-card group" data-sr style="min-height: 280px; background: linear-gradient(135deg, #00113a 0%, #002366 100%);">
       <div class="absolute inset-0 hero-grid-lines opacity-50"></div>
       <div class="absolute inset-0 flex items-center px-10 lg:px-16 z-10">
@@ -706,18 +771,13 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- ALTERNATING FEATURE — SUBLIMADO SHOWCASE          -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="py-24 px-6 lg:px-16" style="background: var(--navy);">
   <div class="max-w-7xl mx-auto">
     <div class="alt-grid">
-      <!-- Visuals -->
       <div class="relative" data-sr>
         <div class="relative rounded-3xl overflow-hidden" style="aspect-ratio: 4/5;">
           <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Sublimado premium" class="w-full h-full object-cover">
           <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,17,58,0.6) 0%, transparent 60%);"></div>
-          <!-- Floating data badge -->
           <div class="absolute top-6 right-6 glass-card p-5">
             <p class="text-white/50 text-[9px] uppercase tracking-widest mb-1">Fidelidad de color</p>
             <div class="flex items-end gap-1">
@@ -729,13 +789,11 @@ body {
             </div>
           </div>
         </div>
-        <!-- Second image overlap -->
         <div class="absolute -bottom-8 -right-8 w-1/2 rounded-2xl overflow-hidden shadow-2xl border-4 border-[#00113a]" style="aspect-ratio:1.2;">
           <img src="https://i.ibb.co/LdC9wzV8/HOODIE2-compressed-1.jpg" alt="Textiles custom" class="w-full h-full object-cover">
         </div>
       </div>
 
-      <!-- Copy -->
       <div class="lg:pl-8" data-sr>
         <div class="section-label" style="color: #b3c5ff;">
           <span style="width:24px;height:2px;background:#b3c5ff;display:block;flex-shrink:0;"></span>
@@ -748,7 +806,6 @@ body {
           Nuestra tecnología de sublimación de alta resolución garantiza que los colores de tu diseño se transfieran con precisión absoluta a tazas, textiles, buffs y cualquier superficie. Resultados que duran.
         </p>
 
-        <!-- Feature list -->
         <div class="space-y-4 mb-10">
           <div class="flex items-start gap-4">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(37,82,202,0.2);">
@@ -792,9 +849,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- PRODUCT STRIPS — STICKERS / BANNERS / MERCH       -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="py-24 px-6 lg:px-16 max-w-7xl mx-auto">
   <div class="mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-6" data-sr>
     <div>
@@ -808,15 +862,13 @@ body {
     </button>
   </div>
 
-  <!-- Strip cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-    <!-- Stickers -->
-    <div class="rounded-3xl overflow-hidden relative group" style="background: var(--warm); min-height: 380px;" data-sr>
-      <div class="absolute inset-0 flex items-center justify-center opacity-60">
+    <div class="product-strip" style="background: var(--warm);" data-sr>
+      <div class="absolute inset-0 flex items-center justify-center opacity-60 pointer-events-none">
         <span class="material-symbols-outlined text-[140px] text-[#2552ca]" style="font-variation-settings:'FILL' 1; opacity:0.08;">sell</span>
       </div>
-      <div class="relative z-10 p-8 flex flex-col h-full" style="min-height:380px;">
+      <div class="product-strip-content">
         <div class="flex-1">
           <div class="tag-chip mb-5">Stickers & Etiquetas</div>
           <h3 class="font-headline text-[#00113a] text-3xl font-bold tracking-tighter leading-tight mb-3">
@@ -837,13 +889,12 @@ body {
       </div>
     </div>
 
-    <!-- Banners -->
-    <div class="rounded-3xl overflow-hidden relative group" style="min-height: 380px;" data-sr>
-      <div class="absolute inset-0">
-        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1XtIXPbVdrU8mfhilXBuhYgagZNaCLujm9nUAi9asG8Bbp7n-Jx-Atks1UugfckilXZrGTTF_ipGW25O7ZwakCLHSHwxoZHW8Rn023aDd1GjYv9Dkgqf1isw97_Em5ei8bCQI94u4_udti9q5j06tCYsrepILdvOE1nnw5fMMNEkLKt8J0N7Vgr-FEayvjDph3W1jkPUyQV_wQEITkS4Nb3tK36tH49anIWDALbj1WjWP9Yq7soCrXZaT1mR6pSo1esqxthgwuOOk" alt="Banners" class="card-img w-full h-full object-cover">
+    <div class="product-strip" data-sr>
+      <div class="product-strip-bg">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1XtIXPbVdrU8mfhilXBuhYgagZNaCLujm9nUAi9asG8Bbp7n-Jx-Atks1UugfckilXZrGTTF_ipGW25O7ZwakCLHSHwxoZHW8Rn023aDd1GjYv9Dkgqf1isw97_Em5ei8bCQI94u4_udti9q5j06tCYsrepILdvOE1nnw5fMMNEkLKt8J0N7Vgr-FEayvjDph3W1jkPUyQV_wQEITkS4Nb3tK36tH49anIWDALbj1WjWP9Yq7soCrXZaT1mR6pSo1esqxthgwuOOk" alt="Banners" class="card-img">
         <div class="absolute inset-0" style="background:linear-gradient(to top, rgba(0,17,58,0.95) 0%, rgba(0,17,58,0.5) 55%, transparent 100%);"></div>
       </div>
-      <div class="absolute bottom-0 left-0 right-0 p-8 z-10">
+      <div class="product-strip-content justify-end">
         <div class="tag-chip mb-4" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.8);">Gran Formato</div>
         <h3 class="font-headline text-white text-3xl font-bold tracking-tighter leading-tight mb-3">
           Banners que<br>detienen miradas.
@@ -855,10 +906,9 @@ body {
       </div>
     </div>
 
-    <!-- Branding corporativo -->
-    <div class="rounded-3xl overflow-hidden relative group" style="background: linear-gradient(145deg, #00113a 0%, #002878 100%); min-height: 380px;" data-sr>
-      <div class="hero-grid-lines opacity-30"></div>
-      <div class="relative z-10 p-8 flex flex-col h-full" style="min-height:380px;">
+    <div class="product-strip" style="background: linear-gradient(145deg, #00113a 0%, #002878 100%);" data-sr>
+      <div class="hero-grid-lines opacity-30 absolute inset-0 pointer-events-none"></div>
+      <div class="product-strip-content">
         <div class="flex-1">
           <div class="tag-chip mb-5" style="background:rgba(37,82,202,0.3); border-color:rgba(179,197,255,0.2); color:#b3c5ff;">Branding Corporativo</div>
           <h3 class="font-headline text-white text-3xl font-bold tracking-tighter leading-tight mb-3">
@@ -891,9 +941,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- PROCESS SECTION                                    -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="py-24 px-6 lg:px-16" style="background: var(--warm); border-top: 1px solid rgba(0,17,58,0.06);">
   <div class="max-w-7xl mx-auto">
     <div class="mb-16" data-sr>
@@ -922,9 +969,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- STATS / SOCIAL PROOF BAND                         -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="py-16 px-6 lg:px-16" style="background: var(--navy);">
   <div class="max-w-7xl mx-auto">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center" data-sr>
@@ -948,9 +992,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- BIG CTA SECTION                                   -->
-<!-- ══════════════════════════════════════════════════ -->
 <section class="big-cta-section py-32 px-6 lg:px-16 relative" data-sr>
   <div class="max-w-4xl mx-auto text-center relative z-10">
     <div class="divider-ornament mb-10">
@@ -975,9 +1016,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- FOLIO TRACKER                                      -->
-<!-- ══════════════════════════════════════════════════ -->
 <section id="consultar-pedido" class="py-24 px-6 lg:px-16 folio-section" data-sr>
   <div class="max-w-2xl mx-auto">
     <div class="text-center mb-10">
@@ -1031,9 +1069,6 @@ body {
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- FOOTER                                            -->
-<!-- ══════════════════════════════════════════════════ -->
 <footer class="relative z-30 py-16 px-6 lg:px-16" style="background: #030c1f;">
   <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
     <div class="md:col-span-2">
@@ -1072,15 +1107,11 @@ body {
 
 </main>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- MODAL — PAPELERÍA PREMIUM                          -->
-<!-- ══════════════════════════════════════════════════ -->
 <div id="impresionExpressModal" class="hidden fixed inset-0 z-[150] bg-black/80 backdrop-blur-md items-center justify-center p-4">
   <div id="impresionExpressContent"
        class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.4)] scale-95 opacity-0 transition-all duration-300 flex flex-col"
        style="max-height:92vh;">
 
-    <!-- Header -->
     <div class="px-8 py-7 text-white relative flex-shrink-0" style="background: linear-gradient(135deg, #00113a 0%, #002878 100%);">
       <div class="hero-grid-lines opacity-40"></div>
       <button onclick="closeImpresionModal()" class="absolute top-5 right-5 bg-white/10 hover:bg-white/20 transition-colors rounded-full w-8 h-8 flex items-center justify-center z-10">
@@ -1096,7 +1127,6 @@ body {
       </div>
     </div>
 
-    <!-- Scrollable body -->
     <div class="overflow-y-auto flex-1 px-8 py-7">
       <div class="space-y-6">
         <div>
@@ -1144,9 +1174,6 @@ body {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- SCRIPTS                                           -->
-<!-- ══════════════════════════════════════════════════ -->
 <script>
   document.addEventListener('contextmenu', event => event.preventDefault());
   document.onkeydown = function(e) {
@@ -1160,6 +1187,16 @@ body {
 
 <script>
 (function(){
+  // ── Fallback: si GSAP no carga en 2s, mostrar todo ──
+  setTimeout(function(){
+    if (typeof gsap === 'undefined') {
+      document.body.classList.add('gsap-fallback');
+      document.querySelectorAll('[data-sr]').forEach(function(el){
+        el.classList.add('sr-visible');
+      });
+    }
+  }, 2000);
+
   gsap.registerPlugin(ScrollTrigger);
 
   // ── Mobile menu ──
@@ -1215,17 +1252,26 @@ body {
   const heroEls = document.querySelectorAll('[data-hero-el]');
   gsap.from(heroEls, { y:50, opacity:0, duration:1, stagger:0.15, ease:'power3.out', delay:0.3 });
 
-  // ── Scroll reveals ──
-  document.querySelectorAll('[data-sr]').forEach(function(el) {
-    gsap.from(el, {
+  // ── Scroll reveals — CORREGIDO: fromTo con immediateRender:false ──
+document.querySelectorAll('[data-sr]').forEach(function(el) {
+  const delay = parseFloat(el.dataset.srDelay || 0);
+  gsap.fromTo(el, 
+    { y: 40, opacity: 0 },
+    {
       scrollTrigger: { trigger: el, start: 'top 88%', once: true },
-      y: 50,
-      opacity: 0,
+      y: 0,
+      opacity: 1,
       duration: 0.9,
-      delay: parseFloat(el.dataset.srDelay || 0),
-      ease: 'power3.out'
-    });
-  });
+      delay: delay,
+      ease: 'power3.out',
+      immediateRender: false,
+      onComplete: function() {
+        el.classList.add('sr-visible');
+        // NO limpiamos props — dejamos que GSAP mantenga el estado final
+      }
+    }
+  );
+});
 
   // ── Folio hover ──
   const folioBtn   = document.getElementById('folio-btn');
@@ -1237,7 +1283,6 @@ body {
 })();
 </script>
 
-<!-- Folio rastrear logic -->
 <script>
 function rastrearFolio() {
   const input   = document.getElementById('folio-input');
@@ -1271,7 +1316,6 @@ function rastrearFolio() {
 }
 </script>
 
-<!-- Modal logic — preserved exactly -->
 <script>
 (function () {
   const IMP_PRODUCTS = [
@@ -1446,7 +1490,6 @@ function rastrearFolio() {
 })();
 </script>
 
-<!-- External modal system and FAB -->
 <script src="fab-artia.js"></script>
 <script src="artia-modal.js"></script>
 
