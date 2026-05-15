@@ -136,13 +136,14 @@ export async function OPTIONS() {
 }
 
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
 // TRANSCRIPCIÓN CON HUGGING FACE
 // ─────────────────────────────────────────
 async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
   const { whisperUrl, fallbackUrl, apiToken } = CONFIG.huggingface
 
   const headers: Record<string, string> = {
-    'Content-Type': 'audio/wav',
+    'Content-Type': 'audio/wav', // HuggingFace acepta cualquier audio como wav en la práctica
   }
   if (apiToken) {
     headers['Authorization'] = `Bearer ${apiToken}`
@@ -174,9 +175,15 @@ async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
       return extractText(result)
     }
 
+    // Si falla con 422, puede ser formato — intentar igual
+    if (response.status === 422) {
+      const err = await response.json().catch(() => ({}))
+      console.warn('[HF] 422 error:', err)
+    }
+
     throw new Error(`HF error ${response.status}`)
   } catch (err) {
-    console.log('[HF] Large falló, intentando con small...')
+    console.log('[HF] Large falló, intentando con small...', err)
   }
 
   // Intento 2: whisper-small
@@ -194,21 +201,8 @@ async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
 
     throw new Error(`HF fallback error ${response.status}`)
   } catch (err) {
-    throw new Error('No se pudo transcribir con Hugging Face')
+    throw new Error('No se pudo transcribir con Hugging Face: ' + (err instanceof Error ? err.message : String(err)))
   }
-}
-
-function extractText(result: unknown): string {
-  if (result && typeof (result as Record<string, unknown>).text === 'string') {
-    return ((result as Record<string, unknown>).text as string).trim()
-  }
-  if (Array.isArray(result)) {
-    return result
-      .map((chunk: { text?: string }) => chunk.text || '')
-      .join(' ')
-      .trim()
-  }
-  throw new Error('Formato de respuesta inesperado')
 }
 
 // ─────────────────────────────────────────
@@ -303,12 +297,16 @@ export async function PUT(req: NextRequest) {
       return errorResponse('Se requiere archivo de audio', 400)
     }
 
+    console.log('[Audio] Recibido:', audioFile.name, audioFile.type, audioFile.size, 'bytes')
+
     const audioBuffer = await audioFile.arrayBuffer()
 
     let transcribedText: string
     try {
       transcribedText = await transcribeAudio(audioBuffer)
+      console.log('[Audio] Transcrito:', transcribedText)
     } catch (err) {
+      console.error('[Audio] Error transcripción:', err)
       return errorResponse(
         'Error al transcribir el audio. Intenta con un audio más corto o claro.',
         502,
@@ -316,7 +314,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    if (!transcribedText) {
+    if (!transcribedText || transcribedText.trim().length === 0) {
       return errorResponse('No se detectó texto en el audio', 422)
     }
 

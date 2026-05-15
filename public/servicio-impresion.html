@@ -1500,7 +1500,7 @@ function rastrearFolio() {
 
 <script src="fab-artia.js"></script>
 <script src="artia-modal.js"></script>
-        <!-- ═══ CHATBOT ARTIA AI ═══ -->
+               <!-- ═══ CHATBOT ARTIA AI ═══ -->
     <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
         <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
             ¿Alguna duda? ✨
@@ -1519,7 +1519,7 @@ function rastrearFolio() {
             <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-sm flex flex-col gap-3 text-black bg-gray-50"></div>
             <div class="p-3 border-t bg-white flex gap-2 items-center">
                 <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-1 text-xs p-2.5 border rounded-lg focus:outline-none focus:border-[#FF00FF] focus:ring-1 focus:ring-[#FF00FF]/20 text-black transition-all">
-                <button id="chat-mic" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm relative" title="Grabar audio">
+                <button id="chat-mic" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-lg material-symbols-outlined transition-all text-sm select-none touch-manipulation" title="Mantén presionado para grabar">
                     mic
                 </button>
                 <button id="chat-send" class="bg-[#FF00FF] hover:bg-[#d400d4] text-white p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm">send</button>
@@ -1527,7 +1527,7 @@ function rastrearFolio() {
             <div id="mic-recording-bar" class="hidden bg-red-50 px-3 py-2 flex items-center justify-between border-t border-red-100">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    <span class="text-xs text-red-600 font-medium">Grabando...</span>
+                    <span class="text-xs text-red-600 font-medium">Grabando... suelta para enviar</span>
                 </div>
                 <span id="mic-timer" class="text-xs text-red-500 font-mono">0:00</span>
             </div>
@@ -1539,7 +1539,7 @@ function rastrearFolio() {
         const CONFIG = {
             apiEndpoint: '/api/chat',
             emailEndpoint: '/api/send-email',
-            audioEndpoint: '/api/chat',  // ← Mismo endpoint pero con PUT
+            audioEndpoint: '/api/chat',
             whatsappNumber: '593969937265',
             storageKey: 'artia_chat_history',
             leadDataKey: 'artia_lead_data',
@@ -1547,7 +1547,7 @@ function rastrearFolio() {
             maxHistory: 50,
             tooltipDelay: 10000,
             tooltipDuration: 6000,
-            maxRecordingTime: 60000, // 60 segundos max
+            maxRecordingTime: 60000,
         };
 
         const chatToggle = document.getElementById('chat-toggle');
@@ -1568,13 +1568,13 @@ function rastrearFolio() {
         let emailSent = false;
         let isFirstOpen = true;
         
-        // ─── VARIABLES DE GRABACIÓN ──────────────────────────────────────
         let mediaRecorder = null;
         let audioChunks = [];
         let recordingTimer = null;
         let recordingSeconds = 0;
         let isRecording = false;
         let audioStream = null;
+        let isSendingAudio = false;
 
         function init() {
             loadHistory();
@@ -1587,7 +1587,17 @@ function rastrearFolio() {
             chatClose.onclick = () => chatWindow.classList.add('hidden');
             chatSend.onclick = sendMessage;
             chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-            chatMic.onclick = toggleRecording;
+            
+            chatMic.addEventListener('mousedown', startRecording);
+            chatMic.addEventListener('touchstart', startRecording, { passive: false });
+            
+            chatMic.addEventListener('mouseup', stopAndSend);
+            chatMic.addEventListener('touchend', stopAndSend);
+            chatMic.addEventListener('mouseleave', stopAndSend);
+            chatMic.addEventListener('touchcancel', stopAndSend);
+            
+            chatMic.addEventListener('contextmenu', (e) => e.preventDefault());
+            
             document.addEventListener('click', (e) => {
                 if (!chatWindow.contains(e.target) && !chatToggle.contains(e.target)) {
                     chatWindow.classList.add('hidden');
@@ -1595,69 +1605,91 @@ function rastrearFolio() {
             });
         }
 
-        // ─── SISTEMA DE GRABACIÓN DE AUDIO ───────────────────────────────
-        async function toggleRecording() {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                await startRecording();
-            }
-        }
-
-        async function startRecording() {
+        async function startRecording(e) {
+            if (e) e.preventDefault();
+            if (isRecording || isSendingAudio) return;
+            
             try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    } 
+                });
+                
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                    ? 'audio/webm;codecs=opus' 
+                    : MediaRecorder.isTypeSupported('audio/webm') 
+                        ? 'audio/webm' 
+                        : 'audio/mp4';
+                
+                mediaRecorder = new MediaRecorder(audioStream, { mimeType });
                 audioChunks = [];
                 
                 mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) audioChunks.push(event.data);
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
                 };
                 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    if (audioChunks.length === 0) {
+                        console.warn('[Artia Chat] No se capturaron datos de audio');
+                        resetMicUI();
+                        return;
+                    }
+                    
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    console.log('[Artia Chat] Audio grabado:', audioBlob.size, 'bytes');
                     await sendAudio(audioBlob);
-                    cleanupRecording();
                 };
                 
-                mediaRecorder.start();
+                mediaRecorder.start(100);
                 isRecording = true;
                 
-                // UI
-                chatMic.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                chatMic.classList.add('bg-red-500', 'text-white', 'scale-110');
                 chatMic.classList.remove('bg-gray-100', 'text-gray-600');
-                chatMic.innerHTML = 'stop';
                 micRecordingBar.classList.remove('hidden');
                 chatInput.disabled = true;
                 chatSend.disabled = true;
                 
-                // Timer
                 recordingSeconds = 0;
                 updateTimer();
                 recordingTimer = setInterval(updateTimer, 1000);
                 
-                // Auto-stop a 60 segundos
-                setTimeout(() => { if (isRecording) stopRecording(); }, CONFIG.maxRecordingTime);
+                setTimeout(() => { 
+                    if (isRecording) stopAndSend(); 
+                }, CONFIG.maxRecordingTime);
                 
             } catch (err) {
                 console.error('[Artia Chat] Error accediendo al micrófono:', err);
-                renderMessage('assistant', 'No pude acceder al micrófono. Por favor verifica los permisos del navegador.', false);
+                renderMessage('assistant', 'No pude acceder al micrófono. Verifica que hayas dado permiso en tu navegador.', false);
+                resetMicUI();
             }
         }
 
-        function stopRecording() {
+        function stopAndSend(e) {
+            if (e) e.preventDefault();
             if (!isRecording || !mediaRecorder) return;
-            mediaRecorder.stop();
+            
+            if (mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
             isRecording = false;
             clearInterval(recordingTimer);
-            
-            // UI reset
-            chatMic.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+            resetMicUI();
+        }
+
+        function resetMicUI() {
+            chatMic.classList.remove('bg-red-500', 'text-white', 'scale-110');
             chatMic.classList.add('bg-gray-100', 'text-gray-600');
-            chatMic.innerHTML = 'mic';
             micRecordingBar.classList.add('hidden');
             chatInput.disabled = false;
             chatSend.disabled = false;
+            recordingSeconds = 0;
         }
 
         function cleanupRecording() {
@@ -1677,13 +1709,18 @@ function rastrearFolio() {
         }
 
         async function sendAudio(audioBlob) {
+            if (isSendingAudio) return;
+            isSendingAudio = true;
+            
             const typingId = appendTyping();
             
             try {
-                // Convertir webm a wav para HuggingFace (o enviar como está si el backend maneja conversión)
                 const formData = new FormData();
                 formData.append('audio', audioBlob, 'recording.webm');
                 formData.append('messages', JSON.stringify(chatHistory));
+                formData.append('stream', 'false');
+                
+                console.log('[Artia Chat] Enviando audio...', audioBlob.size, 'bytes');
                 
                 const res = await fetch(CONFIG.audioEndpoint, { 
                     method: 'PUT', 
@@ -1693,27 +1730,35 @@ function rastrearFolio() {
                 removeTyping(typingId);
                 
                 if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || `HTTP ${res.status}`);
+                    const errText = await res.text();
+                    let errData = {};
+                    try { errData = JSON.parse(errText); } catch {}
+                    console.error('[Artia Chat] Error del servidor:', res.status, errData);
+                    throw new Error(errData.error || `Error ${res.status}`);
                 }
                 
                 const data = await res.json();
+                console.log('[Artia Chat] Respuesta del servidor:', data);
                 
-                // Mostrar texto transcrito como mensaje del usuario
-                if (data._meta && data._meta.transcribed_text) {
-                    const transcribed = decodeURIComponent(data._meta.transcribed_text);
+                const transcribed = data._meta?.transcribed_text 
+                    ? decodeURIComponent(data._meta.transcribed_text) 
+                    : null;
+                    
+                if (transcribed) {
                     renderMessage('user', transcribed, true);
                     chatHistory.push({ role: 'user', content: transcribed });
                 }
                 
-                // Procesar respuesta de la IA
-                if (data.choices && data.choices[0]) {
+                if (data.choices && data.choices[0] && data.choices[0].message) {
                     const aiResponse = data.choices[0].message.content;
                     chatHistory.push({ role: 'assistant', content: aiResponse });
                     saveHistory();
                     
                     const resumenExtraido = extractResumen(aiResponse);
-                    if (resumenExtraido) { leadData = { ...leadData, ...resumenExtraido }; saveHistory(); }
+                    if (resumenExtraido) { 
+                        leadData = { ...leadData, ...resumenExtraido }; 
+                        saveHistory(); 
+                    }
                     
                     if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
                         const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
@@ -1733,12 +1778,17 @@ function rastrearFolio() {
                     } else {
                         renderMessage('assistant', aiResponse, true);
                     }
+                } else {
+                    throw new Error('Respuesta incompleta del servidor');
                 }
                 
             } catch (e) {
                 removeTyping(typingId);
                 console.error('[Artia Chat] Error procesando audio:', e);
                 renderMessage('assistant', 'Lo siento, no pude procesar tu audio. ¿Podrías intentar de nuevo o escribir tu mensaje?', false);
+            } finally {
+                isSendingAudio = false;
+                cleanupRecording();
             }
         }
 
@@ -1833,10 +1883,9 @@ function rastrearFolio() {
                     body: JSON.stringify({ messages: chatHistory }) 
                 });
                 
-                const responseData = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 
-                if (!res.ok) throw new Error(responseData.error || `HTTP ${res.status}`);
-                
+                const data = await res.json();
                 removeTyping(typingId);
 
                 if (data.choices && data.choices[0]) {
