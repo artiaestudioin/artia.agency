@@ -428,7 +428,7 @@ document.addEventListener('DOMContentLoaded', animateCounter);
 
 <!-- ═══ Artia Unified Modal System ═══ -->
 <script src="artia-modal.js"></script>
-    <!-- ═══ CHATBOT ARTIA AI ═══ -->
+        <!-- ═══ CHATBOT ARTIA AI ═══ -->
     <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
         <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
             ¿Alguna duda? ✨
@@ -447,7 +447,17 @@ document.addEventListener('DOMContentLoaded', animateCounter);
             <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-sm flex flex-col gap-3 text-black bg-gray-50"></div>
             <div class="p-3 border-t bg-white flex gap-2 items-center">
                 <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-1 text-xs p-2.5 border rounded-lg focus:outline-none focus:border-[#FF00FF] focus:ring-1 focus:ring-[#FF00FF]/20 text-black transition-all">
+                <button id="chat-mic" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm relative" title="Grabar audio">
+                    mic
+                </button>
                 <button id="chat-send" class="bg-[#FF00FF] hover:bg-[#d400d4] text-white p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm">send</button>
+            </div>
+            <div id="mic-recording-bar" class="hidden bg-red-50 px-3 py-2 flex items-center justify-between border-t border-red-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs text-red-600 font-medium">Grabando...</span>
+                </div>
+                <span id="mic-timer" class="text-xs text-red-500 font-mono">0:00</span>
             </div>
         </div>
     </div>
@@ -457,6 +467,7 @@ document.addEventListener('DOMContentLoaded', animateCounter);
         const CONFIG = {
             apiEndpoint: '/api/chat',
             emailEndpoint: '/api/send-email',
+            audioEndpoint: '/api/chat',  // ← Mismo endpoint pero con PUT
             whatsappNumber: '593969937265',
             storageKey: 'artia_chat_history',
             leadDataKey: 'artia_lead_data',
@@ -464,6 +475,7 @@ document.addEventListener('DOMContentLoaded', animateCounter);
             maxHistory: 50,
             tooltipDelay: 10000,
             tooltipDuration: 6000,
+            maxRecordingTime: 60000, // 60 segundos max
         };
 
         const chatToggle = document.getElementById('chat-toggle');
@@ -471,8 +483,11 @@ document.addEventListener('DOMContentLoaded', animateCounter);
         const chatClose  = document.getElementById('chat-close');
         const chatInput  = document.getElementById('chat-input');
         const chatSend   = document.getElementById('chat-send');
+        const chatMic    = document.getElementById('chat-mic');
         const chatMessages = document.getElementById('chat-messages');
         const chatTooltip = document.getElementById('chat-tooltip');
+        const micRecordingBar = document.getElementById('mic-recording-bar');
+        const micTimer = document.getElementById('mic-timer');
 
         if (!chatToggle || !chatWindow || !chatMessages) return;
 
@@ -480,6 +495,14 @@ document.addEventListener('DOMContentLoaded', animateCounter);
         let leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
         let emailSent = false;
         let isFirstOpen = true;
+        
+        // ─── VARIABLES DE GRABACIÓN ──────────────────────────────────────
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingTimer = null;
+        let recordingSeconds = 0;
+        let isRecording = false;
+        let audioStream = null;
 
         function init() {
             loadHistory();
@@ -492,11 +515,159 @@ document.addEventListener('DOMContentLoaded', animateCounter);
             chatClose.onclick = () => chatWindow.classList.add('hidden');
             chatSend.onclick = sendMessage;
             chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+            chatMic.onclick = toggleRecording;
             document.addEventListener('click', (e) => {
                 if (!chatWindow.contains(e.target) && !chatToggle.contains(e.target)) {
                     chatWindow.classList.add('hidden');
                 }
             });
+        }
+
+        // ─── SISTEMA DE GRABACIÓN DE AUDIO ───────────────────────────────
+        async function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await sendAudio(audioBlob);
+                    cleanupRecording();
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // UI
+                chatMic.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                chatMic.classList.remove('bg-gray-100', 'text-gray-600');
+                chatMic.innerHTML = 'stop';
+                micRecordingBar.classList.remove('hidden');
+                chatInput.disabled = true;
+                chatSend.disabled = true;
+                
+                // Timer
+                recordingSeconds = 0;
+                updateTimer();
+                recordingTimer = setInterval(updateTimer, 1000);
+                
+                // Auto-stop a 60 segundos
+                setTimeout(() => { if (isRecording) stopRecording(); }, CONFIG.maxRecordingTime);
+                
+            } catch (err) {
+                console.error('[Artia Chat] Error accediendo al micrófono:', err);
+                renderMessage('assistant', 'No pude acceder al micrófono. Por favor verifica los permisos del navegador.', false);
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            mediaRecorder.stop();
+            isRecording = false;
+            clearInterval(recordingTimer);
+            
+            // UI reset
+            chatMic.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+            chatMic.classList.add('bg-gray-100', 'text-gray-600');
+            chatMic.innerHTML = 'mic';
+            micRecordingBar.classList.add('hidden');
+            chatInput.disabled = false;
+            chatSend.disabled = false;
+        }
+
+        function cleanupRecording() {
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+            mediaRecorder = null;
+            audioChunks = [];
+        }
+
+        function updateTimer() {
+            recordingSeconds++;
+            const mins = Math.floor(recordingSeconds / 60);
+            const secs = recordingSeconds % 60;
+            micTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function sendAudio(audioBlob) {
+            const typingId = appendTyping();
+            
+            try {
+                // Convertir webm a wav para HuggingFace (o enviar como está si el backend maneja conversión)
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+                formData.append('messages', JSON.stringify(chatHistory));
+                
+                const res = await fetch(CONFIG.audioEndpoint, { 
+                    method: 'PUT', 
+                    body: formData
+                });
+                
+                removeTyping(typingId);
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP ${res.status}`);
+                }
+                
+                const data = await res.json();
+                
+                // Mostrar texto transcrito como mensaje del usuario
+                if (data._meta && data._meta.transcribed_text) {
+                    const transcribed = decodeURIComponent(data._meta.transcribed_text);
+                    renderMessage('user', transcribed, true);
+                    chatHistory.push({ role: 'user', content: transcribed });
+                }
+                
+                // Procesar respuesta de la IA
+                if (data.choices && data.choices[0]) {
+                    const aiResponse = data.choices[0].message.content;
+                    chatHistory.push({ role: 'assistant', content: aiResponse });
+                    saveHistory();
+                    
+                    const resumenExtraido = extractResumen(aiResponse);
+                    if (resumenExtraido) { leadData = { ...leadData, ...resumenExtraido }; saveHistory(); }
+                    
+                    if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
+                        const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
+                        renderMessage('assistant', cleanText, true);
+                        appendWhatsAppButton();
+                        
+                        if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
+                            try {
+                                await notifyByEmail();
+                                emailSent = true;
+                                saveHistory();
+                                setTimeout(() => clearStorage(), 5000);
+                            } catch (emailErr) {
+                                console.error('[Artia Chat] Error enviando email:', emailErr);
+                            }
+                        }
+                    } else {
+                        renderMessage('assistant', aiResponse, true);
+                    }
+                }
+                
+            } catch (e) {
+                removeTyping(typingId);
+                console.error('[Artia Chat] Error procesando audio:', e);
+                renderMessage('assistant', 'Lo siento, no pude procesar tu audio. ¿Podrías intentar de nuevo o escribir tu mensaje?', false);
+            }
         }
 
         function animateEntrance() {
@@ -584,9 +755,16 @@ document.addEventListener('DOMContentLoaded', animateCounter);
             const typingId = appendTyping();
 
             try {
-                const res = await fetch(CONFIG.apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory }) });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
+                const res = await fetch(CONFIG.apiEndpoint, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ messages: chatHistory }) 
+                });
+                
+                const responseData = await res.json().catch(() => ({}));
+                
+                if (!res.ok) throw new Error(responseData.error || `HTTP ${res.status}`);
+                
                 removeTyping(typingId);
 
                 if (data.choices && data.choices[0]) {
@@ -601,11 +779,16 @@ document.addEventListener('DOMContentLoaded', animateCounter);
                         const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
                         renderMessage('assistant', cleanText, true);
                         appendWhatsAppButton();
+                        
                         if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
-                            await notifyByEmail();
-                            emailSent = true;
-                            saveHistory();
-                            setTimeout(() => clearStorage(), 5000);
+                            try {
+                                await notifyByEmail();
+                                emailSent = true;
+                                saveHistory();
+                                setTimeout(() => clearStorage(), 5000);
+                            } catch (emailErr) {
+                                console.error('[Artia Chat] Error enviando email:', emailErr);
+                            }
                         }
                     } else {
                         renderMessage('assistant', aiResponse, true);
@@ -628,7 +811,14 @@ document.addEventListener('DOMContentLoaded', animateCounter);
             const telefono = contactoMatch[1].trim();
             const telefonoValido = isValidPhone(telefono) ? telefono : null;
             const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-            return { servicio: servicioMatch[1].trim(), nombre: clienteMatch[1].trim(), objetivo: objetivoMatch ? objetivoMatch[1].trim() : 'No especificado', telefono: telefonoValido, email: emailMatch ? emailMatch[0] : leadData.email, resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() };
+            return { 
+                servicio: servicioMatch[1].trim(), 
+                nombre: clienteMatch[1].trim(), 
+                objetivo: objetivoMatch ? objetivoMatch[1].trim() : 'No especificado', 
+                telefono: telefonoValido, 
+                email: emailMatch ? emailMatch[0] : leadData.email, 
+                resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() 
+            };
         }
 
         function renderMessage(role, text, animate) {
@@ -672,20 +862,57 @@ document.addEventListener('DOMContentLoaded', animateCounter);
         }
 
         async function notifyByEmail() {
-            if (!leadData.nombre || !leadData.telefono) { console.warn('[Artia Chat] Faltan datos del lead'); return; }
+            if (!leadData.nombre || !leadData.telefono) { 
+                console.warn('[Artia Chat] Faltan datos del lead'); 
+                throw new Error('Faltan datos del lead'); 
+            }
+            
             const emailUsuario = leadData.email && isValidEmail(leadData.email) ? leadData.email : null;
             const mensajeInterno = leadData.resumenCompleto || `Resumen de tu solicitud:\n• Servicio: ${leadData.servicio || 'No detectado'}\n• Cliente: ${leadData.nombre}\n• Objetivo: ${leadData.objetivo || 'No especificado'}\n• Contacto: ${leadData.telefono}`;
-            const payload = { name: leadData.nombre, emailFrom: emailUsuario || 'no-reply@artiaagency.vercel.app', service: leadData.servicio || 'Chat IA — Solicitud de asesor humano', message: mensajeInterno, phone: leadData.telefono };
+            
+            const payload = { 
+                name: leadData.nombre, 
+                emailFrom: emailUsuario || '',  
+                service: leadData.servicio || 'Chat IA — Solicitud de asesor humano', 
+                message: mensajeInterno, 
+                phone: leadData.telefono 
+            };
+            
             try {
-                const res = await fetch(CONFIG.emailEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!res.ok) { const err = await res.json().catch(() => ({})); console.warn('[Artia Chat] Error enviando email:', err); }
-                else { console.log('[Artia Chat] Email enviado correctamente'); }
-            } catch(e) { console.warn('[Artia Chat] No se pudo notificar por email:', e); }
+                const res = await fetch(CONFIG.emailEndpoint, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const responseData = await res.json().catch(() => ({}));
+                
+                if (!res.ok) { 
+                    console.warn('[Artia Chat] Error enviando email:', responseData); 
+                    throw new Error(responseData.message || `HTTP ${res.status}`); 
+                }
+                
+                console.log('[Artia Chat] Email enviado correctamente', responseData);
+                return responseData;
+            } catch(e) { 
+                console.warn('[Artia Chat] No se pudo notificar por email:', e); 
+                throw e;
+            }
         }
 
         function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
-        function isValidEmail(email) { if (!email) return false; const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; return regex.test(email) && !email.includes('artiaagency.vercel.app') && !email.includes('localhost') && !email.includes('example.com') && !email.includes('no-reply'); }
-        function isValidPhone(phone) { if (!phone) return false; const digits = phone.replace(/\D/g, ''); return digits.length >= 7 && digits.length <= 15; }
+        
+        function isValidEmail(email) { 
+            if (!email) return false; 
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+            return regex.test(email) && !email.includes('artiaagency.vercel.app') && !email.includes('localhost') && !email.includes('example.com') && !email.includes('no-reply') && !email.includes('test.com'); 
+        }
+        
+        function isValidPhone(phone) { 
+            if (!phone) return false; 
+            const digits = phone.replace(/\D/g, ''); 
+            return digits.length >= 7 && digits.length <= 15; 
+        }
 
         init();
     })();

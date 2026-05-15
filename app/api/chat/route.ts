@@ -10,7 +10,7 @@ const CONFIG = {
     chatModel: process.env.GROQ_MODEL || 'llama3-8b-8192',
   },
   huggingface: {
-    apiToken: process.env.HF_API_TOKEN || '', // ← Igual que Groq
+    apiToken: process.env.HF_API_TOKEN || '',
     whisperUrl: 'https://api-inference.huggingface.co/models/openai/whisper-large-v3',
     fallbackUrl: 'https://api-inference.huggingface.co/models/openai/whisper-small',
   },
@@ -126,6 +126,13 @@ function errorResponse(message: string, status: number, details?: unknown) {
 
 function successResponse(data: unknown, extraHeaders?: Record<string, string>) {
   return NextResponse.json(data, { status: 200, headers: { ...corsHeaders, ...extraHeaders } })
+}
+
+// ─────────────────────────────────────────
+// OPTIONS (CORS PREFLIGHT)
+// ─────────────────────────────────────────
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders })
 }
 
 // ─────────────────────────────────────────
@@ -370,11 +377,4 @@ export async function GET() {
       hf_token_configured: !!CONFIG.huggingface.apiToken,
     },
   })
-}
-
-// ─────────────────────────────────────────
-// OPTIONS (CORS)
-// ─────────────────────────────────────────
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders })
 }

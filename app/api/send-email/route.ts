@@ -29,11 +29,21 @@ function sanitize(str: unknown, maxLen = 300): string {
     .slice(0, maxLen)
 }
 
+// ─── CORS HEADERS ─────────────────────────────────────────────────────────
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+function jsonResponse(data: unknown, status = 200) {
+  return NextResponse.json(data, { status, headers: corsHeaders })
+}
+
 // ─── VALIDACIÓN DE EMAIL ─────────────────────────────────────────────────
 function isValidEmail(email: string): boolean {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return regex.test(email) && 
-    !email.includes('artiaagency.vercel.app') && // Bloquear dominio propio
     !email.includes('localhost') &&
     !email.includes('example.com') &&
     !email.includes('test.com')
@@ -69,14 +79,29 @@ function parseResumenIA(message: string): {
   }
 }
 
+// ─── OPTIONS (CORS PREFLIGHT) ────────────────────────────────────────────
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders })
+}
+
 export async function POST(req: NextRequest) {
+  // ─── CORS ORIGIN CHECK (opcional, más permisivo para debug) ───────────
   const origin = req.headers.get('origin') ?? ''
-  const allowed = ['https://artiaagency.vercel.app', 'http://localhost:3000']
-  if (origin && !allowed.includes(origin)) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+  const allowed = ['https://artiaagency.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:3000']
+  
+  // Si hay origin y no está en allowed, igual permitimos en desarrollo
+  // En producción descomenta la siguiente línea:
+  // if (origin && !allowed.includes(origin)) {
+  //   return jsonResponse({ error: 'No autorizado' }, 403)
+  // }
+
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return jsonResponse({ error: 'JSON inválido' }, 400)
   }
 
-  const body = await req.json()
   const { name, emailFrom, service, message, type, phone, products } = body ?? {}
 
   if (type === 'impresion') {
@@ -105,28 +130,28 @@ async function handleConsultoria({
   const resumen = parseResumenIA(cleanMessage)
 
   if (!resumen) {
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Resumen incompleto',
         message: 'El chatbot no ha generado el resumen obligatorio con nombre, teléfono y servicio.',
       },
-      { status: 422 }
+      422
     )
   }
 
   if (!resumen.telefono || resumen.telefono === 'No proporcionado' || resumen.telefono.length < 7) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: 'Teléfono faltante', message: 'El usuario no ha proporcionado un número de contacto válido.' },
-      { status: 422 }
+      422
     )
   }
 
   // ─── VALIDAR EMAIL ─────────────────────────────────────────────────────
-  // Si el email no es válido, usar el email de Artia como replyTo
+  // Si el email no es válido o es el fallback, usar el email de Artia como replyTo
   const hasValidEmail = isValidEmail(cleanEmailFrom)
   const replyToEmail = hasValidEmail ? cleanEmailFrom : (process.env.GMAIL_USER || '')
   
-  // Email para el cliente (solo si es válido)
+  // Email para el cliente (solo si es válido y NO es el fallback de no-reply)
   const clientEmail = hasValidEmail ? cleanEmailFrom : null
 
   const now = new Date()
@@ -164,7 +189,7 @@ async function handleConsultoria({
     await transporter.sendMail({
       from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
       to: 'artia.estudioin@gmail.com',
-      replyTo: replyToEmail, // ← Si no hay email válido, usa el de Artia
+      replyTo: replyToEmail,
       subject: `[${folio}] Nueva consulta: ${resumen.servicio}`,
       html: buildInternalEmail({
         cleanName: resumen.nombre || cleanName,
@@ -195,10 +220,10 @@ async function handleConsultoria({
       })
     }
 
-    return NextResponse.json({ ok: true, folio, emailSent: !!clientEmail })
+    return jsonResponse({ ok: true, folio, emailSent: !!clientEmail })
   } catch (err) {
     console.error('Server error:', err)
-    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 })
+    return jsonResponse({ error: 'Error interno del servidor.', details: err instanceof Error ? err.message : String(err) }, 500)
   }
 }
 
@@ -216,15 +241,15 @@ async function handleImpresion({
   const cleanPhone = sanitize(phone ?? '', 50)
 
   if (!cleanName || !cleanEmail) {
-    return NextResponse.json({ error: 'Nombre y correo son obligatorios.' }, { status: 400 })
+    return jsonResponse({ error: 'Nombre y correo son obligatorios.' }, 400)
   }
   
   if (!isValidEmail(cleanEmail)) {
-    return NextResponse.json({ error: 'El correo electrónico no es válido.' }, { status: 400 })
+    return jsonResponse({ error: 'El correo electrónico no es válido.' }, 400)
   }
 
   if (!Array.isArray(products) || products.length === 0) {
-    return NextResponse.json({ error: 'Selecciona al menos un producto.' }, { status: 400 })
+    return jsonResponse({ error: 'Selecciona al menos un producto.' }, 400)
   }
 
   const now = new Date()
@@ -281,18 +306,14 @@ async function handleImpresion({
       html: buildImpresionClientEmail({ cleanName, cleanProducts, folio, fecha, hora, year }),
     })
 
-    return NextResponse.json({ ok: true, folio })
+    return jsonResponse({ ok: true, folio })
   } catch (err) {
     console.error('Error impresión:', err)
-    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 })
+    return jsonResponse({ error: 'Error interno del servidor.', details: err instanceof Error ? err.message : String(err) }, 500)
   }
 }
 
-// ─── PLANTILLAS (sin cambios, omitidas por brevedad) ─────────────────────
-// ... buildInternalEmail, buildClientEmail, buildImpresionInternalEmail, buildImpresionClientEmail
-// (Usa las mismas plantillas que ya tienes, o dime si quieres que las ponga completas)
-
-// ─── PLANTILLA DE EMAIL INTERNO MEJORADA ───────────────────────────────────
+// ─── PLANTILLAS ───────────────────────────────────────────────────────────
 function buildInternalEmail({
   cleanName,
   cleanEmailFrom,
@@ -314,7 +335,6 @@ function buildInternalEmail({
   hora: string
   year: number
 }) {
-  // Extraer líneas del resumen para mostrarlas bonitas
   const resumenLines = cleanMessage
     .split('\n')
     .filter((line) => line.trim().startsWith('•'))
