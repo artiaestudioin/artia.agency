@@ -706,7 +706,7 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
           </div>
         </div>
       </div>
-
+//ALGUNAS
       <style>{`
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @media (max-width: 900px) { .leads-grid { grid-template-columns: 1fr !important; } }
