@@ -6,7 +6,6 @@ function sanitize(val: unknown, max = 300): string {
   return val.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim().slice(0, max)
 }
 
-// PATCH /api/admin/lead-edit — editar campos de un lead desde el panel de clientes
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
 
@@ -20,13 +19,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'id es requerido' }, { status: 400 })
   }
 
-  const nombre          = sanitize(body.nombre,   100)
-  const email           = sanitize(body.email,    200)
-  const telefono        = sanitize(body.telefono,  50)
-  const servicio        = sanitize(body.servicio, 150)
-  const notes           = sanitize(body.notes,    800)
-  const estado          = sanitize(body.estado,    50)
-  const payment_status  = sanitize(body.payment_status, 50)
+  const nombre         = sanitize(body.nombre,   100)
+  const email          = sanitize(body.email,    200)
+  const telefono       = sanitize(body.telefono,  50)
+  const servicio       = sanitize(body.servicio, 150)
+  const notes          = sanitize(body.notes,    800)
+  const estado         = sanitize(body.estado,    50)
+  const payment_status = sanitize(body.payment_status, 50)
 
   if (!nombre) {
     return NextResponse.json({ error: 'El nombre es obligatorio.' }, { status: 400 })
@@ -50,19 +49,24 @@ export async function PATCH(req: NextRequest) {
     notes:           notes || null,
     estado:          estado || 'nuevo',
     payment_status:  payment_status || 'pendiente',
-    estimated_value: body.estimated_value != null && body.estimated_value !== ''
+    estimated_value: (body.estimated_value !== undefined && body.estimated_value !== '' && body.estimated_value !== null)
                        ? Number(body.estimated_value)
                        : null,
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('leads')
     .update(updates)
     .eq('id', id)
+    .select('id')
 
   if (error) {
     console.error('Error editando lead:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para editar' }, { status: 404 })
   }
 
   return NextResponse.json({ ok: true })

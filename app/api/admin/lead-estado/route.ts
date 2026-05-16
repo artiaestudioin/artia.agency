@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// PATCH /api/admin/lead-estado — actualizar estado por id (desde pipeline/vista360)
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
 
@@ -19,17 +18,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('leads')
     .update({ estado })
     .eq('id', id)
+    .select('id')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para actualizar' }, { status: 404 })
+  }
 
   return NextResponse.json({ ok: true })
 }
 
-// POST /api/admin/lead-estado — actualizar estado por folio (backwards compat)
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
 
@@ -47,17 +52,23 @@ export async function POST(req: NextRequest) {
   if (notas_internas !== undefined) updates.notes = notas_internas
   if (notes !== undefined) updates.notes = notes
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('leads')
     .update(updates)
     .eq('folio', folio)
+    .select('id')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: 'Lead no encontrado con ese folio' }, { status: 404 })
+  }
 
   return NextResponse.json({ ok: true })
 }
 
-// DELETE /api/admin/lead-estado?id=...&hard=1 — eliminar lead permanentemente
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient()
 
@@ -72,17 +83,23 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'id es requerido' }, { status: 400 })
   }
 
-  // Solo permitir hard delete si se pasa ?hard=1
   if (hard !== '1') {
     return NextResponse.json({ error: 'Operación no permitida sin ?hard=1' }, { status: 403 })
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('leads')
     .delete()
     .eq('id', id)
+    .select('id')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para eliminar' }, { status: 404 })
+  }
 
   return NextResponse.json({ ok: true })
 }

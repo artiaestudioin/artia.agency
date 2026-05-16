@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
-// Servicios disponibles para el prefijo del folio
 const PREFIJOS: Record<string, string> = {
-  marketing:   'ASMKT',
-  impresion:   'ASIMP',
-  fotografia:  'ASFOT',
-  branding:    'ASBRD',
-  web:         'ASWEB',
-  otro:        'ASMKT', // fallback
+  marketing:  'ASMKT',
+  impresion:  'ASIMP',
+  fotografia: 'ASFOT',
+  branding:   'ASBRD',
+  web:        'ASWEB',
+  otro:       'ASMKT',
 }
 
 function getServiceClient() {
@@ -25,19 +24,18 @@ function sanitize(val: unknown, max = 300): string {
 }
 
 export async function POST(req: NextRequest) {
-  // Verificar que es admin
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const body = await req.json()
 
-  const nombre   = sanitize(body.nombre,   100)
-  const email    = sanitize(body.email,    200)
-  const telefono = sanitize(body.telefono,  50)
-  const servicio = sanitize(body.servicio, 150)
-  const mensaje  = sanitize(body.mensaje,  800)
-  const categoria = sanitize(body.categoria, 50) // para el prefijo del folio
+  const nombre    = sanitize(body.nombre,    100)
+  const email     = sanitize(body.email,     200)
+  const telefono  = sanitize(body.telefono,   50)
+  const servicio  = sanitize(body.servicio,  150)
+  const mensaje   = sanitize(body.mensaje,   800)
+  const categoria = sanitize(body.categoria,  50)
 
   if (!nombre || !servicio) {
     return NextResponse.json({ error: 'Nombre y servicio son obligatorios.' }, { status: 400 })
@@ -45,18 +43,19 @@ export async function POST(req: NextRequest) {
 
   const sc = getServiceClient()
 
-  // Insertar el lead
   const { data, error } = await sc
     .from('leads')
     .insert([{
       nombre,
-      email:    email || null,
-      telefono: telefono || null,
+      email:           email || null,
+      telefono:        telefono || null,
       servicio,
-      mensaje:  mensaje || null,
-      estado:   'nuevo',
-      // Marcar como creado manualmente para distinguirlo
-      fuente:   'whatsapp-manual',
+      notes:           mensaje || null,
+      estado:          'nuevo',
+      payment_status:  'sin_contrato',
+      estimated_value: (body.estimated_value !== undefined && body.estimated_value !== '' && body.estimated_value !== null)
+                         ? parseFloat(body.estimated_value)
+                         : null,
     }])
     .select('folio_num')
     .single()
@@ -66,7 +65,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Generar folio con prefijo según categoría
   const prefijo = PREFIJOS[categoria] ?? 'ASMKT'
   const folio   = prefijo + '-' + String(361 + (data.folio_num ?? 0)).padStart(4, '0')
 

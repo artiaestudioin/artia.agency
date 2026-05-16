@@ -18,8 +18,6 @@ type Lead = {
   notes: string | null
 }
 
-// ─── Constants ────────────────────────────────────────────────────
-
 const ESTADO_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   nuevo:      { label: 'Nuevo',      color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
   contactado: { label: 'Contactado', color: '#f59e0b', bg: '#fefce8', border: '#fde68a' },
@@ -37,8 +35,6 @@ const PAY_CFG: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 const PAGE_SIZE = 5
-
-// ─── Helpers ─────────────────────────────────────────────────────
 
 function fmtMoney(n: number | null | undefined) {
   if (n == null) return '—'
@@ -61,8 +57,6 @@ function avatarBg(name: string) {
   return p[h]
 }
 
-// ─── Edit Modal ───────────────────────────────────────────────────
-
 type EditForm = {
   nombre: string
   email: string
@@ -83,7 +77,7 @@ function EditModal({
   onClose: () => void
   onSaved: (updated: Lead) => void
 }) {
-  const [form, setForm] = useState<EditForm>({
+  const [form, setForm] = useState<<EditForm>({
     nombre:          lead.nombre ?? '',
     email:           lead.email ?? '',
     telefono:        lead.telefono ?? '',
@@ -96,7 +90,7 @@ function EditModal({
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
   }
@@ -122,7 +116,7 @@ function EditModal({
           notes:           form.notes.trim() || null,
         }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.ok) { setError(data.error ?? 'Error al guardar.'); return }
       onSaved({
         ...lead,
@@ -169,7 +163,6 @@ function EditModal({
         maxHeight: '92vh', overflowY: 'auto',
         boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
       }}>
-        {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #00113a 0%, #2552ca 100%)',
           padding: '18px 24px', borderRadius: '20px 20px 0 0',
@@ -190,16 +183,12 @@ function EditModal({
           }}>✕</button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '22px 24px 26px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Nombre */}
           <div>
             <label style={lbl}>Nombre del cliente *</label>
             <input name="nombre" value={form.nombre} onChange={handleChange} style={inp} placeholder="Ej: Juan Pérez" required />
           </div>
 
-          {/* Email + Teléfono */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={lbl}>Email</label>
@@ -211,13 +200,11 @@ function EditModal({
             </div>
           </div>
 
-          {/* Servicio */}
           <div>
             <label style={lbl}>Servicio</label>
             <input name="servicio" value={form.servicio} onChange={handleChange} style={inp} placeholder="Ej: 500 tarjetas de presentación" />
           </div>
 
-          {/* Estado + Pago */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={lbl}>Estado</label>
@@ -239,7 +226,6 @@ function EditModal({
             </div>
           </div>
 
-          {/* Valor estimado */}
           <div>
             <label style={lbl}>Valor estimado ($)</label>
             <input
@@ -249,7 +235,6 @@ function EditModal({
             />
           </div>
 
-          {/* Notas */}
           <div>
             <label style={lbl}>Notas internas</label>
             <textarea
@@ -286,26 +271,22 @@ function EditModal({
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────
-
 export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
   const router = useRouter()
 
-  const [leads, setLeads]             = useState<Lead[]>(initLeads)
+  const [leads, setLeads]             = useState<<Lead[]>(initLeads)
   const [search, setSearch]           = useState('')
   const [folioSearch, setFolioSearch] = useState('')
   const [filterEstado, setFilterEstado] = useState('todos')
   const [page, setPage]               = useState(1)
   const [toast, setToast]             = useState<{ msg: string; ok: boolean } | null>(null)
   const [deleting, setDeleting]       = useState<string | null>(null)
-  const [editingLead, setEditingLead] = useState<Lead | null>(null)
+  const [editingLead, setEditingLead] = useState<<Lead | null>(null)
 
   function showMsg(msg: string, ok = true) {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3500)
   }
-
-  // ── Filtered & paginated ──────────────────────────────────────
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -323,15 +304,11 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // ── Folio search (right panel) ────────────────────────────────
-
   const folioResult = useMemo(() => {
     const q = folioSearch.trim().toLowerCase()
     if (!q) return null
     return leads.find(l => (l.folio ?? '').toLowerCase() === q) ?? null
   }, [leads, folioSearch])
-
-  // ── Stats ─────────────────────────────────────────────────────
 
   const stats = useMemo(() => ({
     total:   leads.length,
@@ -341,8 +318,7 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     vencido: leads.filter(l => l.payment_status === 'vencido').length,
   }), [leads])
 
-  // ── Soft delete (archivar) ────────────────────────────────────
-
+  /* ── SOFT DELETE (archivar) ─────────────────────────────────── */
   async function deleteLead(lead: Lead) {
     const msg = `¿Archivar a "${lead.nombre}"?\n\nSe marcará como "Perdido" para conservar el historial.\nSu folio ${lead.folio ?? ''} quedará registrado pero inactivo.`
     if (!confirm(msg)) return
@@ -353,35 +329,35 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: lead.id, estado: 'perdido' }),
       })
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
         setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, estado: 'perdido' } : l))
         showMsg(`"${lead.nombre}" archivado como Perdido`)
-        // Invalidate server cache so F5 reflects the change immediately
         router.refresh()
       } else {
-        showMsg('Error al archivar', false)
+        showMsg(data.error ?? `Error al archivar (${res.status})`, false)
       }
+    } catch {
+      showMsg('Error de conexión al archivar', false)
     } finally {
       setDeleting(null)
     }
   }
 
-  // ── Hard delete ───────────────────────────────────────────────
-
+  /* ── HARD DELETE ──────────────────────────────────────────── */
   async function hardDeleteLead(lead: Lead) {
     const msg = `¿ELIMINAR PERMANENTEMENTE a "${lead.nombre}"?\n\n⚠️ Esta acción NO se puede deshacer.\nFolio: ${lead.folio ?? 'sin folio'}`
     if (!confirm(msg)) return
     setDeleting(lead.id)
     try {
       const res = await fetch(`/api/admin/lead-estado?id=${lead.id}&hard=1`, { method: 'DELETE' })
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
         setLeads(prev => prev.filter(l => l.id !== lead.id))
         showMsg(`"${lead.nombre}" eliminado permanentemente`)
-        // Invalidate server cache so F5 doesn't restore the deleted lead
         router.refresh()
       } else {
-        const data = await res.json().catch(() => ({}))
-        showMsg(data.error ?? 'Error al eliminar', false)
+        showMsg(data.error ?? `Error al eliminar (${res.status})`, false)
       }
     } catch {
       showMsg('Error de conexión al eliminar', false)
@@ -390,21 +366,16 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     }
   }
 
-  // ── Save edit ─────────────────────────────────────────────────
-
   function handleSaved(updated: Lead) {
     setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))
     setEditingLead(null)
     showMsg(`"${updated.nombre}" actualizado correctamente`)
   }
 
-  // ── Navigate to Vista360 ──────────────────────────────────────
-
   function goToLead(lead: Lead) {
     if (lead.folio) router.push(`/admin/cliente/${lead.folio}`)
   }
 
-  // ─── Render ──────────────────────────────────────────────────
   const sLabel: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#94a3b8', display: 'block', marginBottom: 4 }
   const inp: React.CSSProperties    = { width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: 9, fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }
   const card: React.CSSProperties   = { background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 14, padding: '18px 20px' }
@@ -412,7 +383,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
   return (
     <div style={{ maxWidth: 1300, margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-      {/* Edit Modal */}
       {editingLead && (
         <EditModal
           lead={editingLead}
@@ -421,7 +391,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         />
       )}
 
-      {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', top: 20, right: 20, zIndex: 9999,
@@ -435,7 +404,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         </div>
       )}
 
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>👤 Contactos</h1>
@@ -444,7 +412,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         <NuevoLeadModal />
       </div>
 
-      {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 22 }}>
         {[
           { label: 'Total',    value: stats.total,   color: '#0f172a', icon: '📋' },
@@ -460,12 +427,8 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
         ))}
       </div>
 
-      {/* Main layout: table + right panel */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 18, alignItems: 'start' }} className="leads-grid">
-
-        {/* ── Left: Table ─────────────────────────────────── */}
         <div style={card}>
-          {/* Filters */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <input
               type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
@@ -495,12 +458,10 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
             </div>
           </div>
 
-          {/* Results count */}
           <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10, fontWeight: 500 }}>
             Mostrando {Math.min(paginated.length, PAGE_SIZE)} de {filtered.length} contactos
           </div>
 
-          {/* Table */}
           <div style={{ borderRadius: 10, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 580 }}>
@@ -533,7 +494,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                       onMouseEnter={e => { if (hasLink) e.currentTarget.style.background = '#f8fafc' }}
                       onMouseLeave={e => { e.currentTarget.style.background = '' }}
                     >
-                      {/* Contacto */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{
@@ -552,12 +512,10 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                         </div>
                       </td>
 
-                      {/* Servicio */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
                         <span style={{ fontSize: 12, color: '#475569' }}>{lead.servicio ?? '—'}</span>
                       </td>
 
-                      {/* Estado */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
                         <span style={{
                           display: 'inline-block', fontSize: 10, fontWeight: 800,
@@ -569,7 +527,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                         </span>
                       </td>
 
-                      {/* Pago */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
                         <span style={{
                           display: 'inline-block', fontSize: 10, fontWeight: 700,
@@ -580,21 +537,16 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                         </span>
                       </td>
 
-                      {/* Valor est */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
                         {fmtMoney(lead.estimated_value)}
                       </td>
 
-                      {/* Fecha */}
                       <td style={{ padding: '12px 14px', verticalAlign: 'middle', fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
                         {fmtDate(lead.created_at)}
                       </td>
 
-                      {/* Acciones */}
                       <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
                         <div style={{ display: 'flex', gap: 5 }} onClick={e => e.stopPropagation()}>
-
-                          {/* Ver Vista 360 */}
                           {hasLink && (
                             <a
                               href={`/admin/cliente/${lead.folio}`}
@@ -607,8 +559,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                               Ver →
                             </a>
                           )}
-
-                          {/* Editar */}
                           <button
                             onClick={() => setEditingLead(lead)}
                             title="Editar cliente"
@@ -619,8 +569,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                             }}>
                             ✏️
                           </button>
-
-                          {/* Archivar (soft delete) */}
                           <button
                             onClick={() => deleteLead(lead)}
                             disabled={deleting === lead.id || lead.estado === 'perdido'}
@@ -634,8 +582,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                             }}>
                             {deleting === lead.id ? '…' : '🗑️'}
                           </button>
-
-                          {/* Eliminar permanente */}
                           <button
                             onClick={() => hardDeleteLead(lead)}
                             disabled={deleting === lead.id}
@@ -648,7 +594,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
                             }}>
                             {deleting === lead.id ? '…' : '✕'}
                           </button>
-
                         </div>
                       </td>
                     </tr>
@@ -659,7 +604,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
             </div>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 16 }}>
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
@@ -680,10 +624,7 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
           )}
         </div>
 
-        {/* ── Right: Panel ─────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Folio search */}
           <div style={card}>
             <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', marginBottom: 12 }}>🔎 Buscar por Folio</div>
             <label style={sLabel}>Número de folio</label>
@@ -724,7 +665,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
             )}
           </div>
 
-          {/* Quick stats */}
           <div style={card}>
             <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', marginBottom: 12 }}>📈 Estado financiero</div>
             {Object.entries(PAY_CFG).map(([key, cfg]) => {
@@ -739,7 +679,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
             })}
           </div>
 
-          {/* Recent activity */}
           <div style={card}>
             <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', marginBottom: 12 }}>🕐 Más recientes</div>
             {leads.slice(0, 5).map(lead => {
