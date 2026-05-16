@@ -79,7 +79,7 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
   }
 
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', maxWidth: '100%' }}>
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', width: '100%', minWidth: 0, overflow: 'hidden' }}>
       <header
         style={{
           display: 'flex',
@@ -122,8 +122,8 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
         style={{
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
-          margin: '0 -8px',
-          padding: '4px 8px 16px',
+          width: '100%',
+          paddingBottom: 16,
         }}
       >
         <div
@@ -131,7 +131,8 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
           style={{
             display: 'flex',
             gap: 14,
-            minWidth: 'max-content',
+            minWidth: 'min-content',
+            width: '100%',
           }}
         >
           {COLS.map(col => {
@@ -153,10 +154,9 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
                   borderRadius: 16,
                   padding: 12,
                   minHeight: 240,
-                  width: 290,
-                  minWidth: 270,
+                  flex: '1 1 220px',
+                  minWidth: 220,
                   maxWidth: 340,
-                  flexShrink: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 10,
@@ -389,22 +389,25 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
         </div>
       </div>
       <style>{`
-        @media (max-width: 768px) {
+        .kanban-scroll::-webkit-scrollbar { height: 6px; }
+        .kanban-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .kanban-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        @media (max-width: 900px) {
           .kanban-columns {
-            flex-direction: column !important;
-            min-width: 100% !important;
-            width: 100% !important;
-            gap: 20px !important;
+            flex-wrap: wrap !important;
           }
           .kanban-columns > div {
-            width: 100% !important;
-            min-width: auto !important;
-            max-width: 100% !important;
+            flex: 1 1 280px !important;
           }
-          .kanban-scroll {
-            overflow-x: hidden !important;
-            margin: 0 !important;
-            padding: 0 !important;
+        }
+        @media (max-width: 560px) {
+          .kanban-columns {
+            flex-direction: column !important;
+          }
+          .kanban-columns > div {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
           }
         }
       `}</style>

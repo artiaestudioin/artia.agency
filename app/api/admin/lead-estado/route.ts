@@ -18,18 +18,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('leads')
     .update({ estado })
     .eq('id', id)
-    .select('id')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para actualizar' }, { status: 404 })
   }
 
   return NextResponse.json({ ok: true })
@@ -52,18 +47,13 @@ export async function POST(req: NextRequest) {
   if (notas_internas !== undefined) updates.notes = notas_internas
   if (notes !== undefined) updates.notes = notes
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('leads')
     .update(updates)
     .eq('folio', folio)
-    .select('id')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Lead no encontrado con ese folio' }, { status: 404 })
   }
 
   return NextResponse.json({ ok: true })
@@ -87,18 +77,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Operación no permitida sin ?hard=1' }, { status: 403 })
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('leads')
     .delete()
     .eq('id', id)
-    .select('id')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Lead no encontrado o sin permisos para eliminar' }, { status: 404 })
   }
 
   return NextResponse.json({ ok: true })
