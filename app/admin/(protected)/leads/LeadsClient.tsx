@@ -318,7 +318,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     vencido: leads.filter(l => l.payment_status === 'vencido').length,
   }), [leads])
 
-  /* ── SOFT DELETE (archivar) ─────────────────────────────────── */
   async function deleteLead(lead: Lead) {
     const msg = `¿Archivar a "${lead.nombre}"?\n\nSe marcará como "Perdido" para conservar el historial.\nSu folio ${lead.folio ?? ''} quedará registrado pero inactivo.`
     if (!confirm(msg)) return
@@ -344,7 +343,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
     }
   }
 
-  /* ── HARD DELETE ──────────────────────────────────────────── */
   async function hardDeleteLead(lead: Lead) {
     const msg = `¿ELIMINAR PERMANENTEMENTE a "${lead.nombre}"?\n\n⚠️ Esta acción NO se puede deshacer.\nFolio: ${lead.folio ?? 'sin folio'}`
     if (!confirm(msg)) return
