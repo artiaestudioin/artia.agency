@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': 'https://artiaagency.vercel.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('leads')
-      .insert([{ nombre, email: email || null, telefono: telefono || null, servicio, mensaje: mensaje || fuente || null }])
+      .insert([{ nombre, email: email || null, telefono: telefono || null, servicio, mensaje: mensaje || null, notes: fuente || null }])
       .select('folio_num')
       .single()
 

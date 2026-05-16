@@ -570,7 +570,7 @@
 
 <!-- ═══ Artia Unified Modal System ═══ -->
 <script src="artia-modal.js"></script>
-                <!-- ═══ CHATBOT ARTIA AI ═══ -->
+ <!-- ═══ CHATBOT ARTIA AI ═══ -->
     <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
         <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
             ¿Alguna duda? ✨
@@ -603,7 +603,7 @@
             </div>
         </div>
     </div>
-
+ 
     <script>
     (function() {
         const CONFIG = {
@@ -619,7 +619,7 @@
             tooltipDuration: 6000,
             maxRecordingTime: 60000,
         };
-
+ 
         const chatToggle = document.getElementById('chat-toggle');
         const chatWindow = document.getElementById('chat-window');
         const chatClose  = document.getElementById('chat-close');
@@ -630,9 +630,9 @@
         const chatTooltip = document.getElementById('chat-tooltip');
         const micRecordingBar = document.getElementById('mic-recording-bar');
         const micTimer = document.getElementById('mic-timer');
-
+ 
         if (!chatToggle || !chatWindow || !chatMessages) return;
-
+ 
         let chatHistory = [];
         let leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
         let emailSent = false;
@@ -645,13 +645,13 @@
         let isRecording = false;
         let audioStream = null;
         let isSendingAudio = false;
-
+ 
         function init() {
             loadHistory();
             bindEvents();
             animateEntrance();
         }
-
+ 
         function bindEvents() {
             chatToggle.onclick = toggleChat;
             chatClose.onclick = () => chatWindow.classList.add('hidden');
@@ -674,7 +674,7 @@
                 }
             });
         }
-
+ 
         async function startRecording(e) {
             if (e) e.preventDefault();
             if (isRecording || isSendingAudio) return;
@@ -740,7 +740,7 @@
                 resetMicUI();
             }
         }
-
+ 
         function stopAndSend(e) {
             if (e) e.preventDefault();
             if (!isRecording || !mediaRecorder) return;
@@ -752,7 +752,7 @@
             clearInterval(recordingTimer);
             resetMicUI();
         }
-
+ 
         function resetMicUI() {
             chatMic.classList.remove('bg-red-500', 'text-white', 'scale-110');
             chatMic.classList.add('bg-gray-100', 'text-gray-600');
@@ -761,7 +761,7 @@
             chatSend.disabled = false;
             recordingSeconds = 0;
         }
-
+ 
         function cleanupRecording() {
             if (audioStream) {
                 audioStream.getTracks().forEach(track => track.stop());
@@ -770,14 +770,14 @@
             mediaRecorder = null;
             audioChunks = [];
         }
-
+ 
         function updateTimer() {
             recordingSeconds++;
             const mins = Math.floor(recordingSeconds / 60);
             const secs = recordingSeconds % 60;
             micTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
         }
-
+ 
         async function sendAudio(audioBlob) {
             if (isSendingAudio) return;
             isSendingAudio = true;
@@ -861,7 +861,7 @@
                 cleanupRecording();
             }
         }
-
+ 
         function animateEntrance() {
             if (typeof gsap !== 'undefined') {
                 gsap.set('#ai-chat-container', { y: 120, opacity: 0 });
@@ -879,12 +879,12 @@
             }
             chatToggle.addEventListener('click', () => { if (chatTooltip) { chatTooltip.style.opacity = '0'; chatTooltip.style.transform = 'scale(0.8)'; } });
         }
-
+ 
         function isHomePage() {
             const path = window.location.pathname;
             return path === '/' || path === '/inicio.html' || path.endsWith('/inicio.html');
         }
-
+ 
         function loadHistory() {
             try {
                 const saved = localStorage.getItem(CONFIG.storageKey);
@@ -898,7 +898,7 @@
                 if (savedEmailSent === 'true') emailSent = true;
             } catch (e) { clearStorage(); }
         }
-
+ 
         function saveHistory() {
             try {
                 if (chatHistory.length > CONFIG.maxHistory) chatHistory = chatHistory.slice(-CONFIG.maxHistory);
@@ -907,7 +907,7 @@
                 localStorage.setItem(CONFIG.emailSentKey, String(emailSent));
             } catch (e) { console.warn('[Artia Chat] Error guardando:', e); }
         }
-
+ 
         function clearStorage() {
             localStorage.removeItem(CONFIG.storageKey);
             localStorage.removeItem(CONFIG.leadDataKey);
@@ -916,7 +916,7 @@
             leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
             emailSent = false;
         }
-
+ 
         function toggleChat() {
             const isHidden = chatWindow.classList.contains('hidden');
             if (isHidden) {
@@ -936,7 +936,7 @@
                 chatWindow.classList.add('hidden');
             }
         }
-
+ 
         async function sendMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
@@ -945,7 +945,7 @@
             chatHistory.push({ role: 'user', content: text });
             saveHistory();
             const typingId = appendTyping();
-
+ 
             try {
                 const res = await fetch(CONFIG.apiEndpoint, { 
                     method: 'POST', 
@@ -957,15 +957,15 @@
                 
                 const data = await res.json();
                 removeTyping(typingId);
-
+ 
                 if (data.choices && data.choices[0]) {
                     const aiResponse = data.choices[0].message.content;
                     chatHistory.push({ role: 'assistant', content: aiResponse });
                     saveHistory();
-
+ 
                     const resumenExtraido = extractResumen(aiResponse);
                     if (resumenExtraido) { leadData = { ...leadData, ...resumenExtraido }; saveHistory(); }
-
+ 
                     if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
                         const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
                         renderMessage('assistant', cleanText, true);
@@ -991,7 +991,7 @@
                 renderMessage('assistant', 'Lo siento, tuve un problema al conectar. ¿Podrías intentar de nuevo?', false);
             }
         }
-
+ 
         function extractResumen(text) {
             if (!text || !text.includes('Resumen de tu solicitud:')) return null;
             const servicioMatch = text.match(/•\s*Servicio:\s*([^\n•]+)/i);
@@ -1011,7 +1011,7 @@
                 resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() 
             };
         }
-
+ 
         function renderMessage(role, text, animate) {
             const div = document.createElement('div');
             const isUser = role === 'user';
@@ -1023,7 +1023,7 @@
             if (animate && typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power2.out" });
             scrollToBottom();
         }
-
+ 
         function appendWhatsAppButton() {
             const div = document.createElement('div');
             div.className = 'self-start mt-1';
@@ -1035,7 +1035,7 @@
             if (typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.7)", delay: 0.2 });
             scrollToBottom();
         }
-
+ 
         function appendTyping() {
             const uid = 'typing-' + Date.now();
             const div = document.createElement('div');
@@ -1046,12 +1046,12 @@
             scrollToBottom();
             return uid;
         }
-
+ 
         function removeTyping(id) {
             const el = document.getElementById(id);
             if (el) { if (typeof gsap !== 'undefined') gsap.to(el, { opacity: 0, scale: 0.8, duration: 0.2, onComplete: () => el.remove() }); else el.remove(); }
         }
-
+ 
         async function notifyByEmail() {
             if (!leadData.nombre || !leadData.telefono) { 
                 console.warn('[Artia Chat] Faltan datos del lead'); 
@@ -1084,13 +1084,32 @@
                 }
                 
                 console.log('[Artia Chat] Email enviado correctamente', responseData);
+ 
+                // Guardar lead real en dashboard
+                try {
+                    await fetch('/api/leads', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: leadData.nombre,
+                            email: emailUsuario || null,
+                            telefono: leadData.telefono,
+                            servicio: leadData.servicio || 'Chat IA — Solicitud de asesor humano',
+                            mensaje: mensajeInterno,
+                            fuente: 'Chat IA',
+                        }),
+                    });
+                } catch(leadsErr) {
+                    console.warn('[Artia Chat] No se pudo guardar lead:', leadsErr);
+                }
+ 
                 return responseData;
             } catch(e) { 
                 console.warn('[Artia Chat] No se pudo notificar por email:', e); 
                 throw e;
             }
         }
-
+ 
         function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
         
         function isValidEmail(email) { 
@@ -1104,7 +1123,7 @@
             const digits = phone.replace(/\D/g, ''); 
             return digits.length >= 7 && digits.length <= 15; 
         }
-
+ 
         init();
     })();
     </script>

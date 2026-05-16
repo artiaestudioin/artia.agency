@@ -19,7 +19,7 @@
      share identical API call, error handling, and delivery behavior.
   ───────────────────────────────────────────────────────── */
   window.artiaSendConsultation = async function (payload) {
-    // payload: { name, emailFrom, service, message }
+    // payload: { name, emailFrom, service, message, phone? }
     const res  = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,6 +27,23 @@
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || 'Error del servidor');
+
+    // Guardar lead real en el dashboard
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre:   payload.name,
+          email:    payload.emailFrom || null,
+          telefono: payload.phone     || null,
+          servicio: payload.service,
+          mensaje:  payload.message   || null,
+          fuente:   'Formulario Email',
+        }),
+      });
+    } catch (_) {}
+
     return data; // { ok: true, folio: 'ASMKT-XXXX' }
   };
 
@@ -316,6 +333,10 @@
             <input id="aem-inp-email" type="email" placeholder="tu@correo.com" autocomplete="email">
             <p class="aem-err">Ingresa un correo válido</p>
           </div>
+          <div class="aem-field" id="aem-f-phone">
+            <label for="aem-inp-phone">Teléfono / WhatsApp <span style="color:#c0c8d8;font-weight:400;text-transform:none;">(opcional)</span></label>
+            <input id="aem-inp-phone" type="tel" placeholder="+593 99 000 0000" autocomplete="tel">
+          </div>
           <div class="aem-field" id="aem-f-service">
             <label for="aem-inp-service">Servicio</label>
             <select id="aem-inp-service">
@@ -535,6 +556,7 @@
     const email   = document.getElementById('aem-inp-email').value.trim();
     const service = document.getElementById('aem-inp-service').value;
     const message = document.getElementById('aem-inp-msg').value.trim();
+    const phone   = document.getElementById('aem-inp-phone').value.trim();
 
     if (!validate(name, email, service)) return;
 
@@ -548,7 +570,7 @@
       //   1. Inserts lead in Supabase, generates folio
       //   2. Sends internal email → artia.estudioin@gmail.com
       //   3. Sends confirmation email → client (email)
-      const data = await window.artiaSendConsultation({ name, emailFrom: email, service, message });
+      const data = await window.artiaSendConsultation({ name, emailFrom: email, service, message, phone: phone || null });
 
       submitBtn.classList.add('success');
       submitBtn.innerHTML = `${ICON_CHECK} ¡Enviado! Folio ${data.folio}`;
@@ -559,6 +581,7 @@
         document.getElementById('aem-inp-email').value   = '';
         document.getElementById('aem-inp-service').value = '';
         document.getElementById('aem-inp-msg').value     = '';
+        document.getElementById('aem-inp-phone').value   = '';
         submitBtn.disabled = false;
         submitBtn.classList.remove('success');
         submitBtn.innerHTML = origHTML;
