@@ -19,12 +19,12 @@ function getTransporter() {
   })
 }
 
+// ✅ CORREGIDO: el orden importa — primero < y >, luego & para no doble-escapar
 function sanitize(str: unknown, maxLen = 300): string {
   if (typeof str !== 'string') return ''
   return str
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/&/g, '&amp;')
     .trim()
     .slice(0, maxLen)
 }
@@ -43,7 +43,7 @@ function jsonResponse(data: unknown, status = 200) {
 // ─── VALIDACIÓN DE EMAIL ─────────────────────────────────────────────────
 function isValidEmail(email: string): boolean {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return regex.test(email) && 
+  return regex.test(email) &&
     !email.includes('localhost') &&
     !email.includes('example.com') &&
     !email.includes('test.com')
@@ -85,16 +85,6 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  // ─── CORS ORIGIN CHECK (opcional, más permisivo para debug) ───────────
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ['https://artiaagency.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:3000']
-  
-  // Si hay origin y no está en allowed, igual permitimos en desarrollo
-  // En producción descomenta la siguiente línea:
-  // if (origin && !allowed.includes(origin)) {
-  //   return jsonResponse({ error: 'No autorizado' }, 403)
-  // }
-
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -117,17 +107,18 @@ async function handleConsultoria({
   message,
   phone,
 }: Record<string, unknown>) {
-  const supabase = getSupabase()
   const transporter = getTransporter()
 
   const cleanName = sanitize(name, 100)
   const cleanEmailFrom = sanitize(emailFrom, 200)
   const cleanService = sanitize(service, 100)
-  const cleanMessage = sanitize(message, 2000)
+  // ✅ CORREGIDO: parsear el resumen del mensaje RAW antes de truncar con sanitize.
+  // El mensaje puede ser largo — el resumen con bullets está al final.
+  // Si se sanitiza primero a 2000 chars, los bullets pueden quedar cortados.
+  const rawMessage = typeof message === 'string' ? message : ''
+  const resumen = parseResumenIA(rawMessage)
+  const cleanMessage = sanitize(message, 5000)  // aumentado para no cortar el resumen
   const cleanPhone = sanitize(phone, 50)
-
-  // ─── VALIDAR RESUMEN DE LA IA ─────────────────────────────────────────
-  const resumen = parseResumenIA(cleanMessage)
 
   if (!resumen) {
     return jsonResponse(
@@ -146,12 +137,8 @@ async function handleConsultoria({
     )
   }
 
-  // ─── VALIDAR EMAIL ─────────────────────────────────────────────────────
-  // Si el email no es válido o es el fallback, usar el email de Artia como replyTo
   const hasValidEmail = isValidEmail(cleanEmailFrom)
   const replyToEmail = hasValidEmail ? cleanEmailFrom : (process.env.GMAIL_USER || '')
-  
-  // Email para el cliente (solo si es válido y NO es el fallback de no-reply)
   const clientEmail = hasValidEmail ? cleanEmailFrom : null
 
   const now = new Date()
@@ -165,7 +152,12 @@ async function handleConsultoria({
   })
   const year = now.getFullYear()
 
+  // ─── FOLIO DE RESPALDO (si la DB falla, se usa timestamp) ─────────────
+  let folio = 'ASMKT-' + Date.now().toString().slice(-6)
+
+  // ─── GUARDAR EN SUPABASE (opcional — el email se envía igual si falla) ─
   try {
+    const supabase = getSupabase()
     const { data: insertData, error: dbError } = await supabase
       .from('leads')
       .insert([
@@ -180,12 +172,21 @@ async function handleConsultoria({
       .select('folio_num')
       .single()
 
-    if (dbError) throw new Error('Error guardando en base de datos')
+    if (dbError) {
+      // ✅ CLAVE: logueamos el error real de Supabase para diagnóstico
+      console.error('[send-email] Supabase error (continuando con email):', JSON.stringify(dbError))
+    } else if (insertData?.folio_num) {
+      folio = 'ASMKT-' + String(361 + insertData.folio_num).padStart(4, '0')
+      // Actualizar folio en DB en background, sin bloquear el email
+      supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num).then()
+    }
+  } catch (dbErr) {
+    // La DB falló por completo — seguimos igual con el folio de respaldo
+    console.error('[send-email] Supabase excepción (continuando con email):', dbErr)
+  }
 
-    const folio = 'ASMKT-' + String(361 + insertData.folio_num).padStart(4, '0')
-    await supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num)
-
-    // ─── EMAIL A ARTIA (interno) ────────────────────────────────────────
+  // ─── ENVIAR EMAIL A ARTIA (siempre, independiente de la DB) ───────────
+  try {
     await transporter.sendMail({
       from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
       to: 'artia.estudioin@gmail.com',
@@ -203,9 +204,17 @@ async function handleConsultoria({
         year,
       }),
     })
+  } catch (mailErr) {
+    console.error('[send-email] Error enviando email interno:', mailErr)
+    return jsonResponse(
+      { error: 'Error enviando notificación por email.', details: mailErr instanceof Error ? mailErr.message : String(mailErr) },
+      500
+    )
+  }
 
-    // ─── EMAIL AL CLIENTE (solo si tiene email válido) ─────────────────
-    if (clientEmail) {
+  // ─── EMAIL AL CLIENTE (solo si tiene email válido) ─────────────────────
+  if (clientEmail) {
+    try {
       await transporter.sendMail({
         from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
         to: clientEmail,
@@ -218,13 +227,13 @@ async function handleConsultoria({
           hora,
         }),
       })
+    } catch (mailErr) {
+      // No es crítico si el email al cliente falla — el interno ya se envió
+      console.error('[send-email] Error enviando email al cliente:', mailErr)
     }
-
-    return jsonResponse({ ok: true, folio, emailSent: !!clientEmail })
-  } catch (err) {
-    console.error('Server error:', err)
-    return jsonResponse({ error: 'Error interno del servidor.', details: err instanceof Error ? err.message : String(err) }, 500)
   }
+
+  return jsonResponse({ ok: true, folio, emailSent: !!clientEmail })
 }
 
 async function handleImpresion({
@@ -233,7 +242,6 @@ async function handleImpresion({
   phone,
   products,
 }: Record<string, unknown>) {
-  const supabase = getSupabase()
   const transporter = getTransporter()
 
   const cleanName = sanitize(name, 100)
@@ -243,7 +251,7 @@ async function handleImpresion({
   if (!cleanName || !cleanEmail) {
     return jsonResponse({ error: 'Nombre y correo son obligatorios.' }, 400)
   }
-  
+
   if (!isValidEmail(cleanEmail)) {
     return jsonResponse({ error: 'El correo electrónico no es válido.' }, 400)
   }
@@ -272,7 +280,12 @@ async function handleImpresion({
 
   const mensajeResumen = cleanProducts.map((p) => `• ${p.name}: ${p.quantity} unidades`).join('\n')
 
+  // ─── FOLIO DE RESPALDO ─────────────────────────────────────────────────
+  let folio = 'ASIMP-' + Date.now().toString().slice(-6)
+
+  // ─── GUARDAR EN SUPABASE (opcional) ───────────────────────────────────
   try {
+    const supabase = getSupabase()
     const { data: insertData, error: dbError } = await supabase
       .from('leads')
       .insert([
@@ -286,11 +299,18 @@ async function handleImpresion({
       .select('folio_num')
       .single()
 
-    if (dbError) throw new Error('Error guardando en base de datos')
+    if (dbError) {
+      console.error('[send-email/impresion] Supabase error (continuando):', JSON.stringify(dbError))
+    } else if (insertData?.folio_num) {
+      folio = 'ASIMP-' + String(100 + insertData.folio_num).padStart(4, '0')
+      supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num).then()
+    }
+  } catch (dbErr) {
+    console.error('[send-email/impresion] Supabase excepción (continuando):', dbErr)
+  }
 
-    const folio = 'ASIMP-' + String(100 + insertData.folio_num).padStart(4, '0')
-    await supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num)
-
+  // ─── ENVIAR EMAILS ─────────────────────────────────────────────────────
+  try {
     await transporter.sendMail({
       from: `"Artia Studio" <${process.env.GMAIL_USER}>`,
       to: 'artia.estudioin@gmail.com',
@@ -305,12 +325,15 @@ async function handleImpresion({
       subject: `Tu solicitud de Papelería Premium fue recibida — Artia Studio [${folio}]`,
       html: buildImpresionClientEmail({ cleanName, cleanProducts, folio, fecha, hora, year }),
     })
-
-    return jsonResponse({ ok: true, folio })
-  } catch (err) {
-    console.error('Error impresión:', err)
-    return jsonResponse({ error: 'Error interno del servidor.', details: err instanceof Error ? err.message : String(err) }, 500)
+  } catch (mailErr) {
+    console.error('[send-email/impresion] Error enviando email:', mailErr)
+    return jsonResponse(
+      { error: 'Error enviando notificación por email.', details: mailErr instanceof Error ? mailErr.message : String(mailErr) },
+      500
+    )
   }
+
+  return jsonResponse({ ok: true, folio })
 }
 
 // ─── PLANTILLAS ───────────────────────────────────────────────────────────

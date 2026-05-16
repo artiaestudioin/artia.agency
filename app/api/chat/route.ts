@@ -8,11 +8,8 @@ const CONFIG = {
     apiKey: process.env.GROQ_API_KEY || '',
     baseUrl: 'https://api.groq.com/openai/v1',
     chatModel: process.env.GROQ_MODEL || 'llama3-8b-8192',
-  },
-  huggingface: {
-    apiToken: process.env.HF_API_TOKEN || '',
-    whisperUrl: 'https://api-inference.huggingface.co/models/openai/whisper-large-v3',
-    fallbackUrl: 'https://api-inference.huggingface.co/models/openai/whisper-small',
+    // Groq Whisper nativo — mucho más confiable que Hugging Face
+    whisperModel: 'whisper-large-v3-turbo',
   },
   systemPrompt: `Rol:
 Eres Artia AI, el asistente estratégico y comercial de Artia Studio en Ecuador. Tu objetivo principal NO es solo responder preguntas, sino convertir conversaciones en clientes potenciales reales.
@@ -103,8 +100,8 @@ Si el usuario insiste en precio:
 "Te recomiendo hablar con un asesor para enviarte una cotización exacta según tu proyecto. 👇"
 
 NUNCA:
-- decir “desde $300” para servicios que no sean redes sociales.
-- decir “desde $350” para servicios que no sean páginas web o landing pages.
+- decir "desde $300" para servicios que no sean redes sociales.
+- decir "desde $350" para servicios que no sean páginas web o landing pages.
 - estimar precios automáticamente.
 
 Fuera de alcance:
@@ -171,87 +168,48 @@ export async function OPTIONS() {
 }
 
 // ─────────────────────────────────────────
-// EXTRACT TEXT FROM WHISPER RESPONSE
+// TRANSCRIPCIÓN CON GROQ WHISPER
+// (reemplaza Hugging Face — más confiable y sin 404s)
 // ─────────────────────────────────────────
-function extractText(result: unknown): string {
-  if (result && typeof (result as Record<string, unknown>).text === 'string') {
-    return ((result as Record<string, unknown>).text as string).trim()
-  }
-  if (Array.isArray(result)) {
-    return result
-      .map((chunk: { text?: string }) => chunk.text || '')
-      .join(' ')
-      .trim()
-  }
-  throw new Error('Formato de respuesta inesperado')
-}
+async function transcribeAudio(audioBuffer: ArrayBuffer, mimeType: string): Promise<string> {
+  // Groq Whisper acepta: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm
+  // El browser graba en audio/webm;codecs=opus — Groq lo acepta nativamente.
 
-// ─────────────────────────────────────────
-// TRANSCRIPCIÓN CON HUGGING FACE
-// ─────────────────────────────────────────
-async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
-  const { whisperUrl, fallbackUrl, apiToken } = CONFIG.huggingface
+  const formData = new FormData()
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'audio/wav',
-  }
-  if (apiToken) {
-    headers['Authorization'] = `Bearer ${apiToken}`
-  }
+  // Detectar extensión desde el mimeType
+  let extension = 'webm'
+  if (mimeType.includes('wav')) extension = 'wav'
+  else if (mimeType.includes('mp4') || mimeType.includes('m4a')) extension = 'm4a'
+  else if (mimeType.includes('ogg')) extension = 'ogg'
+  else if (mimeType.includes('mp3') || mimeType.includes('mpeg')) extension = 'mp3'
 
-  // Intento 1: whisper-large-v3
-  try {
-    const response = await fetch(whisperUrl, {
-      method: 'POST',
-      headers,
-      body: audioBuffer,
-    })
+  const blob = new Blob([audioBuffer], { type: mimeType || 'audio/webm' })
+  formData.append('file', blob, `recording.${extension}`)
+  formData.append('model', CONFIG.groq.whisperModel)
+  formData.append('language', 'es') // Forzar español para mejor precisión
+  formData.append('response_format', 'json')
 
-    if (response.status === 503) {
-      const errorData = await response.json().catch(() => ({}))
-      const waitTime = (errorData.estimated_time || 20) * 1000
-      console.log(`[HF] Modelo cargando, esperando ${waitTime / 1000}s...`)
-      await new Promise((r) => setTimeout(r, Math.min(waitTime, 30000)))
+  const response = await fetch(`${CONFIG.groq.baseUrl}/audio/transcriptions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${CONFIG.groq.apiKey}`,
+    },
+    body: formData,
+  })
 
-      const retry = await fetch(whisperUrl, { method: 'POST', headers, body: audioBuffer })
-      if (retry.ok) {
-        const result = await retry.json()
-        return extractText(result)
-      }
-    }
-
-    if (response.ok) {
-      const result = await response.json()
-      return extractText(result)
-    }
-
-    if (response.status === 422) {
-      const err = await response.json().catch(() => ({}))
-      console.warn('[HF] 422 error:', err)
-    }
-
-    throw new Error(`HF error ${response.status}`)
-  } catch (err) {
-    console.log('[HF] Large falló, intentando con small...', err)
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(`Groq Whisper error ${response.status}: ${JSON.stringify(err)}`)
   }
 
-  // Intento 2: whisper-small
-  try {
-    const response = await fetch(fallbackUrl, {
-      method: 'POST',
-      headers,
-      body: audioBuffer,
-    })
+  const result = await response.json()
 
-    if (response.ok) {
-      const result = await response.json()
-      return extractText(result)
-    }
-
-    throw new Error(`HF fallback error ${response.status}`)
-  } catch (err) {
-    throw new Error('No se pudo transcribir con Hugging Face: ' + (err instanceof Error ? err.message : String(err)))
+  if (!result.text || result.text.trim().length === 0) {
+    throw new Error('No se detectó texto en el audio')
   }
+
+  return result.text.trim()
 }
 
 // ─────────────────────────────────────────
@@ -352,8 +310,9 @@ export async function PUT(req: NextRequest) {
 
     let transcribedText: string
     try {
-      transcribedText = await transcribeAudio(audioBuffer)
-      console.log('[Audio] Transcrito:', transcribedText)
+      // ✅ Usar Groq Whisper en lugar de Hugging Face
+      transcribedText = await transcribeAudio(audioBuffer, audioFile.type)
+      console.log('[Audio] Transcrito con Groq Whisper:', transcribedText)
     } catch (err) {
       console.error('[Audio] Error transcripción:', err)
       return errorResponse(
@@ -399,8 +358,8 @@ export async function PUT(req: NextRequest) {
       ...chatData,
       _meta: {
         transcribed_text: transcribedText,
-        source: 'huggingface',
-        model: 'openai/whisper-large-v3',
+        source: 'groq',
+        model: CONFIG.groq.whisperModel,
       },
     })
   } catch (err) {
@@ -416,12 +375,12 @@ export async function GET() {
   return successResponse({
     status: 'ok',
     service: 'artia-chat-api',
-    version: '2.1.0',
+    version: '2.2.0',
     features: { chat: true, streaming: true, audio: true },
     config: {
       chat_model: CONFIG.groq.chatModel,
-      whisper_model: 'openai/whisper-large-v3',
-      hf_token_configured: !!CONFIG.huggingface.apiToken,
+      whisper_model: CONFIG.groq.whisperModel,
+      whisper_provider: 'groq',
     },
   })
 }
