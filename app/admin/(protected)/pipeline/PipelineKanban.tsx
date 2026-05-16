@@ -33,7 +33,7 @@ function avatarBg(name: string) {
 }
 
 export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
-  const [leads, setLeads] = useState<<Lead[]>(init)
+  const [leads, setLeads] = useState<Lead[]>(init)
   const [dragging, setDragging] = useState<string | null>(null)
   const [over, setOver] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)

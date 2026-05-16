@@ -90,7 +90,7 @@ function EditModal({
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
-  function handleChange(e: React.ChangeEvent<<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
   }
