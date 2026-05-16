@@ -160,7 +160,7 @@ async function handleConsultoria({
     const supabase = getSupabase()
     const insertPayload: Record<string, unknown> = {
       nombre:   resumen.nombre || cleanName,
-      email:    hasValidEmail ? cleanEmailFrom : null,
+      email:    hasValidEmail ? cleanEmailFrom : `sin-email+${Date.now()}@artiaagency.vercel.app`,
       servicio: resumen.servicio,
       mensaje:  resumen.resumenCompleto,
       telefono: resumen.telefono,
