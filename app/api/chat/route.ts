@@ -35,7 +35,7 @@ Estilo de conversación:
 Flujo obligatorio:
 1. Saludar y preguntar sobre el proyecto o necesidad.
 2. Detectar automáticamente el servicio ideal.
-3. Recomendar el servicio de forma estratégica y profesional.
+3. Recomendar el servicio de forma estratégica y profesional si lo piden.
 4. Generar interés en mejorar su marca o negocio.
 5. Pedir el nombre de forma natural.
 6. Pedir número de contacto explicando que así un asesor podrá enviarle información más precisa.
@@ -66,11 +66,46 @@ Servicios Artia:
 - Estrategias digitales y posicionamiento.
 
 Precios:
-- SOLO puedes mencionar precios base para:
-  • Redes sociales desde $300.
-  • Páginas web o landing pages desde $350.
-- Para cualquier otro servicio NO dar precios exactos.
-- Si el usuario insiste en precios de otros servicios, responder que un asesor le enviará una cotización personalizada según su proyecto.
+
+IMPORTANTE:
+- NO asumir precios.
+- NO inventar precios.
+- NO reutilizar los precios de redes sociales o páginas web para otros servicios.
+
+SOLO puedes mencionar:
+
+• Redes sociales desde $300.
+• Landing pages o páginas web desde $350.
+
+Ejemplos:
+- Si preguntan por redes sociales → mencionar desde $300.
+- Si preguntan por páginas web → mencionar desde $350.
+
+Para TODO lo demás:
+- tarjetas
+- logos
+- branding
+- impresión
+- gigantografías
+- fotografía
+- videos
+- drone
+- merchandising
+- packaging
+- sublimación
+- publicidad física
+- cualquier otro servicio
+
+Responder:
+"Ese servicio lo cotizamos según cantidad, diseño y producción. Podemos ayudarte con una propuesta mucho más precisa según lo que necesitas."
+
+Si el usuario insiste en precio:
+"Te recomiendo hablar con un asesor para enviarte una cotización exacta según tu proyecto. 👇"
+
+NUNCA:
+- decir “desde $300” para servicios que no sean redes sociales.
+- decir “desde $350” para servicios que no sean páginas web o landing pages.
+- estimar precios automáticamente.
 
 Fuera de alcance:
 Si el usuario pide algo no relacionado responder:
@@ -136,6 +171,21 @@ export async function OPTIONS() {
 }
 
 // ─────────────────────────────────────────
+// EXTRACT TEXT FROM WHISPER RESPONSE
+// ─────────────────────────────────────────
+function extractText(result: unknown): string {
+  if (result && typeof (result as Record<string, unknown>).text === 'string') {
+    return ((result as Record<string, unknown>).text as string).trim()
+  }
+  if (Array.isArray(result)) {
+    return result
+      .map((chunk: { text?: string }) => chunk.text || '')
+      .join(' ')
+      .trim()
+  }
+  throw new Error('Formato de respuesta inesperado')
+}
+
 // ─────────────────────────────────────────
 // TRANSCRIPCIÓN CON HUGGING FACE
 // ─────────────────────────────────────────
@@ -143,7 +193,7 @@ async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
   const { whisperUrl, fallbackUrl, apiToken } = CONFIG.huggingface
 
   const headers: Record<string, string> = {
-    'Content-Type': 'audio/wav', // HuggingFace acepta cualquier audio como wav en la práctica
+    'Content-Type': 'audio/wav',
   }
   if (apiToken) {
     headers['Authorization'] = `Bearer ${apiToken}`
@@ -175,7 +225,6 @@ async function transcribeAudio(audioBuffer: ArrayBuffer): Promise<string> {
       return extractText(result)
     }
 
-    // Si falla con 422, puede ser formato — intentar igual
     if (response.status === 422) {
       const err = await response.json().catch(() => ({}))
       console.warn('[HF] 422 error:', err)
