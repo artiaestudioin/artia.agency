@@ -77,7 +77,7 @@ function EditModal({
   onClose: () => void
   onSaved: (updated: Lead) => void
 }) {
-  const [form, setForm] = useState<<EditForm>({
+  const [form, setForm] = useState<EditForm>({
     nombre:          lead.nombre ?? '',
     email:           lead.email ?? '',
     telefono:        lead.telefono ?? '',
@@ -274,14 +274,14 @@ function EditModal({
 export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
   const router = useRouter()
 
-  const [leads, setLeads]             = useState<<Lead[]>(initLeads)
+  const [leads, setLeads]             = useState<Lead[]>(initLeads)
   const [search, setSearch]           = useState('')
   const [folioSearch, setFolioSearch] = useState('')
   const [filterEstado, setFilterEstado] = useState('todos')
   const [page, setPage]               = useState(1)
   const [toast, setToast]             = useState<{ msg: string; ok: boolean } | null>(null)
   const [deleting, setDeleting]       = useState<string | null>(null)
-  const [editingLead, setEditingLead] = useState<<Lead | null>(null)
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
 
   function showMsg(msg: string, ok = true) {
     setToast({ msg, ok })
@@ -706,7 +706,6 @@ export default function LeadsClient({ leads: initLeads }: { leads: Lead[] }) {
           </div>
         </div>
       </div>
-//ALGUNAS
       <style>{`
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @media (max-width: 900px) { .leads-grid { grid-template-columns: 1fr !important; } }

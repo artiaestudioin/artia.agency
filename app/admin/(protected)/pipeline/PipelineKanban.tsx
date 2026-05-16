@@ -388,7 +388,6 @@ export default function PipelineKanban({ leads: init }: { leads: Lead[] }) {
           })}
         </div>
       </div>
-//PRO
       <style>{`
         @media (max-width: 768px) {
           .kanban-columns {
