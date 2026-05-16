@@ -175,7 +175,7 @@ async function handleConsultoria({
     if (dbError) {
       // ✅ CLAVE: logueamos el error real de Supabase para diagnóstico
       console.error('[send-email] Supabase error (continuando con email):', JSON.stringify(dbError))
-    } else if (insertData?.folio_num) {
+    } else if (insertData != null) {
       folio = 'ASMKT-' + String(361 + insertData.folio_num).padStart(4, '0')
       // Actualizar folio en DB en background, sin bloquear el email
       supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num).then()
@@ -301,7 +301,7 @@ async function handleImpresion({
 
     if (dbError) {
       console.error('[send-email/impresion] Supabase error (continuando):', JSON.stringify(dbError))
-    } else if (insertData?.folio_num) {
+    } else if (insertData != null) {
       folio = 'ASIMP-' + String(100 + insertData.folio_num).padStart(4, '0')
       supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num).then()
     }
