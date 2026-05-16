@@ -426,9 +426,7 @@ document.addEventListener('DOMContentLoaded', animateCounter);
 
 <script type="text/javascript" src="https://counter.websiteout.com/js/35/4/1351/0"></script>
 
-<!-- ═══ Artia Unified Modal System ═══ -->
-<script src="artia-modal.js"></script>
- <!-- ═══ CHATBOT ARTIA AI ═══ -->
+<!-- ═══ CHATBOT ARTIA AI ═══ -->
     <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
         <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
             ¿Alguna duda? ✨
@@ -942,25 +940,6 @@ document.addEventListener('DOMContentLoaded', animateCounter);
                 }
                 
                 console.log('[Artia Chat] Email enviado correctamente', responseData);
- 
-                // Guardar lead real en dashboard
-                try {
-                    await fetch('/api/leads', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            nombre: leadData.nombre,
-                            email: emailUsuario || null,
-                            telefono: leadData.telefono,
-                            servicio: leadData.servicio || 'Chat IA — Solicitud de asesor humano',
-                            mensaje: mensajeInterno,
-                            fuente: 'Chat IA',
-                        }),
-                    });
-                } catch(leadsErr) {
-                    console.warn('[Artia Chat] No se pudo guardar lead:', leadsErr);
-                }
- 
                 return responseData;
             } catch(e) { 
                 console.warn('[Artia Chat] No se pudo notificar por email:', e); 

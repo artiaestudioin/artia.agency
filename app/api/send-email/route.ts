@@ -158,26 +158,28 @@ async function handleConsultoria({
   // ─── GUARDAR EN SUPABASE (opcional — el email se envía igual si falla) ─
   try {
     const supabase = getSupabase()
+    const insertPayload: Record<string, unknown> = {
+      nombre:   resumen.nombre || cleanName,
+      email:    hasValidEmail ? cleanEmailFrom : null,
+      servicio: resumen.servicio,
+      mensaje:  resumen.resumenCompleto,
+      telefono: resumen.telefono,
+    }
+
+    console.log('[send-email] Insertando lead:', JSON.stringify(insertPayload))
+
     const { data: insertData, error: dbError } = await supabase
       .from('leads')
-      .insert([
-        {
-          nombre: resumen.nombre || cleanName,
-          email: hasValidEmail ? cleanEmailFrom : null,
-          servicio: resumen.servicio,
-          mensaje: resumen.resumenCompleto,
-          telefono: resumen.telefono,
-        },
-      ])
-      .select('folio_num')
+      .insert([insertPayload])
+      .select('folio_num, id')
       .single()
 
     if (dbError) {
-      // ✅ CLAVE: logueamos el error real de Supabase para diagnóstico
-      console.error('[send-email] Supabase error (continuando con email):', JSON.stringify(dbError))
+      console.error('[send-email] Supabase error DETALLE:', JSON.stringify(dbError), 'código:', dbError.code, 'hint:', dbError.hint, 'details:', dbError.details)
     } else if (insertData != null) {
-      folio = 'ASMKT-' + String(361 + insertData.folio_num).padStart(4, '0')
-      // Actualizar folio en DB en background, sin bloquear el email
+      // folio_num es autoincremental desde 1 — el offset lo ajustamos para que coincida con la secuencia real
+      folio = 'ASMKT-' + String(insertData.folio_num + 361).padStart(4, '0')
+      console.log('[send-email] Lead creado id:', insertData.id, 'folio_num:', insertData.folio_num, 'folio:', folio)
       supabase.from('leads').update({ folio }).eq('folio_num', insertData.folio_num).then()
     }
   } catch (dbErr) {
