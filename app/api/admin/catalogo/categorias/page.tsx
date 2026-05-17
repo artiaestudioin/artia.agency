@@ -172,37 +172,37 @@ export default function CategoriasPage() {
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Icono</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                   {ICON_PRESETS.map(icon => (
-                    <button key={icon} onClick={() => setEditing(e => ({ ...e, icon }))}
+                    <button key={icon} onClick={() => setEditing(p => p ? { ...p, icon } : p)}
                       style={{ width: 36, height: 36, borderRadius: 8, border: `2px solid ${editing.icon === icon ? '#7c3aed' : '#e2e8f0'}`, background: editing.icon === icon ? '#f5f3ff' : '#fafafa', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {icon}
                     </button>
                   ))}
                 </div>
-                <input value={editing.icon || ''} onChange={e => setEditing(p => ({ ...p, icon: e.target.value }))} placeholder="O escribe un emoji..." style={{ ...inp }} />
+                <input value={editing.icon || ''} onChange={e => setEditing(p => p ? { ...p, icon: e.target.value } : p)} placeholder="O escribe un emoji..." style={{ ...inp }} />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Nombre *</label>
-                <input value={editing.name || ''} onChange={e => setEditing(p => ({ ...p, name: e.target.value, slug: isNew ? slugify(e.target.value) : p.slug }))} style={inp} placeholder="Ej: Tazas Sublimadas" />
+                <input value={editing.name || ''} onChange={e => setEditing(p => p ? { ...p, name: e.target.value, slug: isNew ? slugify(e.target.value) : p.slug } : p)} style={inp} placeholder="Ej: Tazas Sublimadas" />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Slug (URL)</label>
-                <input value={editing.slug || ''} onChange={e => setEditing(p => ({ ...p, slug: e.target.value }))} style={inp} placeholder="tazas-sublimadas" />
+                <input value={editing.slug || ''} onChange={e => setEditing(p => p ? { ...p, slug: e.target.value } : p)} style={inp} placeholder="tazas-sublimadas" />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Descripción</label>
-                <textarea rows={2} value={editing.description || ''} onChange={e => setEditing(p => ({ ...p, description: e.target.value }))} style={{ ...inp, resize: 'vertical' }} placeholder="Describe brevemente esta categoría..." />
+                <textarea rows={2} value={editing.description || ''} onChange={e => setEditing(p => p ? { ...p, description: e.target.value } : p)} style={{ ...inp, resize: 'vertical' }} placeholder="Describe brevemente esta categoría..." />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Orden (menor = primero)</label>
-                <input type="number" value={editing.sort_order ?? 0} onChange={e => setEditing(p => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))} style={inp} />
+                <input type="number" value={editing.sort_order ?? 0} onChange={e => setEditing(p => p ? { ...p, sort_order: parseInt(e.target.value) || 0 } : p)} style={inp} />
               </div>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10 }}>
-                <input type="checkbox" checked={editing.active ?? true} onChange={e => setEditing(p => ({ ...p, active: e.target.checked }))} style={{ width: 16, height: 16, accentColor: '#7c3aed' }} />
+                <input type="checkbox" checked={editing.active ?? true} onChange={e => setEditing(p => p ? { ...p, active: e.target.checked } : p)} style={{ width: 16, height: 16, accentColor: '#7c3aed' }} />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>Categoría activa</div>
                   <div style={{ fontSize: 11, color: '#64748b' }}>Visible en el catálogo público</div>
