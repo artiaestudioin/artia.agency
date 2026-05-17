@@ -911,37 +911,28 @@ async function doPurchase() {
 function buildWAMsg({ p, variant, price, qty, varName, name, phone, orderNum, notes }) {
   const attrs = variant?.attributes || {}
   const attrLines = Object.entries(attrs)
-    .filter(([k,v]) => v && k !== '__typename')
-    .map(([k,v]) => `  • ${k.charAt(0).toUpperCase()+k.slice(1)}: ${v}`)
-    .join('
-')
+    .filter(([k, v]) => v && k !== '__typename')
+    .map(([k, v]) => `• ${k.charAt(0).toUpperCase() + k.slice(1)}: ${v}`)
+    .join('\n')
 
-  return `*PEDIDO ARTIA STUDIO* 🛍️
-` +
-    `${orderNum ? `📋 N° Pedido: *${orderNum}*
-` : ''}` +
-    `
-*Producto:*
-` +
-    `▸ ${p.name}
-` +
-    `▸ Opción: *${varName || 'Estándar'}*
-` +
-    `▸ Cantidad: *${qty >= 1000 ? (qty/1000)+'K' : qty} unidades*
-` +
-    `${attrLines ? attrLines + '
-' : ''}` +
-    `▸ Precio: *$${price.toFixed(2)} USD*
-` +
-    `${name  ? `
-👤 Cliente: ${name}`  : ''}` +
-    `${phone ? `
-📞 Teléfono: ${phone}` : ''}` +
-    `${notes ? `
-📝 Notas: ${notes}` : ''}` +
-    `
+  const lines = [
+    `*PEDIDO ARTIA STUDIO* 🛍️`,
+    orderNum ? `📋 N° Pedido: *${orderNum}*` : null,
+    ``,
+    `*Producto:*`,
+    `▸ ${p.name}`,
+    `▸ Opción: *${varName || 'Estándar'}*`,
+    `▸ Cantidad: *${qty >= 1000 ? (qty / 1000) + 'K' : qty} unidades*`,
+    attrLines || null,
+    `▸ Precio: *$${price.toFixed(2)} USD*`,
+    name ? `\n👤 Cliente: ${name}` : null,
+    phone ? `\n📞 Teléfono: ${phone}` : null,
+    notes ? `\n📝 Notas: ${notes}` : null,
+    ``,
+    `Hola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
+  ]
 
-Hola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
+  return lines.filter(Boolean).join('\n')
 }
 
 function closeModal() {
