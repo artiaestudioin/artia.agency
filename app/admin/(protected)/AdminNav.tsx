@@ -317,10 +317,10 @@ export default function AdminNav({ email }: { email: string }) {
       const isVentas = item.label === 'Ofertas Express'
       const isClientes = item.label === 'Clientes'
     const isReportes = item.label === 'Reportes'
+    const isCatalogo = item.label === 'Catálogo'
 
-    const open = isVentas? salesOpen : isClientes ? clientesOpen : isReportes ? reportesOpen : false
-    const setOpen = isVentas ? setSalesOpen : isClientes ? setClientesOpen : isReportes ? setReportesOpen : () => {}
-
+    const open = isVentas? salesOpen : isClientes ? clientesOpen : isReportes ? reportesOpen: isCatalogo? catalogoOpen : false
+    const setOpen = isVentas ? setSalesOpen : isClientes ? setClientesOpen : isReportes ? setReportesOpen : isCatalogo? setCatalogoOpen: () => {}
       const groupActive = item.children.some(c => isActive(c.href))
 
       return (
