@@ -173,6 +173,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 .thumb{width:60px;height:60px;border-radius:9px;object-fit:cover;border:2px solid transparent;cursor:pointer;transition:border-color .18s;flex-shrink:0}
 .thumb.on{border-color:#2552ca}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -404,16 +405,26 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 <!-- TOAST -->
 <div id="toast" class="toast" style="display:none"></div>
 
-<script src="fab-artia.js" defer></script>
-<script src="artia-modal.js" defer></script>
+
+
 
 <script>
-// ─── CONFIG ────────────────────────────────────────────────────────
-const API_BASE = '/api/catalog'  // o URL absoluta si está en otro dominio
+// ═══════════════════════════════════════════════════════════════════
+// ARTIA STUDIO — Catálogo Público v2.1
+// Consume APIs REST del backend Next.js
+// ═══════════════════════════════════════════════════════════════════
 
-async function loadProducts() {
-  const res = await fetch(`${API_BASE}/products`)
-  const products = await res.json()
+// ─── CONFIG ────────────────────────────────────────────────────────
+const API_BASE        = '/api/catalog'           // Base de las APIs
+const PRODUCTS_API    = `${API_BASE}/products`  // GET  → route(1).ts
+const ORDERS_API      = `${API_BASE}/orders`    // POST → route.ts
+const WA_NUMBER       = '593969937265'          // WhatsApp Artia
+
+// ─── SUPABASE (opcional — solo si necesitas realtime) ──────────────
+// Si tu proyecto usa Supabase directamente, descomenta y configura:
+// const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co'
+// const SUPABASE_KEY = 'TU-ANON-KEY'
+// const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 // ─── STATE ─────────────────────────────────────────────────────────
 let allProducts  = []      // {product + variants[]}
@@ -437,20 +448,107 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ─── LOAD CATEGORIES ───────────────────────────────────────────────
 async function loadCats() {
-  const { data } = await sb.from('catalog_categories').select('*').eq('active', true).order('sort_order')
-  allCats = data || []
-  renderCats()
-  renderFooter()
+  try {
+    const res = await fetch(`${PRODUCTS_API}?limit=1`)  // solo para verificar conexión
+    // Las categorías las cargamos desde la API de productos o desde un endpoint separado
+    // Por ahora, extraemos categorías únicas de los productos una vez cargados
+    // o usamos un endpoint dedicado si existe.
+    // Como el admin usa Supabase directamente, hacemos fetch a la tabla vía REST:
+
+    // Si tienes un endpoint de categorías, úsalo. Si no, extrae de productos.
+    // Fallback: extraer de productos después de loadProducts()
+  } catch (e) {
+    console.warn('Cat API check:', e)
+  }
+}
+
+// ─── LOAD PRODUCTS + VARIANTS ──────────────────────────────────────
+async function loadProducts() {
+  try {
+    // Llamada a la API pública de productos (route(1).ts)
+    const res = await fetch(`${PRODUCTS_API}?limit=100`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const json = await res.json()
+
+    if (!json.ok) throw new Error(json.error || 'Error en API')
+
+    const products = json.products || []
+
+    // Extraer categorías únicas de los productos para los chips
+    const catMap = new Map()
+    products.forEach(p => {
+      if (p.category_slug && !catMap.has(p.category_slug)) {
+        catMap.set(p.category_slug, {
+          slug: p.category_slug,
+          name: p.category_name || p.category_slug,
+          icon: p.category_icon || '🏷️'
+        })
+      }
+    })
+    allCats = Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+
+    // Para cada producto, cargar sus variantes
+    // El API de productos no incluye variantes por diseño (evita payload grande)
+    // Cargamos variantes en batch o por producto según necesidad.
+    // Optimización: cargar todas las variantes de una vez si hay pocas,
+    // o lazy-load al abrir el modal.
+
+    // Por ahora, asumimos que las variantes se cargan lazy en openModal
+    // y los productos vienen con precio base.
+    allProducts = products.map(p => ({
+      ...p,
+      variants: [],           // se carga lazy en openModal
+      displayPrice: p.discount_price || p.price || 0,
+      minPrice: p.discount_price || p.price || 0,
+      maxPrice: p.price || 0,
+      images: Array.isArray(p.images) ? p.images : [],
+      tags: Array.isArray(p.tags) ? p.tags : [],
+    }))
+
+    renderCats()
+    renderFooter()
+    applyFilters()
+
+  } catch (err) {
+    console.error('[Catalog] Error cargando productos:', err)
+    showEmpty('Error de conexión. Intenta recargar la página.')
+  }
+}
+
+// ─── LOAD VARIANTS FOR A PRODUCT (lazy) ────────────────────────────
+async function loadVariants(productId) {
+  try {
+    // Si tienes un endpoint dedicado para variantes, úsalo.
+    // Fallback: como no hay endpoint específico en los archivos subidos,
+    // intentamos obtener el producto con sus variantes vía query param.
+    // 
+    // Si tu backend tiene un endpoint como /api/catalog/variants?product_id=xxx,
+    // reemplaza esto:
+
+    // Por ahora, retornamos array vacío y el modal mostrará precio base
+    // hasta que implementes el endpoint de variantes.
+    // 
+    // RECOMENDACIÓN: Agrega en route(1).ts un handler para ?slug=xxx que
+    // haga JOIN con product_variants y retorne el producto completo.
+
+    return []
+  } catch (e) {
+    console.warn('No se pudieron cargar variantes:', e)
+    return []
+  }
 }
 
 function renderCats() {
   document.getElementById('catsLoading')?.remove()
   const wrap = document.getElementById('catChips')
+  // Limpiar chips existentes excepto "Todos"
+  wrap.querySelectorAll('.chip:not([data-cat="all"])').forEach(el => el.remove())
+
   allCats.forEach(c => {
     const btn = document.createElement('button')
     btn.className = 'chip' + (activeCat === c.slug ? ' on' : '')
     btn.dataset.cat = c.slug
-    btn.innerHTML = `<span>${c.icon}</span> ${c.name}`
+    btn.innerHTML = `<span>${c.icon}</span> ${esc(c.name)}`
     btn.onclick = () => pickCat(c.slug)
     wrap.appendChild(btn)
   })
@@ -459,6 +557,11 @@ function renderCats() {
 function renderFooter() {
   const el = document.getElementById('footerLinks')
   if (!el) return
+  // Limpiar enlaces previos (excepto el título)
+  const title = el.querySelector('h4')
+  el.innerHTML = ''
+  if (title) el.appendChild(title)
+
   allCats.slice(0, 7).forEach(c => {
     const a = document.createElement('a')
     a.href = `?cat=${c.slug}`
@@ -470,66 +573,6 @@ function renderFooter() {
   })
 }
 
-// ─── LOAD PRODUCTS + VARIANTS ──────────────────────────────────────
-// Single query: products with their variants joined
-async function loadProducts() {
-  const { data: products, error } = await sb
-    .from('catalog_products_view')
-    .select(`
-      id, name, slug, category_id, category_name, category_slug, category_icon,
-      subcategory, description, short_description, price, discount_price,
-      stock_status, cover_image, images, tags, custom_label, label_color,
-      featured, whatsapp_message, active, visible_on_website, sort_order
-    `)
-    .eq('active', true)
-    .eq('visible_on_website', true)
-    .order('featured', { ascending: false })
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
-
-  if (error) { console.error(error); showEmpty('Error cargando productos.'); return }
-
-  // Load all variants for these products in one query
-  const productIds = (products || []).map(p => p.id)
-  let variantMap = {}
-
-  if (productIds.length) {
-    const { data: variants } = await sb
-      .from('product_variants')
-      .select('id, product_id, variant_name, quantity, attributes, cost_price, shipping_cost, final_cost, market_price, profit_margin, is_default, stock_status, sort_order')
-      .in('product_id', productIds)
-      .eq('active', true)
-      .order('sort_order', { ascending: true })
-
-    ;(variants || []).forEach(v => {
-      if (!variantMap[v.product_id]) variantMap[v.product_id] = []
-      variantMap[v.product_id].push(v)
-    })
-  }
-
-  // Merge
-  allProducts = (products || []).map(p => ({
-    ...p,
-    variants: variantMap[p.id] || [],
-    // Derive display price from default variant or product price
-    displayPrice: (() => {
-      const variants = variantMap[p.id] || []
-      const def = variants.find(v => v.is_default) || variants[0]
-      return def ? def.market_price : (p.discount_price || p.price)
-    })(),
-    minPrice: (() => {
-      const variants = variantMap[p.id] || []
-      return variants.length ? Math.min(...variants.map(v => v.market_price)) : (p.discount_price || p.price)
-    })(),
-    maxPrice: (() => {
-      const variants = variantMap[p.id] || []
-      return variants.length ? Math.max(...variants.map(v => v.market_price)) : (p.price)
-    })(),
-  }))
-
-  applyFilters()
-}
-
 // ─── FILTER + SORT ─────────────────────────────────────────────────
 function applyFilters() {
   let res = [...allProducts]
@@ -539,7 +582,7 @@ function applyFilters() {
   if (searchQ) {
     const q = searchQ.toLowerCase()
     res = res.filter(p =>
-      p.name.toLowerCase().includes(q) ||
+      (p.name || '').toLowerCase().includes(q) ||
       (p.short_description || '').toLowerCase().includes(q) ||
       (p.category_name || '').toLowerCase().includes(q) ||
       (p.tags || []).some(t => t.toLowerCase().includes(q))
@@ -568,8 +611,8 @@ function renderGrid() {
 }
 
 function cardHTML(p) {
-  const hasVariants = p.variants.length > 0
-  const isSingle    = p.variants.length === 1
+  const hasVariants = p.variants && p.variants.length > 0
+  const isSingle    = p.variants && p.variants.length === 1
   const priceLabel  = hasVariants
     ? (isSingle
         ? `$${p.minPrice.toFixed(2)}`
@@ -577,14 +620,14 @@ function cardHTML(p) {
     : `$${p.displayPrice.toFixed(2)}`
 
   // Show first 3 variants as tier pills on the card
-  const tierPills = p.variants.slice(0,3).map(v =>
-    `<span class="tier-pill" title="${esc(v.variant_name)}">
-      ${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity} uds · $${v.market_price.toFixed(2)}
+  const tierPills = (p.variants || []).slice(0,3).map(v =>
+    `<span class="tier-pill" title="${esc(v.variant_name || '')}">
+      ${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity || 0} uds · $${(v.market_price || 0).toFixed(2)}
     </span>`
-  ).join('') + (p.variants.length > 3 ? `<span class="tier-pill">+${p.variants.length-3} más</span>` : '')
+  ).join('') + ((p.variants || []).length > 3 ? `<span class="tier-pill">+${p.variants.length-3} más</span>` : '')
 
   // Unique attributes preview (e.g. acabados available)
-  const acabados = [...new Set(p.variants.map(v => v.attributes?.acabado).filter(Boolean))]
+  const acabados = [...new Set((p.variants || []).map(v => v.attributes?.acabado).filter(Boolean))]
 
   return `
   <div class="pcard" onclick="openModal('${p.id}')">
@@ -592,7 +635,7 @@ function cardHTML(p) {
       ${p.cover_image
         ? `<img src="${esc(p.cover_image)}" alt="${esc(p.name)}" loading="lazy">`
         : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#e2e8f0"><span class="material-symbols-outlined" style="font-size:44px">image</span></div>`}
-      ${p.custom_label ? `<span class="badge badge-custom" style="background:${p.label_color};position:absolute;top:11px;left:11px">${esc(p.custom_label)}</span>` : ''}
+      ${p.custom_label ? `<span class="badge badge-custom" style="background:${esc(p.label_color)};position:absolute;top:11px;left:11px">${esc(p.custom_label)}</span>` : ''}
       ${p.featured && !p.custom_label ? `<span class="badge badge-navy" style="position:absolute;top:11px;left:11px">⭐ Destacado</span>` : ''}
     </div>
     <div class="pcard-body">
@@ -634,12 +677,22 @@ function showEmpty(msg='') {
 }
 
 // ─── PRODUCT MODAL WITH VARIANT SELECTOR ──────────────────────────
-function openModal(productId) {
+async function openModal(productId) {
   openProduct = allProducts.find(p => p.id === productId)
   if (!openProduct) return
 
+  // Cargar variantes lazy si no las tenemos
+  if (!openProduct.variants || openProduct.variants.length === 0) {
+    const vars = await loadVariants(productId)
+    if (vars.length) {
+      openProduct.variants = vars
+      openProduct.minPrice = Math.min(...vars.map(v => v.market_price || 0))
+      openProduct.maxPrice = Math.max(...vars.map(v => v.market_price || 0))
+    }
+  }
+
   // Default to first variant or default
-  selectedVar = openProduct.variants.find(v => v.is_default) || openProduct.variants[0] || null
+  selectedVar = (openProduct.variants || []).find(v => v.is_default) || (openProduct.variants || [])[0] || null
 
   renderModalBody()
 
@@ -651,13 +704,12 @@ function renderModalBody() {
   const p = openProduct
   if (!p) return
 
-  const hasVariants = p.variants.length > 0
+  const hasVariants = p.variants && p.variants.length > 0
   const galleryImgs = [p.cover_image, ...(p.images||[])].filter(Boolean)
 
   // Group variants by a primary dimension to help organize the picker
-  // Detect if variants differ mainly by quantity OR by acabado
-  const uniqueQtys     = [...new Set(p.variants.map(v => v.quantity))]
-  const uniqueAcabados = [...new Set(p.variants.map(v => v.attributes?.acabado).filter(Boolean))]
+  const uniqueQtys     = [...new Set((p.variants || []).map(v => v.quantity).filter(Boolean))]
+  const uniqueAcabados = [...new Set((p.variants || []).map(v => v.attributes?.acabado).filter(Boolean))]
   const hasAcabados    = uniqueAcabados.length > 1
   const hasMultiQty    = uniqueQtys.length > 1
 
@@ -667,7 +719,7 @@ function renderModalBody() {
     <!-- Image gallery -->
     <div class="gallery-main">
       <img id="galleryMain" src="${esc(galleryImgs[0]||'')}" alt="${esc(p.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background='#f1f5f9';this.style.display='none'">
-      ${p.custom_label ? `<span class="badge badge-custom" style="background:${p.label_color};position:absolute;top:14px;left:14px">${esc(p.custom_label)}</span>` : ''}
+      ${p.custom_label ? `<span class="badge badge-custom" style="background:${esc(p.label_color)};position:absolute;top:14px;left:14px">${esc(p.custom_label)}</span>` : ''}
     </div>
     ${galleryImgs.length > 1 ? `<div class="thumb-row">${galleryImgs.map((u,i) => `<img src="${esc(u)}" class="thumb ${i===0?'on':''}" onclick="switchImg('${esc(u)}',this)">`).join('')}</div>` : ''}
 
@@ -689,13 +741,13 @@ function renderModalBody() {
         <div class="price-box" style="margin-bottom:20px">
           <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;font-family:'Manrope',sans-serif">Precio seleccionado</p>
           <div class="price-main" id="priceDisplay">
-            ${selectedVar ? `$${selectedVar.market_price.toFixed(2)}` : '—'}
+            ${selectedVar ? `$${(selectedVar.market_price || 0).toFixed(2)}` : '—'}
           </div>
           <p class="price-per-unit" id="pricePerUnit">
-            ${selectedVar ? `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${(selectedVar.market_price/selectedVar.quantity).toFixed(4)} c/u` : ''}
+            ${selectedVar ? `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${((selectedVar.market_price || 0)/(selectedVar.quantity || 1)).toFixed(4)} c/u` : ''}
           </p>
-          ${p.variants.length > 1 ? `<p style="font-size:11px;color:#2552ca;font-weight:600;margin-top:6px">
-            Rango: $${p.minPrice.toFixed(2)} – $${p.maxPrice.toFixed(2)}
+          ${(p.variants || []).length > 1 ? `<p style="font-size:11px;color:#2552ca;font-weight:600;margin-top:6px">
+            Rango: $${(p.minPrice || 0).toFixed(2)} – $${(p.maxPrice || 0).toFixed(2)}
           </p>` : ''}
         </div>` : ''}
 
@@ -706,7 +758,7 @@ function renderModalBody() {
             ${hasAcabados && hasMultiQty ? 'Selecciona cantidad y acabado' : hasAcabados ? 'Selecciona acabado' : 'Selecciona cantidad'}
           </p>
           <div class="variant-grid" id="variantGrid">
-            ${p.variants.map((v,i) => variantBtnHTML(v, selectedVar?.id === v.id)).join('')}
+            ${(p.variants || []).map((v,i) => variantBtnHTML(v, selectedVar?.id === v.id)).join('')}
           </div>
         </div>` : ''}
       </div>
@@ -716,7 +768,7 @@ function renderModalBody() {
         ${!hasVariants ? `
         <div class="price-box" style="margin-bottom:16px">
           <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;font-family:'Manrope',sans-serif">Precio</p>
-          <div class="price-main">$${(p.discount_price||p.price).toFixed(2)}</div>
+          <div class="price-main">$${((p.discount_price || p.price || 0)).toFixed(2)}</div>
         </div>` : ''}
 
         <!-- Customer data (optional) -->
@@ -747,7 +799,7 @@ function renderModalBody() {
         ${selectedVar ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-top:12px">
           <p style="font-size:11px;color:#166534;font-weight:600;display:flex;align-items:center;gap:6px">
             <span class="material-symbols-outlined" style="font-size:15px;font-variation-settings:'FILL' 1">local_shipping</span>
-            ${selectedVar.shipping_cost > 0 ? `Envío incluido: $${selectedVar.shipping_cost.toFixed(2)}` : 'Sin costo de envío adicional'}
+            ${(selectedVar.shipping_cost || 0) > 0 ? `Envío incluido: $${(selectedVar.shipping_cost || 0).toFixed(2)}` : 'Sin costo de envío adicional'}
           </p>
         </div>` : ''}
       </div>
@@ -765,14 +817,14 @@ function variantBtnHTML(v, selected) {
 
   return `<button class="variant-btn ${selected?'selected':''}" onclick="pickVariant('${v.id}')">
     <span class="vb-qty">${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity} unidades</span>
-    <span class="vb-price">$${v.market_price.toFixed(2)}</span>
+    <span class="vb-price">$${(v.market_price || 0).toFixed(2)}</span>
     ${attrStr ? `<span class="vb-attrs">${esc(attrStr)}</span>` : ''}
   </button>`
 }
 
 function pickVariant(variantId) {
   if (!openProduct) return
-  selectedVar = openProduct.variants.find(v => v.id === variantId) || null
+  selectedVar = (openProduct.variants || []).find(v => v.id === variantId) || null
 
   // Update variant buttons
   document.querySelectorAll('.variant-btn').forEach(btn => {
@@ -783,14 +835,14 @@ function pickVariant(variantId) {
   const priceEl = document.getElementById('priceDisplay')
   const perEl   = document.getElementById('pricePerUnit')
   if (priceEl && selectedVar) {
-    priceEl.textContent = `$${selectedVar.market_price.toFixed(2)}`
+    priceEl.textContent = `$${(selectedVar.market_price || 0).toFixed(2)}`
     priceEl.classList.remove('flash')
     void priceEl.offsetWidth // trigger reflow
     priceEl.classList.add('flash')
     setTimeout(() => priceEl.classList.remove('flash'), 600)
   }
   if (perEl && selectedVar) {
-    perEl.textContent = `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${(selectedVar.market_price/selectedVar.quantity).toFixed(4)} c/u`
+    perEl.textContent = `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${((selectedVar.market_price || 0)/(selectedVar.quantity || 1)).toFixed(4)} c/u`
   }
 
   // Enable buy button
@@ -799,10 +851,6 @@ function pickVariant(variantId) {
     buyBtn.disabled = false
     buyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">chat</span> Pedir por WhatsApp`
   }
-
-  // Update shipping note
-  const shippingNote = document.querySelector('[data-shipping]')
-  // Re-render panel area with new variant — simpler: just re-render modal
 }
 
 // ─── PURCHASE FLOW ─────────────────────────────────────────────────
@@ -816,9 +864,9 @@ async function doPurchase() {
   const notes = document.getElementById('buyNotes')?.value.trim() || ''
 
   const variant = selectedVar
-  const price   = variant ? variant.market_price : (p.discount_price || p.price)
-  const qty     = variant ? variant.quantity : 1
-  const varName = variant ? variant.variant_name : ''
+  const price   = variant ? (variant.market_price || 0) : (p.discount_price || p.price || 0)
+  const qty     = variant ? (variant.quantity || 1) : 1
+  const varName = variant ? (variant.variant_name || '') : ''
 
   const btn = document.getElementById('buyBtn')
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="animation:spin .7s linear infinite;display:inline-block;font-size:16px">⏳</span> Registrando...' }
@@ -865,20 +913,35 @@ function buildWAMsg({ p, variant, price, qty, varName, name, phone, orderNum, no
   const attrLines = Object.entries(attrs)
     .filter(([k,v]) => v && k !== '__typename')
     .map(([k,v]) => `  • ${k.charAt(0).toUpperCase()+k.slice(1)}: ${v}`)
-    .join('\n')
+    .join('
+')
 
-  return `*PEDIDO ARTIA STUDIO* 🛍️\n` +
-    `${orderNum ? `📋 N° Pedido: *${orderNum}*\n` : ''}` +
-    `\n*Producto:*\n` +
-    `▸ ${p.name}\n` +
-    `▸ Opción: *${varName || 'Estándar'}*\n` +
-    `▸ Cantidad: *${qty >= 1000 ? (qty/1000)+'K' : qty} unidades*\n` +
-    `${attrLines ? attrLines + '\n' : ''}` +
-    `▸ Precio: *$${price.toFixed(2)} USD*\n` +
-    `${name  ? `\n👤 Cliente: ${name}`  : ''}` +
-    `${phone ? `\n📞 Teléfono: ${phone}` : ''}` +
-    `${notes ? `\n📝 Notas: ${notes}` : ''}` +
-    `\n\nHola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
+  return `*PEDIDO ARTIA STUDIO* 🛍️
+` +
+    `${orderNum ? `📋 N° Pedido: *${orderNum}*
+` : ''}` +
+    `
+*Producto:*
+` +
+    `▸ ${p.name}
+` +
+    `▸ Opción: *${varName || 'Estándar'}*
+` +
+    `▸ Cantidad: *${qty >= 1000 ? (qty/1000)+'K' : qty} unidades*
+` +
+    `${attrLines ? attrLines + '
+' : ''}` +
+    `▸ Precio: *$${price.toFixed(2)} USD*
+` +
+    `${name  ? `
+👤 Cliente: ${name}`  : ''}` +
+    `${phone ? `
+📞 Teléfono: ${phone}` : ''}` +
+    `${notes ? `
+📝 Notas: ${notes}` : ''}` +
+    `
+
+Hola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
 }
 
 function closeModal() {
