@@ -27,7 +27,7 @@ import {
   UserCircle,
   Sun,
   Moon,
-   Brain,  
+   Brain, Package, Box, Layers,Archive,
 } from 'lucide-react'
 
 // ─── NAV STRUCTURE ───────────────────────────────────────────────
@@ -72,6 +72,16 @@ const NAV_ITEMS: NavGroup[] = [
     href: '/admin/finanzas',
     label: 'Sistema Contable',
     icon: <DollarSign size={18} />,
+  },
+  {
+    label: 'Catálogo',
+    icon: <Package size={18} />,
+    children: [
+    { href: '/admin/catalogo',            label: 'Productos',    icon: <Box size={15} />  },
+    { href: '/admin/catalogo/categorias', label: 'Categorías',  icon: <Layers size={15} /> },
+    { href: '/admin/catalogo/pedidos',    label: 'Pedidos',    icon: <ShoppingCart size={15} />  },
+    { href: '/admin/catalogo/inventario', label: 'Inventario', icon: <Archive size={15} />  },
+  ],
   },
   {
     href: '/admin/proyectos',
@@ -224,6 +234,7 @@ export default function AdminNav({ email }: { email: string }) {
   const [clientesOpen,  setClientesOpen]  = useState(() => pathname.startsWith('/admin/leads') || pathname.startsWith('/admin/pipeline'))
   // ↓ Reportes abre si estamos en cualquier sub-ruta
   const [reportesOpen,  setReportesOpen]  = useState(() => pathname.startsWith('/admin/reportes'))
+  const [catalogoOpen, setCatalogoOpen] = useState(() => pathname.startsWith('/admin/catalogo'))
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dark, setDark] = useState(false)
   const [mounted, setMounted] = useState(false)
