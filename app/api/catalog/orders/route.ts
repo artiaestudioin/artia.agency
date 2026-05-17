@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
     if (orderErr) throw orderErr
 
     // ── 7. Inventory movements (for tracked products only) ────────
-    const stockUpdates: Promise<any>[] = []
+    const stockUpdates: PromiseLike<any>[] = []
     const movements: any[] = []
 
     for (const item of enriched) {
