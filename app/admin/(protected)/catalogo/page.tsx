@@ -1,5 +1,5 @@
 'use client'
-// app/admin/catalogo/page.tsx — v2 con gestión completa de variantes
+// app/admin/catalogo/page.tsx — v3 FUSIONADO con ProductFormHelpers
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -14,26 +14,16 @@ import {
   fmtMoney, fmtDate, EmptyState
 } from '@/components/DesignSystem'
 
+// ─── IMPORTS DEL HELPER FUSIONADO ───────────────────────────────
+import {
+  ProductVariant,
+  VariantsSection,
+  createEmptyVariant,
+  duplicateProduct as duplicateProductHelper,
+} from '@/components/catalog/ProductFormHelpers'
+
 // ─── TYPES ────────────────────────────────────────────────────────
 interface Category { id: string; name: string; slug: string; icon: string }
-
-interface Variant {
-  id?: string
-  product_id?: string
-  variant_name: string
-  sku: string | null
-  quantity: number
-  attributes: Record<string, string>
-  cost_price: number
-  shipping_cost: number
-  final_cost: number
-  market_price: number
-  profit_margin: number
-  is_default: boolean
-  stock_status: string
-  active: boolean
-  sort_order: number
-}
 
 interface Product {
   id: string
@@ -48,8 +38,7 @@ interface Product {
   active: boolean; featured: boolean; visible_on_website: boolean
   total_orders: number; total_revenue: number
   created_at: string
-  // joined
-  variants: Variant[]
+  variants: ProductVariant[]
   min_price: number; max_price: number
 }
 
@@ -76,21 +65,14 @@ const STOCK_STATUS: Record<string, { label: string; bg: string; color: string; d
   unlimited:    { label: 'Ilimitado',  bg: '#dbeafe', color: '#1e40af', dot: '#3b82f6' },
 }
 
-const EMPTY_VARIANT = (): Variant => ({
-  variant_name: '', sku: null, quantity: 100,
-  attributes: {}, cost_price: 0, shipping_cost: 6,
-  final_cost: 6, market_price: 0, profit_margin: -6,
-  is_default: false, stock_status: 'unlimited', active: true, sort_order: 0,
-})
-
-const EMPTY_PRODUCT: Partial<Product & { variants: Variant[] }> = {
+const EMPTY_PRODUCT: Partial<Product & { variants: ProductVariant[] }> = {
   name: '', slug: '', sku: '', category_id: null,
   description: '', short_description: '', price: 0,
   stock_qty: 0, stock_status: 'unlimited', track_stock: false,
   cover_image: '', images: [], tags: [],
   custom_label: '', label_color: '#2552ca', whatsapp_message: '',
   active: true, featured: false, visible_on_website: true,
-  variants: [EMPTY_VARIANT()],
+  variants: [createEmptyVariant()],
 }
 
 function slugify(s: string) {
@@ -124,246 +106,6 @@ function Label({ children }: { children: React.ReactNode }) {
   </label>
 }
 
-// ─── VARIANT ROW (inside product form) ───────────────────────────
-function VariantRow({
-  variant, index, onChange, onRemove, onSetDefault, isOnly
-}: {
-  variant: Variant; index: number
-  onChange: (i: number, v: Variant) => void
-  onRemove: (i: number) => void
-  onSetDefault: (i: number) => void
-  isOnly: boolean
-}) {
-  const [open, setOpen] = useState(index === 0)
-
-  function upd(field: keyof Variant, val: any) {
-    const updated = { ...variant, [field]: val }
-    // Auto-recalculate
-    if (field === 'cost_price' || field === 'shipping_cost') {
-      updated.final_cost    = (Number(updated.cost_price) || 0) + (Number(updated.shipping_cost) || 0)
-      updated.profit_margin = (Number(updated.market_price) || 0) - updated.final_cost
-    }
-    if (field === 'market_price') {
-      updated.profit_margin = (Number(val) || 0) - (Number(updated.final_cost) || 0)
-    }
-    onChange(index, updated)
-  }
-
-  function updAttr(key: string, val: string) {
-    onChange(index, { ...variant, attributes: { ...variant.attributes, [key]: val } })
-  }
-
-  function removeAttr(key: string) {
-    const attrs = { ...variant.attributes }
-    delete attrs[key]
-    onChange(index, { ...variant, attributes: attrs })
-  }
-
-  const margin       = variant.profit_margin || 0
-  const marginColor  = margin > 0 ? '#16a34a' : margin < 0 ? '#dc2626' : '#64748b'
-  const marginPct    = variant.market_price > 0
-    ? ((margin / variant.market_price) * 100).toFixed(1) + '%'
-    : '—'
-
-  return (
-    <div style={{
-      border: `2px solid ${variant.is_default ? '#2552ca' : '#e2e8f0'}`,
-      borderRadius: 12, overflow: 'hidden',
-      background: variant.is_default ? '#f0f4ff' : '#fafafa',
-      marginBottom: 8,
-    }}>
-      {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px',
-        cursor:'pointer', userSelect:'none' }}
-        onClick={() => setOpen(o => !o)}>
-        {/* Drag handle placeholder */}
-        <span style={{ color:'#cbd5e1', fontSize:16, cursor:'grab' }}>⠿</span>
-
-        <div style={{ flex:1 }}>
-          <span style={{ fontFamily:'Manrope, sans-serif', fontSize:13, fontWeight:700, color:'#0f172a' }}>
-            {variant.variant_name || `Variante ${index + 1}`}
-          </span>
-          {!open && (
-            <span style={{ marginLeft:10, fontSize:12, color:'#64748b' }}>
-              {variant.quantity} uds · <strong>${variant.market_price.toFixed(2)}</strong>
-              {margin > 0 && <span style={{ color:marginColor, marginLeft:6, fontWeight:700 }}>
-                +${margin.toFixed(2)} ({marginPct})
-              </span>}
-            </span>
-          )}
-        </div>
-
-        {variant.is_default && (
-          <span style={{ fontSize:10, fontWeight:800, background:'#2552ca', color:'#fff',
-            padding:'2px 8px', borderRadius:6, letterSpacing:'.1em' }}>DEFAULT</span>
-        )}
-
-        <button onClick={e => { e.stopPropagation(); onSetDefault(index) }}
-          title="Marcar como predeterminada"
-          style={{ background:'none', border:'none', cursor:'pointer', padding:4,
-            color: variant.is_default ? '#f59e0b' : '#d1d5db', fontSize:16 }}>
-          ★
-        </button>
-
-        {!isOnly && (
-          <button onClick={e => { e.stopPropagation(); onRemove(index) }}
-            style={{ background:'#fef2f2', border:'none', borderRadius:6, padding:'4px 7px',
-              cursor:'pointer', color:'#dc2626', display:'flex', alignItems:'center' }}>
-            <X size={13} />
-          </button>
-        )}
-
-        {open ? <ChevronUp size={15} color="#94a3b8" /> : <ChevronDown size={15} color="#94a3b8" />}
-      </div>
-
-      {/* Body */}
-      {open && (
-        <div style={{ padding:'0 14px 14px', borderTop:'1px solid #e2e8f0' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, paddingTop:12 }}>
-
-            {/* Variant name */}
-            <div style={{ gridColumn:'span 2' }}>
-              <Label>Nombre de la variante</Label>
-              <input value={variant.variant_name} onChange={e => upd('variant_name', e.target.value)}
-                placeholder="Ej: 1000 unidades - Acabado UV" style={inp} />
-            </div>
-
-            {/* Quantity */}
-            <div>
-              <Label>Cantidad (unidades)</Label>
-              <input type="number" min="1" value={variant.quantity}
-                onChange={e => upd('quantity', parseInt(e.target.value) || 0)} style={inp} />
-            </div>
-
-            {/* SKU */}
-            <div>
-              <Label>SKU variante</Label>
-              <input value={variant.sku || ''} onChange={e => upd('sku', e.target.value || null)}
-                placeholder="Opcional" style={inp} />
-            </div>
-
-            {/* Cost price */}
-            <div>
-              <Label>Costo de producción ($)</Label>
-              <input type="number" min="0" step="0.01" value={variant.cost_price}
-                onChange={e => upd('cost_price', parseFloat(e.target.value) || 0)} style={inp} />
-            </div>
-
-            {/* Shipping */}
-            <div>
-              <Label>Costo de envío ($)</Label>
-              <input type="number" min="0" step="0.01" value={variant.shipping_cost}
-                onChange={e => upd('shipping_cost', parseFloat(e.target.value) || 0)} style={inp} />
-            </div>
-
-            {/* Final cost (readonly) */}
-            <div>
-              <Label>Costo total (producción + envío)</Label>
-              <div style={{ ...inp, background:'#f1f5f9', color:'#475569', display:'flex', alignItems:'center' }}>
-                ${((variant.cost_price || 0) + (variant.shipping_cost || 0)).toFixed(2)}
-              </div>
-            </div>
-
-            {/* Market price */}
-            <div>
-              <Label>Precio de venta al público ($) *</Label>
-              <input type="number" min="0" step="0.01" value={variant.market_price}
-                onChange={e => upd('market_price', parseFloat(e.target.value) || 0)}
-                style={{ ...inp, borderColor: variant.market_price > 0 ? '#e2e8f0' : '#fca5a5' }} />
-            </div>
-
-            {/* Margin display */}
-            <div style={{ gridColumn:'span 2' }}>
-              <div style={{
-                padding:'10px 14px', borderRadius:10,
-                background: margin > 0 ? '#f0fdf4' : margin < 0 ? '#fef2f2' : '#f8fafc',
-                border: `1px solid ${margin > 0 ? '#bbf7d0' : margin < 0 ? '#fecaca' : '#e2e8f0'}`,
-                display:'flex', justifyContent:'space-between', alignItems:'center',
-              }}>
-                <span style={{ fontSize:12, color:'#64748b' }}>Margen de ganancia</span>
-                <span style={{ fontFamily:'Manrope, sans-serif', fontSize:16, fontWeight:800, color:marginColor }}>
-                  ${margin.toFixed(2)} ({marginPct})
-                </span>
-              </div>
-            </div>
-
-            {/* Stock status */}
-            <div>
-              <Label>Estado stock</Label>
-              <select value={variant.stock_status}
-                onChange={e => upd('stock_status', e.target.value)} style={inp}>
-                <option value="unlimited">Ilimitado</option>
-                <option value="in_stock">En stock</option>
-                <option value="low_stock">Stock bajo</option>
-                <option value="out_of_stock">Sin stock</option>
-              </select>
-            </div>
-
-            {/* Sort order */}
-            <div>
-              <Label>Orden (menor = primero)</Label>
-              <input type="number" value={variant.sort_order}
-                onChange={e => upd('sort_order', parseInt(e.target.value) || 0)} style={inp} />
-            </div>
-
-          </div>
-
-          {/* Attributes (acabado, material, tamaño, etc) */}
-          <div style={{ marginTop:12 }}>
-            <Label>Atributos (acabado, material, color, etc.)</Label>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:8 }}>
-              {Object.entries(variant.attributes).map(([k, v]) => (
-                <div key={k} style={{ display:'flex', alignItems:'center', gap:4,
-                  background:'#ede9fe', borderRadius:7, padding:'4px 10px', fontSize:12 }}>
-                  <span style={{ color:'#7c3aed', fontWeight:600 }}>{k}:</span>
-                  <input value={v} onChange={e => updAttr(k, e.target.value)}
-                    style={{ border:'none', background:'transparent', outline:'none', fontSize:12,
-                      color:'#4c1d95', fontWeight:600, width: `${Math.max(40, v.length * 8)}px` }} />
-                  <button onClick={() => removeAttr(k)}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'#7c3aed', lineHeight:1, padding:0, fontSize:14 }}>×</button>
-                </div>
-              ))}
-            </div>
-            <AttrAdder onAdd={(k, v) => updAttr(k, v)} />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── ATTR ADDER ──────────────────────────────────────────────────
-function AttrAdder({ onAdd }: { onAdd: (key: string, val: string) => void }) {
-  const [key, setKey] = useState('')
-  const [val, setVal] = useState('')
-  const presets = ['acabado', 'material', 'color', 'tamaño', 'lados', 'extras']
-
-  return (
-    <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
-      <select value={key} onChange={e => setKey(e.target.value)}
-        style={{ ...inp, width:'auto', marginBottom:0, fontSize:12 }}>
-        <option value="">+ Atributo</option>
-        {presets.map(p => <option key={p} value={p}>{p}</option>)}
-        <option value="__custom__">Personalizado...</option>
-      </select>
-      {key === '__custom__' && (
-        <input value={key === '__custom__' ? '' : key}
-          onChange={e => setKey(e.target.value)}
-          placeholder="nombre atributo" style={{ ...inp, width:120, marginBottom:0, fontSize:12 }} />
-      )}
-      <input value={val} onChange={e => setVal(e.target.value)}
-        placeholder="valor" style={{ ...inp, width:120, marginBottom:0, fontSize:12 }} />
-      <button onClick={() => {
-        const k = key === '__custom__' ? '' : key
-        if (k && val) { onAdd(k, val); setKey(''); setVal('') }
-      }} style={{
-        padding:'8px 14px', border:'none', borderRadius:8,
-        background:'#7c3aed', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700,
-      }}>+ Agregar</button>
-    </div>
-  )
-}
-
 // ─── MAIN PAGE ────────────────────────────────────────────────────
 export default function CatalogoPage() {
   const supabase = createClient()
@@ -383,8 +125,8 @@ export default function CatalogoPage() {
   const PER_PAGE = 12
 
   const [modal,          setModal]          = useState<'create'|'edit'|'delete'|'restock'|null>(null)
-  const [editProduct,    setEditProduct]    = useState<Partial<Product & { variants: Variant[] }>>(EMPTY_PRODUCT)
-  const [editVariants,   setEditVariants]   = useState<Variant[]>([EMPTY_VARIANT()])
+  const [editProduct,    setEditProduct]    = useState<Partial<Product & { variants: ProductVariant[] }>>(EMPTY_PRODUCT)
+  const [editVariants,   setEditVariants]   = useState<ProductVariant[]>([createEmptyVariant()])
   const [deletingId,     setDeletingId]     = useState<string|null>(null)
   const [tagInput,       setTagInput]       = useState('')
   const [imageInput,     setImageInput]     = useState('')
@@ -406,18 +148,21 @@ export default function CatalogoPage() {
         supabase.from('product_variants').select('*').eq('active', true).order('sort_order'),
       ])
 
-      // Merge variants into products
-      const varMap: Record<string, Variant[]> = {}
-      ;(vars || []).forEach(v => {
+      const varMap: Record<string, ProductVariant[]> = {}
+      ;(vars || []).forEach((v: any) => {
+        const enriched: ProductVariant = {
+          ...v,
+          _localId: v._localId || `db_${v.id}_${Math.random().toString(36).slice(2, 7)}`,
+        }
         if (!varMap[v.product_id]) varMap[v.product_id] = []
-        varMap[v.product_id].push(v)
+        varMap[v.product_id].push(enriched)
       })
 
       const merged = (prods || []).map(p => ({
         ...p,
         variants: varMap[p.id] || [],
-        min_price: varMap[p.id]?.length ? Math.min(...varMap[p.id].map(v => v.market_price)) : p.price,
-        max_price: varMap[p.id]?.length ? Math.max(...varMap[p.id].map(v => v.market_price)) : p.price,
+        min_price: varMap[p.id]?.length ? Math.min(...varMap[p.id].map((v: ProductVariant) => v.market_price)) : p.price,
+        max_price: varMap[p.id]?.length ? Math.max(...varMap[p.id].map((v: ProductVariant) => v.market_price)) : p.price,
       }))
 
       setProducts(merged)
@@ -456,7 +201,6 @@ export default function CatalogoPage() {
 
     setSaving(true)
     try {
-      // Derive base price from default variant
       const defVar = editVariants.find(v => v.is_default) || editVariants[0]
       const basePrice = defVar?.market_price || 0
 
@@ -494,11 +238,9 @@ export default function CatalogoPage() {
         productId = editProduct.id!
         const { error } = await supabase.from('catalog_products').update(productPayload).eq('id', productId)
         if (error) throw error
-        // Delete existing variants before reinserting
         await supabase.from('product_variants').delete().eq('product_id', productId)
       }
 
-      // Insert variants
       const variantPayload = editVariants.map((v, i) => ({
         product_id:    productId,
         variant_name:  v.variant_name,
@@ -520,7 +262,7 @@ export default function CatalogoPage() {
       showToast(modal === 'create' ? 'Producto creado ✓' : 'Producto actualizado ✓')
       setModal(null)
       setEditProduct(EMPTY_PRODUCT)
-      setEditVariants([EMPTY_VARIANT()])
+      setEditVariants([createEmptyVariant()])
       fetchAll()
     } catch (e: any) {
       showToast(e.message || 'Error guardando', false)
@@ -543,40 +285,15 @@ export default function CatalogoPage() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: !val } : p))
   }
 
-  async function duplicateProduct(p: Product) {
-    const { id, created_at, updated_at, total_orders, total_revenue, variants, min_price, max_price, ...rest } = p as any
-    const { data: newProd, error } = await supabase.from('catalog_products')
-      .insert({ ...rest, name: rest.name + ' (copia)', slug: rest.slug + '-copia-' + Date.now().toString(36), active: false })
-      .select('id').single()
-    if (!error && newProd && variants?.length) {
-      await supabase.from('product_variants').insert(
-        variants.map((v: Variant) => ({ ...v, id: undefined, product_id: newProd.id }))
-      )
-    }
-    if (!error) { showToast('Duplicado ✓'); fetchAll() }
-    else showToast('Error duplicando', false)
+  async function duplicateProductHandler(p: Product) {
+    const result = await duplicateProductHelper(supabase, p.id)
+    if (result.ok) { showToast('Duplicado ✓'); fetchAll() }
+    else showToast(result.error || 'Error duplicando', false)
   }
 
   async function updateOrderStatus(id: string, status: string) {
     await supabase.from('catalog_orders').update({ status }).eq('id', id)
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
-  }
-
-  // ─── VARIANT HANDLERS ──────────────────────────────────────────
-  function addVariant() {
-    setEditVariants(prev => [...prev, { ...EMPTY_VARIANT(), sort_order: prev.length }])
-  }
-
-  function updateVariant(i: number, v: Variant) {
-    setEditVariants(prev => prev.map((item, idx) => idx === i ? v : item))
-  }
-
-  function removeVariant(i: number) {
-    setEditVariants(prev => prev.filter((_, idx) => idx !== i))
-  }
-
-  function setDefaultVariant(i: number) {
-    setEditVariants(prev => prev.map((v, idx) => ({ ...v, is_default: idx === i })))
   }
 
   // ─── STATS ─────────────────────────────────────────────────────
@@ -730,71 +447,13 @@ export default function CatalogoPage() {
             </div>
           </div>
 
-          {/* TAB: VARIANTS */}
+          {/* TAB: VARIANTS — USA EL HELPER FUSIONADO */}
           <div id="mpanel-variants" style={{ display:'none', padding:'22px 26px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-              <div>
-                <h3 style={{ fontSize:14, fontWeight:800, margin:0, color:'#0f172a' }}>
-                  Variantes de precio ({editVariants.length})
-                </h3>
-                <p style={{ fontSize:12, color:'#64748b', margin:'3px 0 0' }}>
-                  Cada variante = una combinación de cantidad + acabado + precio. La marcada con ★ es la predeterminada en el catálogo.
-                </p>
-              </div>
-              <button onClick={addVariant} style={{ display:'flex', alignItems:'center', gap:5,
-                padding:'8px 14px', border:'none', borderRadius:9,
-                background:'#7c3aed', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                <Plus size={13} /> Agregar variante
-              </button>
-            </div>
-
-            {editVariants.map((v, i) => (
-              <VariantRow key={i} variant={v} index={i}
-                onChange={updateVariant} onRemove={removeVariant}
-                onSetDefault={setDefaultVariant} isOnly={editVariants.length === 1} />
-            ))}
-
-            {/* Summary table */}
-            {editVariants.length > 1 && (
-              <div style={{ marginTop:16, background:'#f8fafc', borderRadius:12, overflow:'hidden',
-                border:'1px solid #e2e8f0' }}>
-                <div style={{ padding:'10px 16px', background:'#f1f5f9', borderBottom:'1px solid #e2e8f0' }}>
-                  <span style={{ fontSize:11, fontWeight:800, color:'#64748b', textTransform:'uppercase', letterSpacing:'.5px' }}>
-                    Resumen de precios
-                  </span>
-                </div>
-                <table style={{ width:'100%', borderCollapse:'collapse' }}>
-                  <thead>
-                    <tr style={{ background:'#fafafa' }}>
-                      {['Variante','Cantidad','Costo total','Venta al público','Margen'].map(h => (
-                        <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontSize:10,
-                          fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.3px' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {editVariants.map((v, i) => {
-                      const fc  = (v.cost_price||0) + (v.shipping_cost||0)
-                      const mg  = (v.market_price||0) - fc
-                      const pct = v.market_price > 0 ? ((mg/v.market_price)*100).toFixed(1)+'%' : '—'
-                      return (
-                        <tr key={i} style={{ borderBottom:'1px solid #f1f5f9' }}>
-                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:600, color:'#0f172a' }}>
-                            {v.variant_name || `Variante ${i+1}`}
-                            {v.is_default && <span style={{ marginLeft:6, fontSize:9, background:'#2552ca', color:'#fff', padding:'1px 5px', borderRadius:4, fontWeight:800 }}>DEFAULT</span>}
-                          </td>
-                          <td style={{ padding:'8px 12px', fontSize:12 }}>{v.quantity} uds</td>
-                          <td style={{ padding:'8px 12px', fontSize:12, color:'#dc2626' }}>${fc.toFixed(2)}</td>
-                          <td style={{ padding:'8px 12px', fontSize:13, fontWeight:800, color:'#0f172a' }}>${(v.market_price||0).toFixed(2)}</td>
-                          <td style={{ padding:'8px 12px', fontSize:12, fontWeight:700,
-                            color: mg > 0 ? '#16a34a' : '#dc2626' }}>${mg.toFixed(2)} ({pct})</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <VariantsSection
+              variants={editVariants}
+              basePrice={editProduct.price || 0}
+              onChange={setEditVariants}
+            />
           </div>
 
           {/* TAB: MEDIA */}
@@ -933,7 +592,7 @@ export default function CatalogoPage() {
             background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#64748b' }}>
             <RefreshCw size={13}/> Actualizar
           </button>
-          <button onClick={() => { setEditProduct(EMPTY_PRODUCT); setEditVariants([EMPTY_VARIANT()]); setModal('create') }}
+          <button onClick={() => { setEditProduct(EMPTY_PRODUCT); setEditVariants([createEmptyVariant()]); setModal('create') }}
             style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px',
               border:'none', borderRadius:9, background:'linear-gradient(135deg,#7c3aed,#5b21b6)',
               cursor:'pointer', fontSize:13, fontWeight:700, color:'#fff',
@@ -1022,11 +681,11 @@ export default function CatalogoPage() {
                 <ProductCard key={p.id} product={p}
                   onEdit={() => {
                     setEditProduct(p)
-                    setEditVariants(p.variants?.length ? [...p.variants] : [EMPTY_VARIANT()])
+                    setEditVariants(p.variants?.length ? [...p.variants] : [createEmptyVariant()])
                     setModal('edit')
                   }}
                   onDelete={() => { setDeletingId(p.id); setModal('delete') }}
-                  onDuplicate={() => duplicateProduct(p)}
+                  onDuplicate={() => duplicateProductHandler(p)}
                   onToggleActive={() => toggleField(p.id, 'active', p.active)}
                   onToggleFeatured={() => toggleField(p.id, 'featured', p.featured)}
                 />
@@ -1176,8 +835,8 @@ export default function CatalogoPage() {
             {products.slice(0,8).map(p => {
               const vars = p.variants || []
               if (!vars.length) return null
-              const avgMargin = vars.reduce((s,v) => s + (v.profit_margin||0), 0) / vars.length
-              const avgPct    = vars.reduce((s,v) => s + (v.market_price > 0 ? (v.profit_margin/v.market_price)*100 : 0), 0) / vars.length
+              const avgMargin = vars.reduce((s,v) => s + ((v.market_price||0) - ((v.cost_price||0)+(v.shipping_cost||0))), 0) / vars.length
+              const avgPct    = vars.reduce((s,v) => s + (v.market_price > 0 ? (((v.market_price||0) - ((v.cost_price||0)+(v.shipping_cost||0)))/v.market_price)*100 : 0), 0) / vars.length
               return (
                 <div key={p.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, padding:'8px 12px', borderRadius:8, background:'#f8fafc' }}>
                   <span style={{ fontSize:12, fontWeight:600, color:'#0f172a', flex:1 }}>{p.name}</span>

@@ -29,9 +29,37 @@ export interface ProductVariant {
   market_price: number
   shipping_cost: number
   stock_qty: number
-  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock'
+  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock' | 'unlimited'
   active: boolean
   sort_order: number
+  // Additional fields used by page.tsx
+  quantity: number
+  cost_price: number
+  is_default: boolean
+  attributes: Record<string, any>
+  product_id?: string
+}
+
+// ─────────────────────────────────────────────────────────────────
+// createEmptyVariant — factory for new blank variants
+// ─────────────────────────────────────────────────────────────────
+export function createEmptyVariant(): ProductVariant {
+  return {
+    _localId:       `v_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    attribute_type: 'quantity',
+    variant_name:   '',
+    sku:            null,
+    market_price:   0,
+    shipping_cost:  0,
+    stock_qty:      0,
+    stock_status:   'in_stock',
+    active:         true,
+    sort_order:     0,
+    quantity:       0,
+    cost_price:     0,
+    is_default:     true,
+    attributes:     {},
+  }
 }
 
 // Preset options per attribute type
@@ -269,18 +297,13 @@ function generateLocalId() {
 
 export function VariantsSection({ variants, basePrice, onChange }: VariantsSectionProps) {
 
-  function addVariant(type: VariantAttributeType = 'size') {
+  function addVariant(type: VariantAttributeType = 'quantity') {
     const newVariant: ProductVariant = {
-      _localId:       generateLocalId(),
+      ...createEmptyVariant(),
       attribute_type: type,
-      variant_name:   '',
-      sku:            null,
       market_price:   basePrice,
-      shipping_cost:  0,
-      stock_qty:      0,
-      stock_status:   'in_stock',
-      active:         true,
       sort_order:     variants.length,
+      is_default:     variants.length === 0,
     }
     onChange([...variants, newVariant])
   }
