@@ -214,7 +214,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 </header>
 
 <!-- ═══ MAIN ═══ -->
-<main class="main-wrap">
+<main class="main-content min-h-screen">
 
 <!-- HERO -->
 <section class="hero">
@@ -243,7 +243,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
     <!-- Trust row -->
     <div class="fade-up fade-3" style="display:flex;flex-wrap:wrap;gap:20px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1)">
       <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
-        <span class="material-symbols-outlined" style="color:#b3c5ff;font-size:17px;font-variation-settings:'FILL' 1">local_shipping</span>Envío incluido en precio*
+        <span class="material-symbols-outlined" style="color:#b3c5ff;font-size:17px;font-variation-settings:'FILL' 1">local_shipping</span>Envío a todo el Ecuador*
       </div>
       <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
         <span class="material-symbols-outlined" style="color:#25D366;font-size:17px;font-variation-settings:'FILL' 1">verified</span>Producción propia
@@ -252,6 +252,27 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
         <span class="material-symbols-outlined" style="color:#f59e0b;font-size:17px;font-variation-settings:'FILL' 1">star</span>+200 clientes en Ecuador
       </div>
     </div>
+    <div class="hero-product-showcase" data-hero-el>
+        <div class="hero-product-frame">
+          <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Producto impreso premium">
+          <div class="hero-product-overlay"></div>
+          <div class="hero-product-caption">
+            <p class="text-white font-headline text-sm font-bold uppercase tracking-widest mb-1">Sublimado Premium</p>
+            <p class="text-white/50 text-xs">Alta fidelidad de color · Duración máxima</p>
+          </div>
+        </div>
+        <div class="absolute -left-16 top-1/3 glass-card p-4 w-[130px]">
+          <span class="material-symbols-outlined text-[#b3c5ff] text-xl block mb-1" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+          <p class="text-white text-xs font-bold font-headline">Acabado Premium</p>
+          <p class="text-white/50 text-[10px] mt-0.5">Producción élite</p>
+        </div>
+        <div class="absolute -right-8 bottom-1/4 glass-card p-3 flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: #25D366;">
+            <span class="material-symbols-outlined text-white text-sm">check</span>
+          </div>
+          <p class="text-white text-[11px] font-bold">Entrega<br>Express</p>
+        </div>
+      </div>
   </div>
 </section>
 
@@ -351,7 +372,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
         <span class="material-symbols-outlined" style="font-size:18px">chat</span> Cotizar por WhatsApp
       </a>
     </div>
-    <p style="color:rgba(255,255,255,.25);font-size:11px;margin-top:20px">*Envío de $6 USD incluido en precios. Roll Up, Araña y Triángulo sin costo de envío adicional.</p>
+    <p style="color:rgba(255,255,255,.25);font-size:11px;margin-top:20px">*Envío de $6 USD, costo de envío adicional.</p>
   </div>
 </section>
 
@@ -446,6 +467,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadCats(), loadProducts()])
   setupEvents()
 })
+// ── Hero entrance ──
+  const heroEls = document.querySelectorAll('[data-hero-el]');
+  gsap.from(heroEls, { y:50, opacity:0, duration:1, stagger:0.15, ease:'power3.out', delay:0.3 });
 
 // ─── LOAD CATEGORIES ───────────────────────────────────────────────
 async function loadCats() {
