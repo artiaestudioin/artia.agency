@@ -1065,317 +1065,546 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
 </script>
-<script src="fab-artia.js"></script>
+<!-- ═══ Artia Unified Modal System ═══ -->
+ <script src="fab-artia.js"></script>
 <script src="artia-modal.js"></script>
 <!-- ═══ CHATBOT ARTIA AI ═══ -->
-<div id="ai-chat-container" style="position:fixed;bottom:32px;right:32px;z-index:1000;display:flex;flex-direction:column;align-items:flex-end">
-  <!-- Tooltip -->
-  <div id="chat-tooltip" style="margin-bottom:12px;margin-right:4px;background:#fff;color:#0f172a;font-size:11px;font-weight:700;padding:10px 18px;border-radius:16px;border-bottom-right-radius:4px;box-shadow:0 8px 28px rgba(0,0,0,.14);border:1px solid #f1f5f9;opacity:0;transform:scale(.5);transform-origin:bottom right;pointer-events:none;transition:opacity .3s,transform .3s;font-family:'Manrope',sans-serif">
-    ¿Alguna duda? ✨
-  </div>
-  <!-- FAB button -->
-  <button id="chat-toggle" style="background:#FF00FF;color:#fff;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;box-shadow:0 8px 30px rgba(255,0,255,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-    <span class="material-symbols-outlined" style="font-size:26px">smart_toy</span>
-  </button>
-  <!-- Chat window -->
-  <div id="chat-window" style="display:none;position:absolute;bottom:68px;right:0;width:320px;height:448px;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid #f1f5f9;flex-direction:column;overflow:hidden;transform-origin:bottom right">
-    <!-- Header -->
-    <div style="background:#FF00FF;padding:16px;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="material-symbols-outlined" style="font-size:18px">smart_toy</span>
-        <span style="font-weight:700;font-size:14px;font-family:'Manrope',sans-serif">Artia AI</span>
-      </div>
-      <button id="chat-close" style="background:none;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;opacity:.8" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">
-        <span class="material-symbols-outlined" style="font-size:20px">close</span>
-      </button>
+    <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
+        <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
+            ¿Alguna duda? ✨
+        </div>
+        <button id="chat-toggle" class="bg-[#FF00FF] text-white p-4 rounded-full shadow-[0_8px_30px_rgba(255,0,255,0.4)] hover:scale-110 transition-transform flex items-center justify-center">
+            <span class="material-symbols-outlined">smart_toy</span>
+        </button>
+        <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 h-[28rem] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 origin-bottom-right">
+            <div class="bg-[#FF00FF] p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">smart_toy</span>
+                    <span class="font-bold text-sm">Artia AI</span>
+                </div>
+                <button id="chat-close" class="material-symbols-outlined text-sm hover:opacity-70 transition-opacity">close</button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-sm flex flex-col gap-3 text-black bg-gray-50"></div>
+            <div class="p-3 border-t bg-white flex gap-2 items-center">
+                <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-1 text-xs p-2.5 border rounded-lg focus:outline-none focus:border-[#FF00FF] focus:ring-1 focus:ring-[#FF00FF]/20 text-black transition-all">
+                <button id="chat-mic" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-lg material-symbols-outlined transition-all text-sm select-none touch-manipulation" title="Mantén presionado para grabar">
+                    mic
+                </button>
+                <button id="chat-send" class="bg-[#FF00FF] hover:bg-[#d400d4] text-white p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm">send</button>
+            </div>
+            <div id="mic-recording-bar" class="hidden bg-red-50 px-3 py-2 flex items-center justify-between border-t border-red-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs text-red-600 font-medium">Grabando... suelta para enviar</span>
+                </div>
+                <span id="mic-timer" class="text-xs text-red-500 font-mono">0:00</span>
+            </div>
+        </div>
     </div>
-    <!-- Messages -->
-    <div id="chat-messages" style="flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:#f8fafc;font-size:13px"></div>
-    <!-- Input row -->
-    <div style="padding:12px;border-top:1px solid #f1f5f9;background:#fff;display:flex;gap:8px;align-items:center;flex-shrink:0">
-      <input id="chat-input" type="text" placeholder="Escribe tu mensaje..." style="flex:1;font-size:12px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;outline:none;font-family:'Inter',sans-serif;transition:border-color .2s" onfocus="this.style.borderColor='#FF00FF'" onblur="this.style.borderColor='#e2e8f0'">
-      <button id="chat-mic" title="Mantén presionado para grabar" style="background:#f1f5f9;border:none;cursor:pointer;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:background .2s;color:#64748b;flex-shrink:0">
-        <span class="material-symbols-outlined" style="font-size:18px">mic</span>
-      </button>
-      <button id="chat-send" style="background:#FF00FF;border:none;cursor:pointer;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;transition:background .2s" onmouseover="this.style.background='#d400d4'" onmouseout="this.style.background='#FF00FF'">
-        <span class="material-symbols-outlined" style="font-size:18px">send</span>
-      </button>
-    </div>
-    <!-- Recording bar -->
-    <div id="mic-recording-bar" style="display:none;padding:8px 12px;background:#fff5f5;border-top:1px solid #fecaca;align-items:center;justify-content:space-between;flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="width:8px;height:8px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite"></span>
-        <span style="font-size:11px;color:#dc2626;font-family:'Manrope',sans-serif;font-weight:600">Grabando... suelta para enviar</span>
-      </div>
-      <span id="mic-timer" style="font-size:11px;color:#ef4444;font-family:monospace">0:00</span>
-    </div>
-  </div>
-</div>
-
-<style>
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-#chat-window{display:none}
-#chat-window.open{display:flex;flex-direction:column}
-</style>
-
-<script>
-(function() {
-  const CONFIG = {
-    apiEndpoint: '/api/chat',
-    emailEndpoint: '/api/send-email',
-    audioEndpoint: '/api/chat',
-    whatsappNumber: '593969937265',
-    maxHistory: 50,
-    tooltipDelay: 10000,
-    tooltipDuration: 6000,
-    maxRecordingTime: 60000,
-  };
-
-  const chatToggle   = document.getElementById('chat-toggle');
-  const chatWindow   = document.getElementById('chat-window');
-  const chatClose    = document.getElementById('chat-close');
-  const chatInput    = document.getElementById('chat-input');
-  const chatSend     = document.getElementById('chat-send');
-  const chatMic      = document.getElementById('chat-mic');
-  const chatMessages = document.getElementById('chat-messages');
-  const chatTooltip  = document.getElementById('chat-tooltip');
-  const micBar       = document.getElementById('mic-recording-bar');
-  const micTimer     = document.getElementById('mic-timer');
-
-  if (!chatToggle || !chatWindow || !chatMessages) return;
-
-  let chatHistory = [];
-  let leadData = { nombre:null, telefono:null, email:null, servicio:null, objetivo:null, resumenCompleto:null };
-  let emailSent = false;
-  let isFirstOpen = true;
-  let mediaRecorder = null, audioChunks = [], recordingTimer = null;
-  let recordingSeconds = 0, isRecording = false, audioStream = null, isSendingAudio = false;
-
-  // ── Tooltip ──
-  setTimeout(() => {
-    chatTooltip.style.opacity = '1';
-    chatTooltip.style.transform = 'scale(1)';
-    setTimeout(() => {
-      chatTooltip.style.opacity = '0';
-      chatTooltip.style.transform = 'scale(.5)';
-    }, CONFIG.tooltipDuration);
-  }, CONFIG.tooltipDelay);
-
-  // ── Events ──
-  chatToggle.onclick = toggleChat;
-  chatClose.onclick  = () => chatWindow.classList.remove('open');
-  chatSend.onclick   = sendMessage;
-  chatInput.onkeypress = e => { if (e.key === 'Enter') sendMessage(); };
-
-  chatMic.addEventListener('mousedown',   startRecording);
-  chatMic.addEventListener('touchstart',  startRecording, { passive: false });
-  chatMic.addEventListener('mouseup',     stopAndSend);
-  chatMic.addEventListener('touchend',    stopAndSend);
-  chatMic.addEventListener('mouseleave',  stopAndSend);
-  chatMic.addEventListener('touchcancel', stopAndSend);
-  chatMic.addEventListener('contextmenu', e => e.preventDefault());
-
-  document.addEventListener('click', e => {
-    if (!chatWindow.contains(e.target) && !chatToggle.contains(e.target))
-      chatWindow.classList.remove('open');
-  });
-
-  function toggleChat() {
-    const isOpen = chatWindow.classList.contains('open');
-    if (isOpen) { chatWindow.classList.remove('open'); return; }
-    chatWindow.classList.add('open');
-    chatTooltip.style.opacity = '0';
-    chatTooltip.style.transform = 'scale(.5)';
-    if (isFirstOpen) {
-      isFirstOpen = false;
-      setTimeout(() => {
-        appendTypingThenSay('¡Hola! 👋 Soy el asistente de **Artia Studio**. ¿En qué producto o servicio puedo ayudarte hoy?');
-      }, 400);
-    }
-    setTimeout(() => chatInput.focus(), 300);
-  }
-
-  async function sendMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatInput.value = '';
-    renderMessage('user', text, true);
-    chatHistory.push({ role: 'user', content: text });
-    if (chatHistory.length > CONFIG.maxHistory) chatHistory = chatHistory.slice(-CONFIG.maxHistory);
-    const typingId = appendTyping();
-    try {
-      const res = await fetch(CONFIG.apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: chatHistory })
-      });
-      removeTyping(typingId);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const reply = data.reply || data.message || data.content || '…';
-      chatHistory.push({ role: 'assistant', content: reply });
-      renderMessage('assistant', reply, true);
-      processLeadData(reply);
-    } catch (e) {
-      removeTyping(typingId);
-      renderMessage('assistant', 'Hubo un problema al conectar. Por favor intenta de nuevo.', true);
-    }
-  }
-
-  async function sendAudio(blob) {
-    if (isSendingAudio) return;
-    isSendingAudio = true;
-    const typingId = appendTyping();
-    try {
-      const fd = new FormData();
-      fd.append('audio', blob, 'recording.webm');
-      fd.append('messages', JSON.stringify(chatHistory));
-      fd.append('stream', 'false');
-      const res = await fetch(CONFIG.audioEndpoint, { method: 'PUT', body: fd });
-      removeTyping(typingId);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const transcript = data.transcript || '';
-      const reply = data.reply || data.message || data.content || '…';
-      if (transcript) renderMessage('user', transcript, true);
-      renderMessage('assistant', reply, true);
-      if (transcript) chatHistory.push({ role: 'user', content: transcript });
-      chatHistory.push({ role: 'assistant', content: reply });
-      processLeadData(reply);
-    } catch (e) {
-      removeTyping(typingId);
-      renderMessage('assistant', 'No pude procesar el audio. Escribe tu mensaje.', true);
-    } finally { isSendingAudio = false; }
-  }
-
-  async function startRecording(e) {
-    if (e) e.preventDefault();
-    if (isRecording || isSendingAudio) return;
-    try {
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
-                 : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-      mediaRecorder = new MediaRecorder(audioStream, { mimeType: mime });
-      audioChunks = [];
-      mediaRecorder.ondataavailable = ev => { if (ev.data && ev.data.size > 0) audioChunks.push(ev.data); };
-      mediaRecorder.onstop = async () => {
-        await new Promise(r => setTimeout(r, 100));
-        if (!audioChunks.length) { resetMicUI(); return; }
-        await sendAudio(new Blob(audioChunks, { type: mime }));
-      };
-      mediaRecorder.start(100);
-      isRecording = true;
-      chatMic.style.background = '#ef4444'; chatMic.style.color = '#fff';
-      micBar.style.display = 'flex';
-      chatInput.disabled = true; chatSend.disabled = true;
-      recordingSeconds = 0; updateTimer();
-      recordingTimer = setInterval(updateTimer, 1000);
-      setTimeout(() => { if (isRecording) stopAndSend(); }, CONFIG.maxRecordingTime);
-    } catch (err) {
-      renderMessage('assistant', 'No pude acceder al micrófono. Verifica los permisos.', false);
-      resetMicUI();
-    }
-  }
-
-  function stopAndSend(e) {
-    if (e) e.preventDefault();
-    if (!isRecording || !mediaRecorder) return;
-    if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    isRecording = false;
-    clearInterval(recordingTimer);
-    if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
-    resetMicUI();
-  }
-
-  function resetMicUI() {
-    chatMic.style.background = '#f1f5f9'; chatMic.style.color = '#64748b';
-    micBar.style.display = 'none';
-    chatInput.disabled = false; chatSend.disabled = false;
-    recordingSeconds = 0;
-  }
-
-  function updateTimer() {
-    recordingSeconds++;
-    const m = Math.floor(recordingSeconds / 60), s = recordingSeconds % 60;
-    micTimer.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-  }
-
-  function processLeadData(text) {
-    const resumen = extractResumen(text);
-    if (resumen) {
-      Object.assign(leadData, resumen);
-      if (!emailSent && leadData.nombre && leadData.telefono) {
-        emailSent = true;
-        notifyByEmail().catch(() => {});
-        setTimeout(appendWhatsAppButton, 600);
-      }
-    }
-  }
-
-  function extractResumen(text) {
-    if (!text || !text.includes('Resumen de tu solicitud:')) return null;
-    const sM = text.match(/•\s*Servicio:\s*([^\n•]+)/i);
-    const cM = text.match(/•\s*Cliente:\s*([^\n•]+)/i);
-    const oM = text.match(/•\s*Objetivo:\s*([^\n•]+)/i);
-    const tM = text.match(/•\s*Contacto:\s*([^\n•]+)/i);
-    if (!sM || !cM || !tM) return null;
-    const tel = tM[1].trim();
-    const telOk = tel.replace(/\D/g,'').length >= 7 ? tel : null;
-    const emailM = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-    return { servicio: sM[1].trim(), nombre: cM[1].trim(), objetivo: oM ? oM[1].trim() : '', telefono: telOk, email: emailM ? emailM[0] : null, resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() };
-  }
-
-  async function notifyByEmail() {
-    if (!leadData.nombre || !leadData.telefono) return;
-    const payload = { name: leadData.nombre, emailFrom: leadData.email || '', service: leadData.servicio || 'Chat IA', message: leadData.resumenCompleto || '', phone: leadData.telefono };
-    await fetch(CONFIG.emailEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  }
-
-  function appendWhatsAppButton() {
-    const div = document.createElement('div');
-    div.style.cssText = 'align-self:flex-start;margin-top:4px';
-    const nombre = leadData.nombre || '';
-    const servicio = leadData.servicio || 'un proyecto';
-    const msg = nombre ? `Hola Artia, soy ${nombre}. Vi su página y quiero hablar con un asesor sobre ${servicio}.` : 'Hola Artia, vi su página y quiero hablar con un asesor.';
-    div.innerHTML = `<a href="https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:10px 18px;border-radius:100px;font-size:12px;font-weight:700;text-decoration:none;font-family:'Manrope',sans-serif;transition:background .2s" onmouseover="this.style.background='#128C7E'" onmouseout="this.style.background='#25D366'"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Hablar con un asesor</a>`;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function appendTypingThenSay(text) {
-    const id = appendTyping();
-    setTimeout(() => { removeTyping(id); renderMessage('assistant', text, true); }, 900);
-  }
-
-  function appendTyping() {
-    const uid = 'typing-' + Date.now();
-    const div = document.createElement('div');
-    div.id = uid;
-    div.style.cssText = 'align-self:flex-start;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #e2e8f0;padding:10px 14px;border-radius:14px;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.06)';
-    div.innerHTML = '<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%;animation:bounce 1.2s infinite 0ms"></span><span style="width:6px;height:6px;background:#94a3b8;border-radius:50%;animation:bounce 1.2s infinite 150ms"></span><span style="width:6px;height:6px;background:#94a3b8;border-radius:50%;animation:bounce 1.2s infinite 300ms"></span>';
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return uid;
-  }
-
-  function removeTyping(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
-
-  function renderMessage(role, text, animate) {
-    const div = document.createElement('div');
-    const isUser = role === 'user';
-    div.style.cssText = `align-self:${isUser ? 'flex-end' : 'flex-start'};max-width:85%;padding:10px 14px;border-radius:14px;border-${isUser ? 'bottom-right' : 'bottom-left'}-radius:4px;font-size:13px;line-height:1.55;font-family:'Inter',sans-serif;${isUser ? 'background:#FF00FF;color:#fff' : 'background:#fff;border:1px solid #e2e8f0;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.06)'}`;
-    if (!isUser) {
-      div.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
-    } else { div.textContent = text; }
-    if (animate) div.style.animation = 'fadeUp .25s ease';
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-})();
-</script>
-<style>@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}</style>
+ 
+    <script>
+    (function() {
+        const CONFIG = {
+            apiEndpoint: '/api/chat',
+            emailEndpoint: '/api/send-email',
+            audioEndpoint: '/api/chat',
+            whatsappNumber: '593969937265',
+            storageKey: 'artia_chat_history',
+            leadDataKey: 'artia_lead_data',
+            emailSentKey: 'artia_email_sent',
+            maxHistory: 50,
+            tooltipDelay: 10000,
+            tooltipDuration: 6000,
+            maxRecordingTime: 60000,
+        };
+ 
+        const chatToggle = document.getElementById('chat-toggle');
+        const chatWindow = document.getElementById('chat-window');
+        const chatClose  = document.getElementById('chat-close');
+        const chatInput  = document.getElementById('chat-input');
+        const chatSend   = document.getElementById('chat-send');
+        const chatMic    = document.getElementById('chat-mic');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatTooltip = document.getElementById('chat-tooltip');
+        const micRecordingBar = document.getElementById('mic-recording-bar');
+        const micTimer = document.getElementById('mic-timer');
+ 
+        if (!chatToggle || !chatWindow || !chatMessages) return;
+ 
+        let chatHistory = [];
+        let leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
+        let emailSent = false;
+        let isFirstOpen = true;
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingTimer = null;
+        let recordingSeconds = 0;
+        let isRecording = false;
+        let audioStream = null;
+        let isSendingAudio = false;
+ 
+        function init() {
+            loadHistory();
+            bindEvents();
+            animateEntrance();
+        }
+ 
+        function bindEvents() {
+            chatToggle.onclick = toggleChat;
+            chatClose.onclick = () => chatWindow.classList.add('hidden');
+            chatSend.onclick = sendMessage;
+            chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+            
+            chatMic.addEventListener('mousedown', startRecording);
+            chatMic.addEventListener('touchstart', startRecording, { passive: false });
+            
+            chatMic.addEventListener('mouseup', stopAndSend);
+            chatMic.addEventListener('touchend', stopAndSend);
+            chatMic.addEventListener('mouseleave', stopAndSend);
+            chatMic.addEventListener('touchcancel', stopAndSend);
+            
+            chatMic.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            document.addEventListener('click', (e) => {
+                if (!chatWindow.contains(e.target) && !chatToggle.contains(e.target)) {
+                    chatWindow.classList.add('hidden');
+                }
+            });
+        }
+ 
+        async function startRecording(e) {
+            if (e) e.preventDefault();
+            if (isRecording || isSendingAudio) return;
+            
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    } 
+                });
+                
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                    ? 'audio/webm;codecs=opus' 
+                    : MediaRecorder.isTypeSupported('audio/webm') 
+                        ? 'audio/webm' 
+                        : 'audio/mp4';
+                
+                mediaRecorder = new MediaRecorder(audioStream, { mimeType });
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    if (audioChunks.length === 0) {
+                        console.warn('[Artia Chat] No se capturaron datos de audio');
+                        resetMicUI();
+                        return;
+                    }
+                    
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    console.log('[Artia Chat] Audio grabado:', audioBlob.size, 'bytes');
+                    await sendAudio(audioBlob);
+                };
+                
+                mediaRecorder.start(100);
+                isRecording = true;
+                
+                chatMic.classList.add('bg-red-500', 'text-white', 'scale-110');
+                chatMic.classList.remove('bg-gray-100', 'text-gray-600');
+                micRecordingBar.classList.remove('hidden');
+                chatInput.disabled = true;
+                chatSend.disabled = true;
+                
+                recordingSeconds = 0;
+                updateTimer();
+                recordingTimer = setInterval(updateTimer, 1000);
+                
+                setTimeout(() => { 
+                    if (isRecording) stopAndSend(); 
+                }, CONFIG.maxRecordingTime);
+                
+            } catch (err) {
+                console.error('[Artia Chat] Error accediendo al micrófono:', err);
+                renderMessage('assistant', 'No pude acceder al micrófono. Verifica que hayas dado permiso en tu navegador.', false);
+                resetMicUI();
+            }
+        }
+ 
+        function stopAndSend(e) {
+            if (e) e.preventDefault();
+            if (!isRecording || !mediaRecorder) return;
+            
+            if (mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            clearInterval(recordingTimer);
+            resetMicUI();
+        }
+ 
+        function resetMicUI() {
+            chatMic.classList.remove('bg-red-500', 'text-white', 'scale-110');
+            chatMic.classList.add('bg-gray-100', 'text-gray-600');
+            micRecordingBar.classList.add('hidden');
+            chatInput.disabled = false;
+            chatSend.disabled = false;
+            recordingSeconds = 0;
+        }
+ 
+        function cleanupRecording() {
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+            mediaRecorder = null;
+            audioChunks = [];
+        }
+ 
+        function updateTimer() {
+            recordingSeconds++;
+            const mins = Math.floor(recordingSeconds / 60);
+            const secs = recordingSeconds % 60;
+            micTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+ 
+        async function sendAudio(audioBlob) {
+            if (isSendingAudio) return;
+            isSendingAudio = true;
+            
+            const typingId = appendTyping();
+            
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+                formData.append('messages', JSON.stringify(chatHistory));
+                formData.append('stream', 'false');
+                
+                console.log('[Artia Chat] Enviando audio...', audioBlob.size, 'bytes');
+                
+                const res = await fetch(CONFIG.audioEndpoint, { 
+                    method: 'PUT', 
+                    body: formData
+                });
+                
+                removeTyping(typingId);
+                
+                if (!res.ok) {
+                    const errText = await res.text();
+                    let errData = {};
+                    try { errData = JSON.parse(errText); } catch {}
+                    console.error('[Artia Chat] Error del servidor:', res.status, errData);
+                    throw new Error(errData.error || `Error ${res.status}`);
+                }
+                
+                const data = await res.json();
+                console.log('[Artia Chat] Respuesta del servidor:', data);
+                
+                const transcribed = data._meta?.transcribed_text 
+                    ? decodeURIComponent(data._meta.transcribed_text) 
+                    : null;
+                    
+                if (transcribed) {
+                    renderMessage('user', transcribed, true);
+                    chatHistory.push({ role: 'user', content: transcribed });
+                }
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const aiResponse = data.choices[0].message.content;
+                    chatHistory.push({ role: 'assistant', content: aiResponse });
+                    saveHistory();
+                    
+                    const resumenExtraido = extractResumen(aiResponse);
+                    if (resumenExtraido) { 
+                        leadData = { ...leadData, ...resumenExtraido }; 
+                        saveHistory(); 
+                    }
+                    
+                    if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
+                        const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
+                        renderMessage('assistant', cleanText, true);
+                        appendWhatsAppButton();
+                        
+                        if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
+                            try {
+                                await notifyByEmail();
+                                emailSent = true;
+                                saveHistory();
+                                setTimeout(() => clearStorage(), 5000);
+                            } catch (emailErr) {
+                                console.error('[Artia Chat] Error enviando email:', emailErr);
+                            }
+                        }
+                    } else {
+                        renderMessage('assistant', aiResponse, true);
+                    }
+                } else {
+                    throw new Error('Respuesta incompleta del servidor');
+                }
+                
+            } catch (e) {
+                removeTyping(typingId);
+                console.error('[Artia Chat] Error procesando audio:', e);
+                renderMessage('assistant', 'Lo siento, no pude procesar tu audio. ¿Podrías intentar de nuevo o escribir tu mensaje?', false);
+            } finally {
+                isSendingAudio = false;
+                cleanupRecording();
+            }
+        }
+ 
+        function animateEntrance() {
+            if (typeof gsap !== 'undefined') {
+                gsap.set('#ai-chat-container', { y: 120, opacity: 0 });
+                const delay = isHomePage() ? CONFIG.tooltipDelay : 3000;
+                gsap.to('#ai-chat-container', { y: 0, opacity: 1, duration: 1.2, ease: "elastic.out(1, 0.5)", delay: delay / 1000 });
+                if (isHomePage()) {
+                    gsap.to('#chat-tooltip', { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)", delay: (delay + 500) / 1000 });
+                    setTimeout(() => { gsap.to('#chat-tooltip', { opacity: 0, scale: 0.8, duration: 0.4, ease: "power2.in" }); }, delay + CONFIG.tooltipDuration);
+                }
+            } else {
+                setTimeout(() => {
+                    const container = document.getElementById('ai-chat-container');
+                    if (container) { container.style.transition = 'all 1.2s ease'; container.style.transform = 'translateY(0)'; container.style.opacity = '1'; }
+                }, isHomePage() ? CONFIG.tooltipDelay : 3000);
+            }
+            chatToggle.addEventListener('click', () => { if (chatTooltip) { chatTooltip.style.opacity = '0'; chatTooltip.style.transform = 'scale(0.8)'; } });
+        }
+ 
+        function isHomePage() {
+            const path = window.location.pathname;
+            return path === '/' || path === '/inicio.html' || path.endsWith('/inicio.html');
+        }
+ 
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem(CONFIG.storageKey);
+                const savedLead = localStorage.getItem(CONFIG.leadDataKey);
+                const savedEmailSent = localStorage.getItem(CONFIG.emailSentKey);
+                if (saved) {
+                    chatHistory = JSON.parse(saved);
+                    chatHistory.slice(-20).forEach(msg => { if (msg.role !== 'system') renderMessage(msg.role, msg.content, false); });
+                }
+                if (savedLead) leadData = JSON.parse(savedLead);
+                if (savedEmailSent === 'true') emailSent = true;
+            } catch (e) { clearStorage(); }
+        }
+ 
+        function saveHistory() {
+            try {
+                if (chatHistory.length > CONFIG.maxHistory) chatHistory = chatHistory.slice(-CONFIG.maxHistory);
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(chatHistory));
+                localStorage.setItem(CONFIG.leadDataKey, JSON.stringify(leadData));
+                localStorage.setItem(CONFIG.emailSentKey, String(emailSent));
+            } catch (e) { console.warn('[Artia Chat] Error guardando:', e); }
+        }
+ 
+        function clearStorage() {
+            localStorage.removeItem(CONFIG.storageKey);
+            localStorage.removeItem(CONFIG.leadDataKey);
+            localStorage.removeItem(CONFIG.emailSentKey);
+            chatHistory = [];
+            leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
+            emailSent = false;
+        }
+ 
+        function toggleChat() {
+            const isHidden = chatWindow.classList.contains('hidden');
+            if (isHidden) {
+                chatWindow.classList.remove('hidden');
+                chatInput.focus();
+                if (typeof gsap !== 'undefined') gsap.fromTo(chatWindow, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" });
+                if (isFirstOpen && chatHistory.length === 0) {
+                    isFirstOpen = false;
+                    setTimeout(() => {
+                        const welcome = "¡Hola! Soy Artia AI, tu asistente de Artia Studio. ¿En qué proyecto puedo ayudarte hoy?";
+                        renderMessage('assistant', welcome, false);
+                        chatHistory.push({ role: 'assistant', content: welcome });
+                        saveHistory();
+                    }, 500);
+                }
+            } else {
+                chatWindow.classList.add('hidden');
+            }
+        }
+ 
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            renderMessage('user', text, true);
+            chatInput.value = '';
+            chatHistory.push({ role: 'user', content: text });
+            saveHistory();
+            const typingId = appendTyping();
+ 
+            try {
+                const res = await fetch(CONFIG.apiEndpoint, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ messages: chatHistory }) 
+                });
+                
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                removeTyping(typingId);
+ 
+                if (data.choices && data.choices[0]) {
+                    const aiResponse = data.choices[0].message.content;
+                    chatHistory.push({ role: 'assistant', content: aiResponse });
+                    saveHistory();
+ 
+                    const resumenExtraido = extractResumen(aiResponse);
+                    if (resumenExtraido) { leadData = { ...leadData, ...resumenExtraido }; saveHistory(); }
+ 
+                    if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
+                        const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
+                        renderMessage('assistant', cleanText, true);
+                        appendWhatsAppButton();
+                        
+                        if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
+                            try {
+                                await notifyByEmail();
+                                emailSent = true;
+                                saveHistory();
+                                setTimeout(() => clearStorage(), 5000);
+                            } catch (emailErr) {
+                                console.error('[Artia Chat] Error enviando email:', emailErr);
+                            }
+                        }
+                    } else {
+                        renderMessage('assistant', aiResponse, true);
+                    }
+                } else { throw new Error('Respuesta incompleta'); }
+            } catch (e) {
+                removeTyping(typingId);
+                console.error('[Artia Chat] Error:', e);
+                renderMessage('assistant', 'Lo siento, tuve un problema al conectar. ¿Podrías intentar de nuevo?', false);
+            }
+        }
+ 
+        function extractResumen(text) {
+            if (!text || !text.includes('Resumen de tu solicitud:')) return null;
+            const servicioMatch = text.match(/•\s*Servicio:\s*([^\n•]+)/i);
+            const clienteMatch = text.match(/•\s*Cliente:\s*([^\n•]+)/i);
+            const objetivoMatch = text.match(/•\s*Objetivo:\s*([^\n•]+)/i);
+            const contactoMatch = text.match(/•\s*Contacto:\s*([^\n•]+)/i);
+            if (!servicioMatch || !clienteMatch || !contactoMatch) return null;
+            const telefono = contactoMatch[1].trim();
+            const telefonoValido = isValidPhone(telefono) ? telefono : null;
+            const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            return { 
+                servicio: servicioMatch[1].trim(), 
+                nombre: clienteMatch[1].trim(), 
+                objetivo: objetivoMatch ? objetivoMatch[1].trim() : 'No especificado', 
+                telefono: telefonoValido, 
+                email: emailMatch ? emailMatch[0] : leadData.email, 
+                resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() 
+            };
+        }
+ 
+        function renderMessage(role, text, animate) {
+            const div = document.createElement('div');
+            const isUser = role === 'user';
+            div.className = `p-3 rounded-2xl max-w-[85%] text-[13px] leading-relaxed ${isUser ? 'bg-[#FF00FF] text-white self-end rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-sm shadow-sm'}`;
+            if (!isUser) {
+                div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            } else { div.textContent = text; }
+            chatMessages.appendChild(div);
+            if (animate && typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power2.out" });
+            scrollToBottom();
+        }
+ 
+        function appendWhatsAppButton() {
+            const div = document.createElement('div');
+            div.className = 'self-start mt-1';
+            const nombre = leadData.nombre || '';
+            const servicio = leadData.servicio || 'un proyecto';
+            const mensajeWhatsApp = nombre ? `Hola Artia, soy ${nombre}. Vi su página y quiero hablar con un asesor sobre ${servicio}.` : 'Hola Artia, vi su página y quiero hablar con un asesor.';
+            div.innerHTML = `<a href="https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(mensajeWhatsApp)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-5 py-3 rounded-full text-[13px] font-bold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 hover:scale-105"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Hablar con un asesor</a>`;
+            chatMessages.appendChild(div);
+            if (typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.7)", delay: 0.2 });
+            scrollToBottom();
+        }
+ 
+        function appendTyping() {
+            const uid = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = uid;
+            div.className = 'self-start flex items-center gap-1 bg-white border border-gray-200 px-3 py-2.5 rounded-2xl rounded-bl-sm shadow-sm';
+            div.innerHTML = '<span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>';
+            chatMessages.appendChild(div);
+            scrollToBottom();
+            return uid;
+        }
+ 
+        function removeTyping(id) {
+            const el = document.getElementById(id);
+            if (el) { if (typeof gsap !== 'undefined') gsap.to(el, { opacity: 0, scale: 0.8, duration: 0.2, onComplete: () => el.remove() }); else el.remove(); }
+        }
+ 
+        async function notifyByEmail() {
+            if (!leadData.nombre || !leadData.telefono) { 
+                console.warn('[Artia Chat] Faltan datos del lead'); 
+                throw new Error('Faltan datos del lead'); 
+            }
+            
+            const emailUsuario = leadData.email && isValidEmail(leadData.email) ? leadData.email : null;
+            const mensajeInterno = leadData.resumenCompleto || `Resumen de tu solicitud:\n• Servicio: ${leadData.servicio || 'No detectado'}\n• Cliente: ${leadData.nombre}\n• Objetivo: ${leadData.objetivo || 'No especificado'}\n• Contacto: ${leadData.telefono}`;
+            
+            const payload = { 
+                name: leadData.nombre, 
+                emailFrom: emailUsuario || '',  
+                service: leadData.servicio || 'Chat IA — Solicitud de asesor humano', 
+                message: mensajeInterno, 
+                phone: leadData.telefono 
+            };
+            
+            try {
+                const res = await fetch(CONFIG.emailEndpoint, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const responseData = await res.json().catch(() => ({}));
+                
+                if (!res.ok) { 
+                    console.warn('[Artia Chat] Error enviando email:', responseData); 
+                    throw new Error(responseData.message || `HTTP ${res.status}`); 
+                }
+                
+                console.log('[Artia Chat] Email enviado correctamente', responseData);
+                return responseData;
+            } catch(e) { 
+                console.warn('[Artia Chat] No se pudo notificar por email:', e); 
+                throw e;
+            }
+        }
+ 
+        function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
+        
+        function isValidEmail(email) { 
+            if (!email) return false; 
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+            return regex.test(email) && !email.includes('artiaagency.vercel.app') && !email.includes('localhost') && !email.includes('example.com') && !email.includes('no-reply') && !email.includes('test.com'); 
+        }
+        
+        function isValidPhone(phone) { 
+            if (!phone) return false; 
+            const digits = phone.replace(/\D/g, ''); 
+            return digits.length >= 7 && digits.length <= 15; 
+        }
+ 
+        init();
+    })();
+    </script>
 </body>
 </html>
