@@ -186,41 +186,27 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 
 <!-- ── Overrides críticos: se cargan DESPUÉS de Tailwind para ganar la cascada ── -->
 <style id="artia-overrides">
-  /* Tailwind preflight está desactivado, pero por si acaso: proteger layout principal */
   .main-wrap           { padding-top: 60px !important; }
   .main-content        { min-height: 100vh; }
   @media(min-width:1024px){
     .main-wrap         { margin-left: var(--sidebar-w) !important; padding-top: 0 !important; }
   }
-
-  /* Hero padding */
   .hero                { padding: 72px 0 56px !important; }
   @media(min-width:1024px){
     .hero              { padding: 100px 0 72px !important; }
   }
-
-  /* Contenedor centrado */
   .container           { max-width: 1180px !important; margin: 0 auto !important; padding: 0 20px !important; }
-
-  /* Sidebar visible solo en desktop */
   .pub-sidebar         { display: none; }
   @media(min-width:1024px){ .pub-sidebar { display: flex !important; } }
-
-  /* Header móvil */
   .pub-mobile-header   { display: flex !important; }
   @media(min-width:1024px){ .pub-mobile-header { display: none !important; } }
-
-  /* Proteger h1 del hero contra reset de Tailwind forms plugin */
   .hero h1             { font-size: clamp(36px,6vw,70px) !important; font-weight: 800 !important; line-height: .92 !important; letter-spacing: -.03em !important; color: #fff !important; margin-bottom: 20px !important; }
-
-  /* Botones del catálogo */
   .btn                 { display: inline-flex !important; align-items: center !important; }
-
-  /* Chips de categoría */
   .chip.on             { background: var(--navy) !important; color: #fff !important; border-color: var(--navy) !important; }
-
-  /* Cards de producto */
   .pcard               { background: #fff !important; }
+  /* Fix desborde visual: hero showcase chips pueden salirse del hero */
+  .hero                { overflow: visible !important; }
+  @media(max-width:1099px){ .hero-showcase-wrap { display: none !important; } }
 </style>
 
 <base target="_blank">
