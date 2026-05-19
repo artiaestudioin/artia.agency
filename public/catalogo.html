@@ -10,16 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<!-- Tailwind con preflight DESACTIVADO para no romper estilos del catálogo -->
-<script>
-  // Debe estar ANTES de que cargue tailwind.css
-  window.tailwind = window.tailwind || {};
-  tailwind.config = {
-    corePlugins: { preflight: false }
-  };
-</script>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <style>
 /* ─── RESET ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -183,33 +173,6 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 .thumb{width:60px;height:60px;border-radius:9px;object-fit:cover;border:2px solid transparent;cursor:pointer;transition:border-color .18s;flex-shrink:0}
 .thumb.on{border-color:#2552ca}
 </style>
-
-<!-- ── Overrides críticos: se cargan DESPUÉS de Tailwind para ganar la cascada ── -->
-<style id="artia-overrides">
-  .main-wrap           { padding-top: 60px !important; }
-  .main-content        { min-height: 100vh; }
-  @media(min-width:1024px){
-    .main-wrap         { margin-left: var(--sidebar-w) !important; padding-top: 0 !important; }
-  }
-  .hero                { padding: 72px 0 56px !important; }
-  @media(min-width:1024px){
-    .hero              { padding: 100px 0 72px !important; }
-  }
-  .container           { max-width: 1180px !important; margin: 0 auto !important; padding: 0 20px !important; }
-  .pub-sidebar         { display: none; }
-  @media(min-width:1024px){ .pub-sidebar { display: flex !important; } }
-  .pub-mobile-header   { display: flex !important; }
-  @media(min-width:1024px){ .pub-mobile-header { display: none !important; } }
-  .hero h1             { font-size: clamp(36px,6vw,70px) !important; font-weight: 800 !important; line-height: .92 !important; letter-spacing: -.03em !important; color: #fff !important; margin-bottom: 20px !important; }
-  .btn                 { display: inline-flex !important; align-items: center !important; }
-  .chip.on             { background: var(--navy) !important; color: #fff !important; border-color: var(--navy) !important; }
-  .pcard               { background: #fff !important; }
-  /* Fix desborde visual: hero showcase chips pueden salirse del hero */
-  .hero                { overflow: visible !important; }
-  @media(max-width:1099px){ .hero-showcase-wrap { display: none !important; } }
-</style>
-
-<base target="_blank">
 </head>
 <body>
 
@@ -249,85 +212,44 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 </header>
 
 <!-- ═══ MAIN ═══ -->
-<main class="main-wrap main-content">
+<main class="main-wrap">
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
-  <div class="container" style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:40px">
-
-    <!-- LEFT: copy -->
-    <div style="flex:1;min-width:0">
-      <div class="fade-up">
-        <span class="badge badge-blue fade-up" style="background:rgba(179,197,255,.15);color:#b3c5ff;border:1px solid rgba(179,197,255,.2);margin-bottom:18px;display:inline-flex">
-          🛍️ Catálogo oficial · Artia Studio
-        </span>
+  <div class="container" style="position:relative;z-index:1">
+    <div class="fade-up">
+      <span class="badge badge-blue fade-up" style="background:rgba(179,197,255,.15);color:#b3c5ff;border:1px solid rgba(179,197,255,.2);margin-bottom:18px">
+        🛍️ Catálogo oficial · Artia Studio
+      </span>
+    </div>
+    <h1 class="fade-up fade-1" style="font-family:'Manrope',sans-serif;font-size:clamp(36px,6vw,70px);font-weight:800;color:#fff;line-height:.92;letter-spacing:-.03em;max-width:680px;margin-bottom:20px">
+      Precios reales,<br>calidad premium,<br><span style="color:#b3c5ff">entrega a todo Ecuador.</span>
+    </h1>
+    <p class="fade-up fade-2" style="color:rgba(255,255,255,.58);font-size:16px;max-width:480px;line-height:1.65;margin-bottom:28px">
+      Selecciona el producto, elige tu cantidad y acabado — el precio se actualiza en tiempo real. Sin sorpresas, sin costo oculto.
+    </p>
+    <div class="fade-up fade-3" style="display:flex;flex-wrap:wrap;gap:12px">
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">
+        Ver catálogo <span class="material-symbols-outlined" style="font-size:18px">arrow_downward</span>
+      </button>
+      <a href="https://wa.me/593969937265?text=Hola%20Artia,%20quiero%20una%20cotización" target="_blank" class="btn btn-wa btn-lg">
+        <span class="material-symbols-outlined" style="font-size:18px">chat</span> Cotización rápida
+      </a>
+    </div>
+    <!-- Trust row -->
+    <div class="fade-up fade-3" style="display:flex;flex-wrap:wrap;gap:20px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1)">
+      <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
+        <span class="material-symbols-outlined" style="color:#b3c5ff;font-size:17px;font-variation-settings:'FILL' 1">local_shipping</span>Envío incluido en precio*
       </div>
-      <h1 class="fade-up fade-1" style="font-family:'Manrope',sans-serif;font-size:clamp(36px,6vw,70px);font-weight:800;color:#fff;line-height:.92;letter-spacing:-.03em;max-width:620px;margin-bottom:20px">
-        Precios reales,<br>calidad premium,<br><span style="color:#b3c5ff">entrega a todo Ecuador.</span>
-      </h1>
-      <p class="fade-up fade-2" style="color:rgba(255,255,255,.58);font-size:16px;max-width:480px;line-height:1.65;margin-bottom:28px">
-        Selecciona el producto, elige tu cantidad y acabado — el precio se actualiza en tiempo real. Sin sorpresas, sin costo oculto.
-      </p>
-      <div class="fade-up fade-3" style="display:flex;flex-wrap:wrap;gap:12px">
-        <button class="btn btn-primary btn-lg" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">
-          Ver catálogo <span class="material-symbols-outlined" style="font-size:18px">arrow_downward</span>
-        </button>
-        <a href="https://wa.me/593969937265?text=Hola%20Artia,%20quiero%20una%20cotización" target="_blank" class="btn btn-wa btn-lg">
-          <span class="material-symbols-outlined" style="font-size:18px">chat</span> Cotización rápida
-        </a>
+      <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
+        <span class="material-symbols-outlined" style="color:#25D366;font-size:17px;font-variation-settings:'FILL' 1">verified</span>Producción propia
       </div>
-      <!-- Trust row -->
-      <div class="fade-up fade-3" style="display:flex;flex-wrap:wrap;gap:20px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1)">
-        <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
-          <span class="material-symbols-outlined" style="color:#b3c5ff;font-size:17px;font-variation-settings:'FILL' 1">local_shipping</span>Envío a todo el Ecuador*
-        </div>
-        <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
-          <span class="material-symbols-outlined" style="color:#25D366;font-size:17px;font-variation-settings:'FILL' 1">verified</span>Producción propia
-        </div>
-        <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
-          <span class="material-symbols-outlined" style="color:#f59e0b;font-size:17px;font-variation-settings:'FILL' 1">star</span>+200 clientes en Ecuador
-        </div>
+      <div style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.5);font-size:12px">
+        <span class="material-symbols-outlined" style="color:#f59e0b;font-size:17px;font-variation-settings:'FILL' 1">star</span>+200 clientes en Ecuador
       </div>
     </div>
-
-    <!-- RIGHT: product showcase card (hidden mobile, shown ≥1100px) -->
-    <div class="hero-showcase-wrap" style="position:relative;flex-shrink:0;width:300px;height:420px;display:none">
-
-      <!-- Main photo card -->
-      <div style="position:absolute;inset:0;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.13);box-shadow:0 28px 64px rgba(0,0,0,.5)">
-        <img src="https://i.ibb.co/Pz1WqWkr/19.jpg" alt="Sublimado Premium"
-          style="width:100%;height:100%;object-fit:cover;opacity:.82;display:block">
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,17,58,.9) 0%,transparent 52%)"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 18px">
-          <p style="color:#b3c5ff;font-size:9px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;font-family:'Manrope',sans-serif;margin-bottom:3px">Sublimado Premium</p>
-          <p style="color:rgba(255,255,255,.5);font-size:11px;font-family:'Inter',sans-serif">Alta fidelidad de color · Duración máxima</p>
-        </div>
-      </div>
-
-      <!-- Floating glass chip: Acabado Premium — left side -->
-      <div style="position:absolute;top:28%;left:-64px;background:rgba(20,30,70,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px 16px;min-width:134px;box-shadow:0 8px 28px rgba(0,0,0,.3)">
-        <span class="material-symbols-outlined" style="color:#b3c5ff;font-size:22px;display:block;margin-bottom:5px;font-variation-settings:'FILL' 1">workspace_premium</span>
-        <p style="color:#fff;font-size:12px;font-weight:700;font-family:'Manrope',sans-serif;margin:0 0 2px">Acabado Premium</p>
-        <p style="color:rgba(255,255,255,.45);font-size:10px;font-family:'Inter',sans-serif;margin:0">Producción élite</p>
-      </div>
-
-      <!-- Floating glass chip: Entrega Express — right-bottom -->
-      <div style="position:absolute;bottom:20%;right:-52px;background:rgba(20,30,70,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:11px 15px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.3)">
-        <div style="width:30px;height:30px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <span class="material-symbols-outlined" style="color:#fff;font-size:16px;font-variation-settings:'FILL' 1">check</span>
-        </div>
-        <p style="color:#fff;font-size:11px;font-weight:700;font-family:'Manrope',sans-serif;line-height:1.35;margin:0">Entrega<br>Express</p>
-      </div>
-
-    </div>
-
-    <style>
-      @media(min-width:1100px){
-        .hero-showcase-wrap{ display:block !important }
-      }
-    </style>
   </div>
 </section>
 
@@ -386,7 +308,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 
     <!-- Category chips -->
     <div class="cat-chips" id="catChips" style="margin-bottom:22px">
-      <button class="chip on" data-cat="all" onclick="pickCat('all')">🏷️ Todos</button>
+      <button class="chip on" data-cat="all">🏷️ Todos</button>
       <div id="catsLoading" style="display:flex;gap:8px">
         <div class="skel" style="width:120px;height:36px;border-radius:100px"></div>
         <div class="skel" style="width:100px;height:36px;border-radius:100px"></div>
@@ -427,7 +349,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
         <span class="material-symbols-outlined" style="font-size:18px">chat</span> Cotizar por WhatsApp
       </a>
     </div>
-    <p style="color:rgba(255,255,255,.25);font-size:11px;margin-top:20px">*Envío de $6 USD, costo de envío adicional.</p>
+    <p style="color:rgba(255,255,255,.25);font-size:11px;margin-top:20px">*Envío de $6 USD incluido en precios. Roll Up, Araña y Triángulo sin costo de envío adicional.</p>
   </div>
 </section>
 
@@ -482,26 +404,17 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);ov
 <!-- TOAST -->
 <div id="toast" class="toast" style="display:none"></div>
 
-
-
+<script src="fab-artia.js" defer></script>
+<script src="artia-modal.js" defer></script>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// ARTIA STUDIO — Catálogo Público v2.1
-// Consume APIs REST del backend Next.js
-// ═══════════════════════════════════════════════════════════════════
-
 // ─── CONFIG ────────────────────────────────────────────────────────
-const API_BASE        = '/api/catalog'           // Base de las APIs
-const PRODUCTS_API    = `${API_BASE}/products`  // GET  → route(1).ts
-const ORDERS_API      = `${API_BASE}/orders`    // POST → route.ts
-const WA_NUMBER       = '593969937265'          // WhatsApp Artia
+const SUPABASE_URL     = 'https://qnslgtbsilqhcyitskuv.supabase.co'
+const SUPABASE_ANON    = 'YOUR_SUPABASE_ANON_KEY'   // ← replace
+const WA_NUMBER        = '593969937265'
+const ORDERS_API       = '/api/catalog/orders'
 
-// ─── SUPABASE (opcional — solo si necesitas realtime) ──────────────
-// Si tu proyecto usa Supabase directamente, descomenta y configura:
-// const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co'
-// const SUPABASE_KEY = 'TU-ANON-KEY'
-// const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
 
 // ─── STATE ─────────────────────────────────────────────────────────
 let allProducts  = []      // {product + variants[]}
@@ -522,120 +435,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadCats(), loadProducts()])
   setupEvents()
 })
-// ── Hero entrance ──
-  const heroEls = document.querySelectorAll('[data-hero-el]');
-  gsap.from(heroEls, { y:50, opacity:0, duration:1, stagger:0.15, ease:'power3.out', delay:0.3 });
 
 // ─── LOAD CATEGORIES ───────────────────────────────────────────────
 async function loadCats() {
-  try {
-    const res = await fetch(`${PRODUCTS_API}?limit=1`)  // solo para verificar conexión
-    // Las categorías las cargamos desde la API de productos o desde un endpoint separado
-    // Por ahora, extraemos categorías únicas de los productos una vez cargados
-    // o usamos un endpoint dedicado si existe.
-    // Como el admin usa Supabase directamente, hacemos fetch a la tabla vía REST:
-
-    // Si tienes un endpoint de categorías, úsalo. Si no, extrae de productos.
-    // Fallback: extraer de productos después de loadProducts()
-  } catch (e) {
-    console.warn('Cat API check:', e)
-  }
-}
-
-// ─── LOAD PRODUCTS + VARIANTS ──────────────────────────────────────
-async function loadProducts() {
-  try {
-    // Llamada a la API pública de productos (route(1).ts)
-    const res = await fetch(`${PRODUCTS_API}?limit=100`)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const json = await res.json()
-
-    if (!json.ok) throw new Error(json.error || 'Error en API')
-
-    const products = json.products || []
-
-    // Extraer categorías únicas de los productos para los chips
-    const catMap = new Map()
-    products.forEach(p => {
-      if (p.category_slug && !catMap.has(p.category_slug)) {
-        catMap.set(p.category_slug, {
-          slug: p.category_slug,
-          name: p.category_name || p.category_slug,
-          icon: p.category_icon || '🏷️'
-        })
-      }
-    })
-    allCats = Array.from(catMap.values()).sort((a, b) => a.name.localeCompare(b.name))
-
-    // Para cada producto, cargar sus variantes
-    // El API de productos no incluye variantes por diseño (evita payload grande)
-    // Cargamos variantes en batch o por producto según necesidad.
-    // Optimización: cargar todas las variantes de una vez si hay pocas,
-    // o lazy-load al abrir el modal.
-
-    // Por ahora, asumimos que las variantes se cargan lazy en openModal
-    // y los productos vienen con precio base.
-    allProducts = products.map(p => ({
-      ...p,
-      variants: [],           // se carga lazy en openModal
-      displayPrice: p.discount_price || p.price || 0,
-      minPrice: p.discount_price || p.price || 0,
-      maxPrice: p.price || 0,
-      images: Array.isArray(p.images) ? p.images : [],
-      tags: Array.isArray(p.tags) ? p.tags : [],
-    }))
-
-    renderCats()
-    renderFooter()
-    applyFilters()
-
-  } catch (err) {
-    console.error('[Catalog] Error cargando productos:', err)
-    showEmpty('Error de conexión. Intenta recargar la página.')
-  }
-}
-
-// ─── LOAD VARIANTS FOR A PRODUCT (lazy) ────────────────────────────
-async function loadVariants(productId) {
-  try {
-    // Si tienes un endpoint dedicado para variantes, úsalo.
-    // Fallback: como no hay endpoint específico en los archivos subidos,
-    // intentamos obtener el producto con sus variantes vía query param.
-    // 
-    // Si tu backend tiene un endpoint como /api/catalog/variants?product_id=xxx,
-    // reemplaza esto:
-
-    // Por ahora, retornamos array vacío y el modal mostrará precio base
-    // hasta que implementes el endpoint de variantes.
-    // 
-    // RECOMENDACIÓN: Agrega en route(1).ts un handler para ?slug=xxx que
-    // haga JOIN con product_variants y retorne el producto completo.
-
-    return []
-  } catch (e) {
-    console.warn('No se pudieron cargar variantes:', e)
-    return []
-  }
+  const { data } = await sb.from('catalog_categories').select('*').eq('active', true).order('sort_order')
+  allCats = data || []
+  renderCats()
+  renderFooter()
 }
 
 function renderCats() {
   document.getElementById('catsLoading')?.remove()
   const wrap = document.getElementById('catChips')
-  // Limpiar chips existentes excepto "Todos"
-  wrap.querySelectorAll('.chip:not([data-cat="all"])').forEach(el => el.remove())
-
-  // Actualizar estado visual del botón "Todos"
-  const allBtn = wrap.querySelector('.chip[data-cat="all"]')
-  if (allBtn) {
-    allBtn.classList.toggle('on', activeCat === 'all')
-    allBtn.onclick = () => pickCat('all')
-  }
-
   allCats.forEach(c => {
     const btn = document.createElement('button')
     btn.className = 'chip' + (activeCat === c.slug ? ' on' : '')
     btn.dataset.cat = c.slug
-    btn.innerHTML = `<span>${c.icon}</span> ${esc(c.name)}`
+    btn.innerHTML = `<span>${c.icon}</span> ${c.name}`
     btn.onclick = () => pickCat(c.slug)
     wrap.appendChild(btn)
   })
@@ -644,11 +460,6 @@ function renderCats() {
 function renderFooter() {
   const el = document.getElementById('footerLinks')
   if (!el) return
-  // Limpiar enlaces previos (excepto el título)
-  const title = el.querySelector('h4')
-  el.innerHTML = ''
-  if (title) el.appendChild(title)
-
   allCats.slice(0, 7).forEach(c => {
     const a = document.createElement('a')
     a.href = `?cat=${c.slug}`
@@ -660,6 +471,66 @@ function renderFooter() {
   })
 }
 
+// ─── LOAD PRODUCTS + VARIANTS ──────────────────────────────────────
+// Single query: products with their variants joined
+async function loadProducts() {
+  const { data: products, error } = await sb
+    .from('catalog_products_view')
+    .select(`
+      id, name, slug, category_id, category_name, category_slug, category_icon,
+      subcategory, description, short_description, price, discount_price,
+      stock_status, cover_image, images, tags, custom_label, label_color,
+      featured, whatsapp_message, active, visible_on_website, sort_order
+    `)
+    .eq('active', true)
+    .eq('visible_on_website', true)
+    .order('featured', { ascending: false })
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) { console.error(error); showEmpty('Error cargando productos.'); return }
+
+  // Load all variants for these products in one query
+  const productIds = (products || []).map(p => p.id)
+  let variantMap = {}
+
+  if (productIds.length) {
+    const { data: variants } = await sb
+      .from('product_variants')
+      .select('id, product_id, variant_name, quantity, attributes, cost_price, shipping_cost, final_cost, market_price, profit_margin, is_default, stock_status, sort_order')
+      .in('product_id', productIds)
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
+
+    ;(variants || []).forEach(v => {
+      if (!variantMap[v.product_id]) variantMap[v.product_id] = []
+      variantMap[v.product_id].push(v)
+    })
+  }
+
+  // Merge
+  allProducts = (products || []).map(p => ({
+    ...p,
+    variants: variantMap[p.id] || [],
+    // Derive display price from default variant or product price
+    displayPrice: (() => {
+      const variants = variantMap[p.id] || []
+      const def = variants.find(v => v.is_default) || variants[0]
+      return def ? def.market_price : (p.discount_price || p.price)
+    })(),
+    minPrice: (() => {
+      const variants = variantMap[p.id] || []
+      return variants.length ? Math.min(...variants.map(v => v.market_price)) : (p.discount_price || p.price)
+    })(),
+    maxPrice: (() => {
+      const variants = variantMap[p.id] || []
+      return variants.length ? Math.max(...variants.map(v => v.market_price)) : (p.price)
+    })(),
+  }))
+
+  applyFilters()
+}
+
 // ─── FILTER + SORT ─────────────────────────────────────────────────
 function applyFilters() {
   let res = [...allProducts]
@@ -669,7 +540,7 @@ function applyFilters() {
   if (searchQ) {
     const q = searchQ.toLowerCase()
     res = res.filter(p =>
-      (p.name || '').toLowerCase().includes(q) ||
+      p.name.toLowerCase().includes(q) ||
       (p.short_description || '').toLowerCase().includes(q) ||
       (p.category_name || '').toLowerCase().includes(q) ||
       (p.tags || []).some(t => t.toLowerCase().includes(q))
@@ -698,8 +569,8 @@ function renderGrid() {
 }
 
 function cardHTML(p) {
-  const hasVariants = p.variants && p.variants.length > 0
-  const isSingle    = p.variants && p.variants.length === 1
+  const hasVariants = p.variants.length > 0
+  const isSingle    = p.variants.length === 1
   const priceLabel  = hasVariants
     ? (isSingle
         ? `$${p.minPrice.toFixed(2)}`
@@ -707,14 +578,14 @@ function cardHTML(p) {
     : `$${p.displayPrice.toFixed(2)}`
 
   // Show first 3 variants as tier pills on the card
-  const tierPills = (p.variants || []).slice(0,3).map(v =>
-    `<span class="tier-pill" title="${esc(v.variant_name || '')}">
-      ${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity || 0} uds · $${(v.market_price || 0).toFixed(2)}
+  const tierPills = p.variants.slice(0,3).map(v =>
+    `<span class="tier-pill" title="${esc(v.variant_name)}">
+      ${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity} uds · $${v.market_price.toFixed(2)}
     </span>`
-  ).join('') + ((p.variants || []).length > 3 ? `<span class="tier-pill">+${p.variants.length-3} más</span>` : '')
+  ).join('') + (p.variants.length > 3 ? `<span class="tier-pill">+${p.variants.length-3} más</span>` : '')
 
   // Unique attributes preview (e.g. acabados available)
-  const acabados = [...new Set((p.variants || []).map(v => v.attributes?.acabado).filter(Boolean))]
+  const acabados = [...new Set(p.variants.map(v => v.attributes?.acabado).filter(Boolean))]
 
   return `
   <div class="pcard" onclick="openModal('${p.id}')">
@@ -722,7 +593,7 @@ function cardHTML(p) {
       ${p.cover_image
         ? `<img src="${esc(p.cover_image)}" alt="${esc(p.name)}" loading="lazy">`
         : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#e2e8f0"><span class="material-symbols-outlined" style="font-size:44px">image</span></div>`}
-      ${p.custom_label ? `<span class="badge badge-custom" style="background:${esc(p.label_color)};position:absolute;top:11px;left:11px">${esc(p.custom_label)}</span>` : ''}
+      ${p.custom_label ? `<span class="badge badge-custom" style="background:${p.label_color};position:absolute;top:11px;left:11px">${esc(p.custom_label)}</span>` : ''}
       ${p.featured && !p.custom_label ? `<span class="badge badge-navy" style="position:absolute;top:11px;left:11px">⭐ Destacado</span>` : ''}
     </div>
     <div class="pcard-body">
@@ -764,22 +635,12 @@ function showEmpty(msg='') {
 }
 
 // ─── PRODUCT MODAL WITH VARIANT SELECTOR ──────────────────────────
-async function openModal(productId) {
+function openModal(productId) {
   openProduct = allProducts.find(p => p.id === productId)
   if (!openProduct) return
 
-  // Cargar variantes lazy si no las tenemos
-  if (!openProduct.variants || openProduct.variants.length === 0) {
-    const vars = await loadVariants(productId)
-    if (vars.length) {
-      openProduct.variants = vars
-      openProduct.minPrice = Math.min(...vars.map(v => v.market_price || 0))
-      openProduct.maxPrice = Math.max(...vars.map(v => v.market_price || 0))
-    }
-  }
-
   // Default to first variant or default
-  selectedVar = (openProduct.variants || []).find(v => v.is_default) || (openProduct.variants || [])[0] || null
+  selectedVar = openProduct.variants.find(v => v.is_default) || openProduct.variants[0] || null
 
   renderModalBody()
 
@@ -791,12 +652,13 @@ function renderModalBody() {
   const p = openProduct
   if (!p) return
 
-  const hasVariants = p.variants && p.variants.length > 0
+  const hasVariants = p.variants.length > 0
   const galleryImgs = [p.cover_image, ...(p.images||[])].filter(Boolean)
 
   // Group variants by a primary dimension to help organize the picker
-  const uniqueQtys     = [...new Set((p.variants || []).map(v => v.quantity).filter(Boolean))]
-  const uniqueAcabados = [...new Set((p.variants || []).map(v => v.attributes?.acabado).filter(Boolean))]
+  // Detect if variants differ mainly by quantity OR by acabado
+  const uniqueQtys     = [...new Set(p.variants.map(v => v.quantity))]
+  const uniqueAcabados = [...new Set(p.variants.map(v => v.attributes?.acabado).filter(Boolean))]
   const hasAcabados    = uniqueAcabados.length > 1
   const hasMultiQty    = uniqueQtys.length > 1
 
@@ -806,7 +668,7 @@ function renderModalBody() {
     <!-- Image gallery -->
     <div class="gallery-main">
       <img id="galleryMain" src="${esc(galleryImgs[0]||'')}" alt="${esc(p.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background='#f1f5f9';this.style.display='none'">
-      ${p.custom_label ? `<span class="badge badge-custom" style="background:${esc(p.label_color)};position:absolute;top:14px;left:14px">${esc(p.custom_label)}</span>` : ''}
+      ${p.custom_label ? `<span class="badge badge-custom" style="background:${p.label_color};position:absolute;top:14px;left:14px">${esc(p.custom_label)}</span>` : ''}
     </div>
     ${galleryImgs.length > 1 ? `<div class="thumb-row">${galleryImgs.map((u,i) => `<img src="${esc(u)}" class="thumb ${i===0?'on':''}" onclick="switchImg('${esc(u)}',this)">`).join('')}</div>` : ''}
 
@@ -828,13 +690,13 @@ function renderModalBody() {
         <div class="price-box" style="margin-bottom:20px">
           <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;font-family:'Manrope',sans-serif">Precio seleccionado</p>
           <div class="price-main" id="priceDisplay">
-            ${selectedVar ? `$${(selectedVar.market_price || 0).toFixed(2)}` : '—'}
+            ${selectedVar ? `$${selectedVar.market_price.toFixed(2)}` : '—'}
           </div>
           <p class="price-per-unit" id="pricePerUnit">
-            ${selectedVar ? `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${((selectedVar.market_price || 0)/(selectedVar.quantity || 1)).toFixed(4)} c/u` : ''}
+            ${selectedVar ? `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${(selectedVar.market_price/selectedVar.quantity).toFixed(4)} c/u` : ''}
           </p>
-          ${(p.variants || []).length > 1 ? `<p style="font-size:11px;color:#2552ca;font-weight:600;margin-top:6px">
-            Rango: $${(p.minPrice || 0).toFixed(2)} – $${(p.maxPrice || 0).toFixed(2)}
+          ${p.variants.length > 1 ? `<p style="font-size:11px;color:#2552ca;font-weight:600;margin-top:6px">
+            Rango: $${p.minPrice.toFixed(2)} – $${p.maxPrice.toFixed(2)}
           </p>` : ''}
         </div>` : ''}
 
@@ -845,7 +707,7 @@ function renderModalBody() {
             ${hasAcabados && hasMultiQty ? 'Selecciona cantidad y acabado' : hasAcabados ? 'Selecciona acabado' : 'Selecciona cantidad'}
           </p>
           <div class="variant-grid" id="variantGrid">
-            ${(p.variants || []).map((v,i) => variantBtnHTML(v, selectedVar?.id === v.id)).join('')}
+            ${p.variants.map((v,i) => variantBtnHTML(v, selectedVar?.id === v.id)).join('')}
           </div>
         </div>` : ''}
       </div>
@@ -855,21 +717,21 @@ function renderModalBody() {
         ${!hasVariants ? `
         <div class="price-box" style="margin-bottom:16px">
           <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;font-family:'Manrope',sans-serif">Precio</p>
-          <div class="price-main">$${((p.discount_price || p.price || 0)).toFixed(2)}</div>
+          <div class="price-main">$${(p.discount_price||p.price).toFixed(2)}</div>
         </div>` : ''}
 
         <!-- Customer data (optional) -->
         <div class="buy-form" style="margin-bottom:14px">
-          <label for="buyName">Tus datos (opcional)</label>
-          <input type="text"  id="buyName"  placeholder="Nombre completo" aria-label="Nombre completo">
-          <input type="tel"   id="buyPhone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono / WhatsApp">
-          <input type="email" id="buyEmail" placeholder="Correo electrónico" aria-label="Correo electrónico">
+          <label>Tus datos (opcional)</label>
+          <input type="text"  id="buyName"  placeholder="Nombre completo">
+          <input type="tel"   id="buyPhone" placeholder="Teléfono / WhatsApp">
+          <input type="email" id="buyEmail" placeholder="Correo electrónico">
         </div>
 
         <!-- Notes -->
         <div class="buy-form" style="margin-bottom:16px">
-          <label for="buyNotes">Notas del pedido (opcional)</label>
-          <input type="text" id="buyNotes" placeholder="Ej: logo en archivo AI, color específico..." aria-label="Notas del pedido">
+          <label>Notas del pedido (opcional)</label>
+          <input type="text" id="buyNotes" placeholder="Ej: logo en archivo AI, color específico...">
         </div>
 
         <!-- CTA -->
@@ -886,7 +748,7 @@ function renderModalBody() {
         ${selectedVar ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-top:12px">
           <p style="font-size:11px;color:#166534;font-weight:600;display:flex;align-items:center;gap:6px">
             <span class="material-symbols-outlined" style="font-size:15px;font-variation-settings:'FILL' 1">local_shipping</span>
-            ${(selectedVar.shipping_cost || 0) > 0 ? `Envío incluido: $${(selectedVar.shipping_cost || 0).toFixed(2)}` : 'Sin costo de envío adicional'}
+            ${selectedVar.shipping_cost > 0 ? `Envío incluido: $${selectedVar.shipping_cost.toFixed(2)}` : 'Sin costo de envío adicional'}
           </p>
         </div>` : ''}
       </div>
@@ -904,14 +766,14 @@ function variantBtnHTML(v, selected) {
 
   return `<button class="variant-btn ${selected?'selected':''}" onclick="pickVariant('${v.id}')">
     <span class="vb-qty">${v.quantity >= 1000 ? (v.quantity/1000)+'K' : v.quantity} unidades</span>
-    <span class="vb-price">$${(v.market_price || 0).toFixed(2)}</span>
+    <span class="vb-price">$${v.market_price.toFixed(2)}</span>
     ${attrStr ? `<span class="vb-attrs">${esc(attrStr)}</span>` : ''}
   </button>`
 }
 
 function pickVariant(variantId) {
   if (!openProduct) return
-  selectedVar = (openProduct.variants || []).find(v => v.id === variantId) || null
+  selectedVar = openProduct.variants.find(v => v.id === variantId) || null
 
   // Update variant buttons
   document.querySelectorAll('.variant-btn').forEach(btn => {
@@ -922,14 +784,14 @@ function pickVariant(variantId) {
   const priceEl = document.getElementById('priceDisplay')
   const perEl   = document.getElementById('pricePerUnit')
   if (priceEl && selectedVar) {
-    priceEl.textContent = `$${(selectedVar.market_price || 0).toFixed(2)}`
+    priceEl.textContent = `$${selectedVar.market_price.toFixed(2)}`
     priceEl.classList.remove('flash')
     void priceEl.offsetWidth // trigger reflow
     priceEl.classList.add('flash')
     setTimeout(() => priceEl.classList.remove('flash'), 600)
   }
   if (perEl && selectedVar) {
-    perEl.textContent = `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${((selectedVar.market_price || 0)/(selectedVar.quantity || 1)).toFixed(4)} c/u`
+    perEl.textContent = `${selectedVar.quantity >= 1000 ? (selectedVar.quantity/1000)+'K' : selectedVar.quantity} unidades · $${(selectedVar.market_price/selectedVar.quantity).toFixed(4)} c/u`
   }
 
   // Enable buy button
@@ -938,6 +800,10 @@ function pickVariant(variantId) {
     buyBtn.disabled = false
     buyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">chat</span> Pedir por WhatsApp`
   }
+
+  // Update shipping note
+  const shippingNote = document.querySelector('[data-shipping]')
+  // Re-render panel area with new variant — simpler: just re-render modal
 }
 
 // ─── PURCHASE FLOW ─────────────────────────────────────────────────
@@ -951,9 +817,9 @@ async function doPurchase() {
   const notes = document.getElementById('buyNotes')?.value.trim() || ''
 
   const variant = selectedVar
-  const price   = variant ? (variant.market_price || 0) : (p.discount_price || p.price || 0)
-  const qty     = variant ? (variant.quantity || 1) : 1
-  const varName = variant ? (variant.variant_name || '') : ''
+  const price   = variant ? variant.market_price : (p.discount_price || p.price)
+  const qty     = variant ? variant.quantity : 1
+  const varName = variant ? variant.variant_name : ''
 
   const btn = document.getElementById('buyBtn')
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="animation:spin .7s linear infinite;display:inline-block;font-size:16px">⏳</span> Registrando...' }
@@ -998,28 +864,22 @@ async function doPurchase() {
 function buildWAMsg({ p, variant, price, qty, varName, name, phone, orderNum, notes }) {
   const attrs = variant?.attributes || {}
   const attrLines = Object.entries(attrs)
-    .filter(([k, v]) => v && k !== '__typename')
-    .map(([k, v]) => `• ${k.charAt(0).toUpperCase() + k.slice(1)}: ${v}`)
+    .filter(([k,v]) => v && k !== '__typename')
+    .map(([k,v]) => `  • ${k.charAt(0).toUpperCase()+k.slice(1)}: ${v}`)
     .join('\n')
 
-  const lines = [
-    `*PEDIDO ARTIA STUDIO* 🛍️`,
-    orderNum ? `📋 N° Pedido: *${orderNum}*` : null,
-    ``,
-    `*Producto:*`,
-    `▸ ${p.name}`,
-    `▸ Opción: *${varName || 'Estándar'}*`,
-    `▸ Cantidad: *${qty >= 1000 ? (qty / 1000) + 'K' : qty} unidades*`,
-    attrLines || null,
-    `▸ Precio: *$${price.toFixed(2)} USD*`,
-    name ? `\n👤 Cliente: ${name}` : null,
-    phone ? `\n📞 Teléfono: ${phone}` : null,
-    notes ? `\n📝 Notas: ${notes}` : null,
-    ``,
-    `Hola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
-  ]
-
-  return lines.filter(Boolean).join('\n')
+  return `*PEDIDO ARTIA STUDIO* 🛍️\n` +
+    `${orderNum ? `📋 N° Pedido: *${orderNum}*\n` : ''}` +
+    `\n*Producto:*\n` +
+    `▸ ${p.name}\n` +
+    `▸ Opción: *${varName || 'Estándar'}*\n` +
+    `▸ Cantidad: *${qty >= 1000 ? (qty/1000)+'K' : qty} unidades*\n` +
+    `${attrLines ? attrLines + '\n' : ''}` +
+    `▸ Precio: *$${price.toFixed(2)} USD*\n` +
+    `${name  ? `\n👤 Cliente: ${name}`  : ''}` +
+    `${phone ? `\n📞 Teléfono: ${phone}` : ''}` +
+    `${notes ? `\n📝 Notas: ${notes}` : ''}` +
+    `\n\nHola Artia, me interesa este pedido. ¿Tienen disponibilidad y cuál sería el tiempo de entrega?`
 }
 
 function closeModal() {
@@ -1103,545 +963,5 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
 </script>
-<script src="fab-artia.js"></script>
-<script src="artia-modal.js"></script>
-<!-- ═══ CHATBOT ARTIA AI ═══ -->
-    <div id="ai-chat-container" class="fixed bottom-8 right-8 lg:bottom-6 lg:right-24 z-[100] flex flex-col items-end">
-        <div id="chat-tooltip" class="mb-3 mr-1 bg-white text-primary text-[11px] font-bold px-5 py-2.5 rounded-2xl rounded-br-sm shadow-xl border border-gray-100 origin-bottom-right opacity-0 scale-50 pointer-events-none">
-            ¿Alguna duda? ✨
-        </div>
-        <button id="chat-toggle" class="bg-[#FF00FF] text-white p-4 rounded-full shadow-[0_8px_30px_rgba(255,0,255,0.4)] hover:scale-110 transition-transform flex items-center justify-center">
-            <span class="material-symbols-outlined">smart_toy</span>
-        </button>
-        <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 h-[28rem] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-100 origin-bottom-right">
-            <div class="bg-[#FF00FF] p-4 text-white flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-sm">smart_toy</span>
-                    <span class="font-bold text-sm">Artia AI</span>
-                </div>
-                <button id="chat-close" class="material-symbols-outlined text-sm hover:opacity-70 transition-opacity">close</button>
-            </div>
-            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-sm flex flex-col gap-3 text-black bg-gray-50"></div>
-            <div class="p-3 border-t bg-white flex gap-2 items-center">
-                <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." class="flex-1 text-xs p-2.5 border rounded-lg focus:outline-none focus:border-[#FF00FF] focus:ring-1 focus:ring-[#FF00FF]/20 text-black transition-all">
-                <button id="chat-mic" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-lg material-symbols-outlined transition-all text-sm select-none touch-manipulation" title="Mantén presionado para grabar">
-                    mic
-                </button>
-                <button id="chat-send" class="bg-[#FF00FF] hover:bg-[#d400d4] text-white p-2.5 rounded-lg material-symbols-outlined transition-colors text-sm">send</button>
-            </div>
-            <div id="mic-recording-bar" class="hidden bg-red-50 px-3 py-2 flex items-center justify-between border-t border-red-100">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    <span class="text-xs text-red-600 font-medium">Grabando... suelta para enviar</span>
-                </div>
-                <span id="mic-timer" class="text-xs text-red-500 font-mono">0:00</span>
-            </div>
-        </div>
-    </div>
- 
-    <script>
-    (function() {
-        const CONFIG = {
-            apiEndpoint: '/api/chat',
-            emailEndpoint: '/api/send-email',
-            audioEndpoint: '/api/chat',
-            whatsappNumber: '593969937265',
-            storageKey: 'artia_chat_history',
-            leadDataKey: 'artia_lead_data',
-            emailSentKey: 'artia_email_sent',
-            maxHistory: 50,
-            tooltipDelay: 10000,
-            tooltipDuration: 6000,
-            maxRecordingTime: 60000,
-        };
- 
-        const chatToggle = document.getElementById('chat-toggle');
-        const chatWindow = document.getElementById('chat-window');
-        const chatClose  = document.getElementById('chat-close');
-        const chatInput  = document.getElementById('chat-input');
-        const chatSend   = document.getElementById('chat-send');
-        const chatMic    = document.getElementById('chat-mic');
-        const chatMessages = document.getElementById('chat-messages');
-        const chatTooltip = document.getElementById('chat-tooltip');
-        const micRecordingBar = document.getElementById('mic-recording-bar');
-        const micTimer = document.getElementById('mic-timer');
- 
-        if (!chatToggle || !chatWindow || !chatMessages) return;
- 
-        let chatHistory = [];
-        let leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
-        let emailSent = false;
-        let isFirstOpen = true;
-        
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let recordingTimer = null;
-        let recordingSeconds = 0;
-        let isRecording = false;
-        let audioStream = null;
-        let isSendingAudio = false;
- 
-        function init() {
-            loadHistory();
-            bindEvents();
-            animateEntrance();
-        }
- 
-        function bindEvents() {
-            chatToggle.onclick = toggleChat;
-            chatClose.onclick = () => chatWindow.classList.add('hidden');
-            chatSend.onclick = sendMessage;
-            chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-            
-            chatMic.addEventListener('mousedown', startRecording);
-            chatMic.addEventListener('touchstart', startRecording, { passive: false });
-            
-            chatMic.addEventListener('mouseup', stopAndSend);
-            chatMic.addEventListener('touchend', stopAndSend);
-            chatMic.addEventListener('mouseleave', stopAndSend);
-            chatMic.addEventListener('touchcancel', stopAndSend);
-            
-            chatMic.addEventListener('contextmenu', (e) => e.preventDefault());
-            
-            document.addEventListener('click', (e) => {
-                if (!chatWindow.contains(e.target) && !chatToggle.contains(e.target)) {
-                    chatWindow.classList.add('hidden');
-                }
-            });
-        }
- 
-        async function startRecording(e) {
-            if (e) e.preventDefault();
-            if (isRecording || isSendingAudio) return;
-            
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        sampleRate: 44100
-                    } 
-                });
-                
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-                    ? 'audio/webm;codecs=opus' 
-                    : MediaRecorder.isTypeSupported('audio/webm') 
-                        ? 'audio/webm' 
-                        : 'audio/mp4';
-                
-                mediaRecorder = new MediaRecorder(audioStream, { mimeType });
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data && event.data.size > 0) {
-                        audioChunks.push(event.data);
-                    }
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    await new Promise(r => setTimeout(r, 100));
-                    
-                    if (audioChunks.length === 0) {
-                        console.warn('[Artia Chat] No se capturaron datos de audio');
-                        resetMicUI();
-                        return;
-                    }
-                    
-                    const audioBlob = new Blob(audioChunks, { type: mimeType });
-                    console.log('[Artia Chat] Audio grabado:', audioBlob.size, 'bytes');
-                    await sendAudio(audioBlob);
-                };
-                
-                mediaRecorder.start(100);
-                isRecording = true;
-                
-                chatMic.classList.add('bg-red-500', 'text-white', 'scale-110');
-                chatMic.classList.remove('bg-gray-100', 'text-gray-600');
-                micRecordingBar.classList.remove('hidden');
-                chatInput.disabled = true;
-                chatSend.disabled = true;
-                
-                recordingSeconds = 0;
-                updateTimer();
-                recordingTimer = setInterval(updateTimer, 1000);
-                
-                setTimeout(() => { 
-                    if (isRecording) stopAndSend(); 
-                }, CONFIG.maxRecordingTime);
-                
-            } catch (err) {
-                console.error('[Artia Chat] Error accediendo al micrófono:', err);
-                renderMessage('assistant', 'No pude acceder al micrófono. Verifica que hayas dado permiso en tu navegador.', false);
-                resetMicUI();
-            }
-        }
- 
-        function stopAndSend(e) {
-            if (e) e.preventDefault();
-            if (!isRecording || !mediaRecorder) return;
-            
-            if (mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
-            isRecording = false;
-            clearInterval(recordingTimer);
-            resetMicUI();
-        }
- 
-        function resetMicUI() {
-            chatMic.classList.remove('bg-red-500', 'text-white', 'scale-110');
-            chatMic.classList.add('bg-gray-100', 'text-gray-600');
-            micRecordingBar.classList.add('hidden');
-            chatInput.disabled = false;
-            chatSend.disabled = false;
-            recordingSeconds = 0;
-        }
- 
-        function cleanupRecording() {
-            if (audioStream) {
-                audioStream.getTracks().forEach(track => track.stop());
-                audioStream = null;
-            }
-            mediaRecorder = null;
-            audioChunks = [];
-        }
- 
-        function updateTimer() {
-            recordingSeconds++;
-            const mins = Math.floor(recordingSeconds / 60);
-            const secs = recordingSeconds % 60;
-            micTimer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
- 
-        async function sendAudio(audioBlob) {
-            if (isSendingAudio) return;
-            isSendingAudio = true;
-            
-            const typingId = appendTyping();
-            
-            try {
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'recording.webm');
-                formData.append('messages', JSON.stringify(chatHistory));
-                formData.append('stream', 'false');
-                
-                console.log('[Artia Chat] Enviando audio...', audioBlob.size, 'bytes');
-                
-                const res = await fetch(CONFIG.audioEndpoint, { 
-                    method: 'PUT', 
-                    body: formData
-                });
-                
-                removeTyping(typingId);
-                
-                if (!res.ok) {
-                    const errText = await res.text();
-                    let errData = {};
-                    try { errData = JSON.parse(errText); } catch {}
-                    console.error('[Artia Chat] Error del servidor:', res.status, errData);
-                    throw new Error(errData.error || `Error ${res.status}`);
-                }
-                
-                const data = await res.json();
-                console.log('[Artia Chat] Respuesta del servidor:', data);
-                
-                const transcribed = data._meta?.transcribed_text 
-                    ? decodeURIComponent(data._meta.transcribed_text) 
-                    : null;
-                    
-                if (transcribed) {
-                    renderMessage('user', transcribed, true);
-                    chatHistory.push({ role: 'user', content: transcribed });
-                }
-                
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const aiResponse = data.choices[0].message.content;
-                    chatHistory.push({ role: 'assistant', content: aiResponse });
-                    saveHistory();
-                    
-                    const resumenExtraido = extractResumen(aiResponse);
-                    if (resumenExtraido) { 
-                        leadData = { ...leadData, ...resumenExtraido }; 
-                        saveHistory(); 
-                    }
-                    
-                    if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
-                        const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
-                        renderMessage('assistant', cleanText, true);
-                        appendWhatsAppButton();
-                        
-                        if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
-                            try {
-                                await notifyByEmail();
-                                emailSent = true;
-                                saveHistory();
-                                setTimeout(() => clearStorage(), 5000);
-                            } catch (emailErr) {
-                                console.error('[Artia Chat] Error enviando email:', emailErr);
-                            }
-                        }
-                    } else {
-                        renderMessage('assistant', aiResponse, true);
-                    }
-                } else {
-                    throw new Error('Respuesta incompleta del servidor');
-                }
-                
-            } catch (e) {
-                removeTyping(typingId);
-                console.error('[Artia Chat] Error procesando audio:', e);
-                renderMessage('assistant', 'Lo siento, no pude procesar tu audio. ¿Podrías intentar de nuevo o escribir tu mensaje?', false);
-            } finally {
-                isSendingAudio = false;
-                cleanupRecording();
-            }
-        }
- 
-        function animateEntrance() {
-            if (typeof gsap !== 'undefined') {
-                gsap.set('#ai-chat-container', { y: 120, opacity: 0 });
-                const delay = isHomePage() ? CONFIG.tooltipDelay : 3000;
-                gsap.to('#ai-chat-container', { y: 0, opacity: 1, duration: 1.2, ease: "elastic.out(1, 0.5)", delay: delay / 1000 });
-                if (isHomePage()) {
-                    gsap.to('#chat-tooltip', { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)", delay: (delay + 500) / 1000 });
-                    setTimeout(() => { gsap.to('#chat-tooltip', { opacity: 0, scale: 0.8, duration: 0.4, ease: "power2.in" }); }, delay + CONFIG.tooltipDuration);
-                }
-            } else {
-                setTimeout(() => {
-                    const container = document.getElementById('ai-chat-container');
-                    if (container) { container.style.transition = 'all 1.2s ease'; container.style.transform = 'translateY(0)'; container.style.opacity = '1'; }
-                }, isHomePage() ? CONFIG.tooltipDelay : 3000);
-            }
-            chatToggle.addEventListener('click', () => { if (chatTooltip) { chatTooltip.style.opacity = '0'; chatTooltip.style.transform = 'scale(0.8)'; } });
-        }
- 
-        function isHomePage() {
-            const path = window.location.pathname;
-            return path === '/' || path === '/inicio.html' || path.endsWith('/inicio.html');
-        }
- 
-        function loadHistory() {
-            try {
-                const saved = localStorage.getItem(CONFIG.storageKey);
-                const savedLead = localStorage.getItem(CONFIG.leadDataKey);
-                const savedEmailSent = localStorage.getItem(CONFIG.emailSentKey);
-                if (saved) {
-                    chatHistory = JSON.parse(saved);
-                    chatHistory.slice(-20).forEach(msg => { if (msg.role !== 'system') renderMessage(msg.role, msg.content, false); });
-                }
-                if (savedLead) leadData = JSON.parse(savedLead);
-                if (savedEmailSent === 'true') emailSent = true;
-            } catch (e) { clearStorage(); }
-        }
- 
-        function saveHistory() {
-            try {
-                if (chatHistory.length > CONFIG.maxHistory) chatHistory = chatHistory.slice(-CONFIG.maxHistory);
-                localStorage.setItem(CONFIG.storageKey, JSON.stringify(chatHistory));
-                localStorage.setItem(CONFIG.leadDataKey, JSON.stringify(leadData));
-                localStorage.setItem(CONFIG.emailSentKey, String(emailSent));
-            } catch (e) { console.warn('[Artia Chat] Error guardando:', e); }
-        }
- 
-        function clearStorage() {
-            localStorage.removeItem(CONFIG.storageKey);
-            localStorage.removeItem(CONFIG.leadDataKey);
-            localStorage.removeItem(CONFIG.emailSentKey);
-            chatHistory = [];
-            leadData = { nombre: null, telefono: null, email: null, servicio: null, objetivo: null, resumenCompleto: null };
-            emailSent = false;
-        }
- 
-        function toggleChat() {
-            const isHidden = chatWindow.classList.contains('hidden');
-            if (isHidden) {
-                chatWindow.classList.remove('hidden');
-                chatInput.focus();
-                if (typeof gsap !== 'undefined') gsap.fromTo(chatWindow, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" });
-                if (isFirstOpen && chatHistory.length === 0) {
-                    isFirstOpen = false;
-                    setTimeout(() => {
-                        const welcome = "¡Hola! Soy Artia AI, tu asistente de Artia Studio. ¿En qué proyecto puedo ayudarte hoy?";
-                        renderMessage('assistant', welcome, false);
-                        chatHistory.push({ role: 'assistant', content: welcome });
-                        saveHistory();
-                    }, 500);
-                }
-            } else {
-                chatWindow.classList.add('hidden');
-            }
-        }
- 
-        async function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text) return;
-            renderMessage('user', text, true);
-            chatInput.value = '';
-            chatHistory.push({ role: 'user', content: text });
-            saveHistory();
-            const typingId = appendTyping();
- 
-            try {
-                const res = await fetch(CONFIG.apiEndpoint, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ messages: chatHistory }) 
-                });
-                
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                
-                const data = await res.json();
-                removeTyping(typingId);
- 
-                if (data.choices && data.choices[0]) {
-                    const aiResponse = data.choices[0].message.content;
-                    chatHistory.push({ role: 'assistant', content: aiResponse });
-                    saveHistory();
- 
-                    const resumenExtraido = extractResumen(aiResponse);
-                    if (resumenExtraido) { leadData = { ...leadData, ...resumenExtraido }; saveHistory(); }
- 
-                    if (aiResponse.includes('[SHOW_WHATSAPP_BUTTON]')) {
-                        const cleanText = aiResponse.replace('[SHOW_WHATSAPP_BUTTON]', '').trim();
-                        renderMessage('assistant', cleanText, true);
-                        appendWhatsAppButton();
-                        
-                        if (leadData.nombre && leadData.telefono && isValidPhone(leadData.telefono) && !emailSent) {
-                            try {
-                                await notifyByEmail();
-                                emailSent = true;
-                                saveHistory();
-                                setTimeout(() => clearStorage(), 5000);
-                            } catch (emailErr) {
-                                console.error('[Artia Chat] Error enviando email:', emailErr);
-                            }
-                        }
-                    } else {
-                        renderMessage('assistant', aiResponse, true);
-                    }
-                } else { throw new Error('Respuesta incompleta'); }
-            } catch (e) {
-                removeTyping(typingId);
-                console.error('[Artia Chat] Error:', e);
-                renderMessage('assistant', 'Lo siento, tuve un problema al conectar. ¿Podrías intentar de nuevo?', false);
-            }
-        }
- 
-        function extractResumen(text) {
-            if (!text || !text.includes('Resumen de tu solicitud:')) return null;
-            const servicioMatch = text.match(/•\s*Servicio:\s*([^\n•]+)/i);
-            const clienteMatch = text.match(/•\s*Cliente:\s*([^\n•]+)/i);
-            const objetivoMatch = text.match(/•\s*Objetivo:\s*([^\n•]+)/i);
-            const contactoMatch = text.match(/•\s*Contacto:\s*([^\n•]+)/i);
-            if (!servicioMatch || !clienteMatch || !contactoMatch) return null;
-            const telefono = contactoMatch[1].trim();
-            const telefonoValido = isValidPhone(telefono) ? telefono : null;
-            const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-            return { 
-                servicio: servicioMatch[1].trim(), 
-                nombre: clienteMatch[1].trim(), 
-                objetivo: objetivoMatch ? objetivoMatch[1].trim() : 'No especificado', 
-                telefono: telefonoValido, 
-                email: emailMatch ? emailMatch[0] : leadData.email, 
-                resumenCompleto: text.substring(text.indexOf('Resumen de tu solicitud:')).trim() 
-            };
-        }
- 
-        function renderMessage(role, text, animate) {
-            const div = document.createElement('div');
-            const isUser = role === 'user';
-            div.className = `p-3 rounded-2xl max-w-[85%] text-[13px] leading-relaxed ${isUser ? 'bg-[#FF00FF] text-white self-end rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-sm shadow-sm'}`;
-            if (!isUser) {
-                div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-            } else { div.textContent = text; }
-            chatMessages.appendChild(div);
-            if (animate && typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power2.out" });
-            scrollToBottom();
-        }
- 
-        function appendWhatsAppButton() {
-            const div = document.createElement('div');
-            div.className = 'self-start mt-1';
-            const nombre = leadData.nombre || '';
-            const servicio = leadData.servicio || 'un proyecto';
-            const mensajeWhatsApp = nombre ? `Hola Artia, soy ${nombre}. Vi su página y quiero hablar con un asesor sobre ${servicio}.` : 'Hola Artia, vi su página y quiero hablar con un asesor.';
-            div.innerHTML = `<a href="https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(mensajeWhatsApp)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-5 py-3 rounded-full text-[13px] font-bold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 hover:scale-105"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Hablar con un asesor</a>`;
-            chatMessages.appendChild(div);
-            if (typeof gsap !== 'undefined') gsap.fromTo(div, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.7)", delay: 0.2 });
-            scrollToBottom();
-        }
- 
-        function appendTyping() {
-            const uid = 'typing-' + Date.now();
-            const div = document.createElement('div');
-            div.id = uid;
-            div.className = 'self-start flex items-center gap-1 bg-white border border-gray-200 px-3 py-2.5 rounded-2xl rounded-bl-sm shadow-sm';
-            div.innerHTML = '<span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>';
-            chatMessages.appendChild(div);
-            scrollToBottom();
-            return uid;
-        }
- 
-        function removeTyping(id) {
-            const el = document.getElementById(id);
-            if (el) { if (typeof gsap !== 'undefined') gsap.to(el, { opacity: 0, scale: 0.8, duration: 0.2, onComplete: () => el.remove() }); else el.remove(); }
-        }
- 
-        async function notifyByEmail() {
-            if (!leadData.nombre || !leadData.telefono) { 
-                console.warn('[Artia Chat] Faltan datos del lead'); 
-                throw new Error('Faltan datos del lead'); 
-            }
-            
-            const emailUsuario = leadData.email && isValidEmail(leadData.email) ? leadData.email : null;
-            const mensajeInterno = leadData.resumenCompleto || `Resumen de tu solicitud:\n• Servicio: ${leadData.servicio || 'No detectado'}\n• Cliente: ${leadData.nombre}\n• Objetivo: ${leadData.objetivo || 'No especificado'}\n• Contacto: ${leadData.telefono}`;
-            
-            const payload = { 
-                name: leadData.nombre, 
-                emailFrom: emailUsuario || '',  
-                service: leadData.servicio || 'Chat IA — Solicitud de asesor humano', 
-                message: mensajeInterno, 
-                phone: leadData.telefono 
-            };
-            
-            try {
-                const res = await fetch(CONFIG.emailEndpoint, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const responseData = await res.json().catch(() => ({}));
-                
-                if (!res.ok) { 
-                    console.warn('[Artia Chat] Error enviando email:', responseData); 
-                    throw new Error(responseData.message || `HTTP ${res.status}`); 
-                }
-                
-                console.log('[Artia Chat] Email enviado correctamente', responseData);
-                return responseData;
-            } catch(e) { 
-                console.warn('[Artia Chat] No se pudo notificar por email:', e); 
-                throw e;
-            }
-        }
- 
-        function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
-        
-        function isValidEmail(email) { 
-            if (!email) return false; 
-            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-            return regex.test(email) && !email.includes('artiaagency.vercel.app') && !email.includes('localhost') && !email.includes('example.com') && !email.includes('no-reply') && !email.includes('test.com'); 
-        }
-        
-        function isValidPhone(phone) { 
-            if (!phone) return false; 
-            const digits = phone.replace(/\D/g, ''); 
-            return digits.length >= 7 && digits.length <= 15; 
-        }
- 
-        init();
-    })();
-    </script>
 </body>
 </html>
