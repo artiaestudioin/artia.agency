@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Vista360Client from './Vista360Client'
 import SeguimientoClient from './SeguimientoClient'
-import ClienteActions from './ClienteActions'
 
 export async function generateMetadata({ params }: { params: Promise<{ folio: string }> }) {
   const { folio } = await params
@@ -30,7 +29,7 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
     )
   }
 
-  // ✅ AHORA SÍ: consultas después de validar lead
+  // Fetch related data after lead validation
   let paymentParents: any[] = []
   let project: any = null
   let projectFiles: any[] = []
@@ -65,7 +64,6 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
     projectFiles = data ?? []
   }
 
-  // ✅ SOLO UN RETURN FINAL
   return (
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
 
@@ -109,17 +107,17 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
           projectFiles={projectFiles}
         />
       </div>
-      {/* Preview */}
-        <div style={{ position: 'sticky', top: 24 }}>
-          <div style={{
-            borderRadius: 16,
-            overflow: 'hidden',
-            transform: 'scale(0.82)',
-            transformOrigin: 'top center',
-          }}>
-            <SeguimientoClient lead={lead} folio={folio} />
-          </div>
-        </div>
+
+      {/* Client Preview — only if SeguimientoClient accepts these props */}
+      {/*
+        NOTE: SeguimientoClient expects different props than Vista360Client.
+        If you need a preview, either:
+        1. Create a wrapper that passes the correct props, or
+        2. Use a simplified preview component.
+        
+        The previous code incorrectly passed `folio` which doesn't exist
+        in SeguimientoClient's prop type.
+      */}
 
     </div>
   )
