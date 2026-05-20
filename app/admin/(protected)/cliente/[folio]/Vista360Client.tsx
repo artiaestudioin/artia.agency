@@ -247,6 +247,11 @@ export default function Vista360Client({
   const [notes, setNotes]         = useState(initLead.notes ?? '')
   const [editNotes, setEditNotes] = useState(false)
   const [savingNotes, setSavingNotes]       = useState(false)
+
+  // ── Editable client message ──────────────────────────────────
+  const [editMensaje, setEditMensaje]     = useState(false)
+  const [mensajeText, setMensajeText]     = useState(initLead.mensaje ?? '')
+  const [savingMensaje, setSavingMensaje] = useState(false)
   const [toast, setToast]                   = useState<{ msg: string; ok: boolean } | null>(null)
   const [creatingProject, setCreatingProject] = useState(false)
   const [showContractForm, setShowContractForm] = useState(false)
@@ -450,6 +455,33 @@ export default function Vista360Client({
       if (res.ok) { setLead(l => ({ ...l, notes })); setEditNotes(false); showMsg('Notas guardadas') }
       else showMsg('Error guardando', false)
     } finally { setSavingNotes(false) }
+  }
+
+  async function saveMensaje() {
+    setSavingMensaje(true)
+    try {
+      const res = await fetch('/api/admin/lead-notes', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id, mensaje: mensajeText }),
+      })
+      if (res.ok) {
+        setLead(l => ({ ...l, mensaje: mensajeText }))
+        setEditMensaje(false)
+        showMsg('Mensaje del cliente actualizado ✓')
+        router.refresh()
+      } else {
+        showMsg('Error al guardar el mensaje', false)
+      }
+    } catch {
+      showMsg('Error de conexión', false)
+    } finally {
+      setSavingMensaje(false)
+    }
+  }
+
+  function cancelMensaje() {
+    setMensajeText(lead.mensaje ?? '')
+    setEditMensaje(false)
   }
 
   async function createProjectForLead() {

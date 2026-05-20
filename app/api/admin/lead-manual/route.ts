@@ -3,12 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const PREFIJOS: Record<string, string> = {
-  marketing:  'ASMKT',
-  impresion:  'ASIMP',
+  marketing: 'ASMKT',
+  impresion: 'ASIMP',
   fotografia: 'ASFOT',
-  branding:   'ASBRD',
-  web:        'ASWEB',
-  otro:       'ASMKT',
+  branding: 'ASBRD',
+  web: 'ASWEB',
+  otro: 'ASMKT',
 }
 
 function getServiceClient() {
@@ -25,38 +25,61 @@ function sanitize(val: unknown, max = 300): string {
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user)
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const body = await req.json()
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'Body JSON inválido' },
+      { status: 400 }
+    )
+  }
 
-  const nombre    = sanitize(body.nombre,    100)
-  const email     = sanitize(body.email,     200)
-  const telefono  = sanitize(body.telefono,   50)
-  const servicio  = sanitize(body.servicio,  150)
-  const mensaje   = sanitize(body.mensaje,   800)
-  const categoria = sanitize(body.categoria,  50)
+  const nombre = sanitize(body.nombre, 100)
+  const email = sanitize(body.email, 200)
+  const telefono = sanitize(body.telefono, 50)
+  const servicio = sanitize(body.servicio, 150)
+  const mensaje = sanitize(body.mensaje, 800)
+  const categoria = sanitize(body.categoria, 50)
+  const estado = sanitize(body.estado, 50) || 'nuevo'
+  const payment_status = sanitize(body.payment_status, 50) || 'sin_contrato'
 
+  // Validation
   if (!nombre || !servicio) {
-    return NextResponse.json({ error: 'Nombre y servicio son obligatorios.' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Nombre y servicio son obligatorios.' },
+      { status: 400 }
+    )
   }
 
   const sc = getServiceClient()
 
+  // Insert lead with all fields
   const { data, error } = await sc
     .from('leads')
-    .insert([{
-      nombre,
-      email:           email || null,
-      telefono:        telefono || null,
-      servicio,
-      notes:           mensaje || null,
-      estado:          'nuevo',
-      payment_status:  'sin_contrato',
-      estimated_value: (body.estimated_value !== undefined && body.estimated_value !== '' && body.estimated_value !== null)
-                         ? parseFloat(body.estimated_value)
-                         : null,
-    }])
+    .insert([
+      {
+        nombre,
+        email: email || null,
+        telefono: telefono || null,
+        servicio,
+        notes: mensaje || null,
+        estado: estado || 'nuevo',
+        payment_status: payment_status || 'sin_contrato',
+        estimated_value:
+          body.estimated_value !== undefined &&
+          body.estimated_value !== '' &&
+          body.estimated_value !== null
+            ? parseFloat(String(body.estimated_value))
+            : null,
+      },
+    ])
     .select('folio_num')
     .single()
 
@@ -65,10 +88,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  if (!data || data.folio_num == null) {
+    return NextResponse.json(
+      { error: 'No se pudo generar el folio' },
+      { status: 500 }
+    )
+  }
+
+  // Generate folio with offset
   const prefijo = PREFIJOS[categoria] ?? 'ASMKT'
-  const folio   = prefijo + '-' + String(361 + (data.folio_num ?? 0)).padStart(4, '0')
+  const folio =
+    prefijo + '-' + String(361 + (data.folio_num ?? 0)).padStart(4, '0')
 
-  await sc.from('leads').update({ folio }).eq('folio_num', data.folio_num)
+  // Update lead with generated folio
+  const { error: updateError } = await sc
+    .from('leads')
+    .update({ folio })
+    .eq('folio_num', data.folio_num)
 
-  return NextResponse.json({ ok: true, folio })
+  if (updateError) {
+    console.error('Error actualizando folio:', updateError)
+    return NextResponse.json(
+      { error: 'Lead creado pero error al generar folio' },
+      { status: 500 }
+    )
+  }
+
+  return NextResponse.json({ ok: true, folio, folio_num: data.folio_num })
 }
