@@ -816,7 +816,7 @@ function cancelMensaje() {
     </div>
   )}
 </div>
-
+</div> 
           {/* Pipeline state */}
           <div style={card}>
             <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', marginBottom: 12 }}>⚙️ Estado del Pipeline</div>
