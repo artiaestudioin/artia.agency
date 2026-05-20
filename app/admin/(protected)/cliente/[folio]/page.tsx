@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import Vista360Client from './Vista360Client'
-import SeguimientoClient from './SeguimientoClient'
 
 export async function generateMetadata({ params }: { params: Promise<{ folio: string }> }) {
   const { folio } = await params
@@ -65,7 +64,7 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
   }
 
   return (
-    <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
 
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -99,25 +98,12 @@ export default async function AdminClienteFolioPage({ params }: { params: Promis
       </div>
 
       {/* Vista 360 */}
-      <div style={{ marginTop: 40 }}>
-        <Vista360Client
-          lead={lead}
-          paymentParents={paymentParents}
-          project={project}
-          projectFiles={projectFiles}
-        />
-      </div>
-
-      {/* Client Preview — only if SeguimientoClient accepts these props */}
-      {/*
-        NOTE: SeguimientoClient expects different props than Vista360Client.
-        If you need a preview, either:
-        1. Create a wrapper that passes the correct props, or
-        2. Use a simplified preview component.
-        
-        The previous code incorrectly passed `folio` which doesn't exist
-        in SeguimientoClient's prop type.
-      */}
+      <Vista360Client
+        lead={lead}
+        paymentParents={paymentParents}
+        project={project}
+        projectFiles={projectFiles}
+      />
 
     </div>
   )

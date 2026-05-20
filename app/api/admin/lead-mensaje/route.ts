@@ -11,20 +11,14 @@ function getServiceClient() {
 
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user)
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json(
-      { error: 'Body JSON inválido' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'Body JSON inválido' }, { status: 400 })
   }
 
   const leadId = String(body.leadId ?? '')
@@ -32,10 +26,7 @@ export async function PATCH(req: NextRequest) {
   const previousMensaje = String(body.previous_mensaje ?? '')
 
   if (!leadId) {
-    return NextResponse.json(
-      { error: 'ID de lead requerido' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'ID de lead requerido' }, { status: 400 })
   }
 
   const sc = getServiceClient()
@@ -51,13 +42,10 @@ export async function PATCH(req: NextRequest) {
 
   if (error) {
     console.error('Error updating mensaje:', error)
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Optionally log to history table if it exists
+  // Log to history table if it exists (non-blocking)
   try {
     await sc.from('lead_message_history').insert({
       lead_id: leadId,
@@ -67,7 +55,7 @@ export async function PATCH(req: NextRequest) {
       updated_at: new Date().toISOString(),
     })
   } catch {
-    // History table is optional — don't fail if it doesn't exist
+    // History table is optional
   }
 
   return NextResponse.json({ ok: true })

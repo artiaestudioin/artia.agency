@@ -11,12 +11,12 @@ const ESTADOS = [
   { label: 'Perdido', value: 'perdido' },
 ] as const
 
+// FIX: Eliminados 'sin_contrato' y 'vencido' — no son válidos en leads.payment_status
+// Constraint DB: (payment_status = ANY (ARRAY['pendiente'::text, 'parcial'::text, 'pagado'::text]))
 const PAYMENT_STATUSES = [
-  { label: 'Sin contrato', value: 'sin_contrato' },
   { label: 'Pendiente', value: 'pendiente' },
   { label: 'Parcial', value: 'parcial' },
   { label: 'Pagado', value: 'pagado' },
-  { label: 'Vencido', value: 'vencido' },
 ] as const
 
 const SERVICIOS = [
@@ -57,13 +57,6 @@ const inpFocus: React.CSSProperties = {
   boxShadow: '0 0 0 3px rgba(37, 82, 202, 0.08)',
 }
 
-const card: React.CSSProperties = {
-  background: '#fff',
-  border: '0.5px solid #e2e8f0',
-  borderRadius: 14,
-  padding: '18px 20px',
-}
-
 export default function NuevoLeadModal() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -79,7 +72,7 @@ export default function NuevoLeadModal() {
     servicio: '',
     categoria: 'marketing',
     estado: 'nuevo',
-    payment_status: 'sin_contrato',
+    payment_status: 'pendiente', // FIX: era 'sin_contrato', ahora 'pendiente'
     estimated_value: '',
     mensaje: '',
   })
@@ -108,9 +101,13 @@ export default function NuevoLeadModal() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    // Validation
+    // FIX: Validar email obligatorio (NOT NULL en DB)
     if (!form.nombre.trim()) {
       setError('El nombre del cliente es obligatorio.')
+      return
+    }
+    if (!form.email.trim()) {
+      setError('El email es obligatorio.')
       return
     }
     if (!form.servicio.trim()) {
@@ -124,7 +121,7 @@ export default function NuevoLeadModal() {
     try {
       const payload = {
         nombre: form.nombre.trim(),
-        email: form.email.trim() || null,
+        email: form.email.trim(),
         telefono: form.telefono.trim() || null,
         servicio: form.servicio.trim(),
         categoria: form.categoria,
@@ -172,7 +169,7 @@ export default function NuevoLeadModal() {
       servicio: '',
       categoria: 'marketing',
       estado: 'nuevo',
-      payment_status: 'sin_contrato',
+      payment_status: 'pendiente',
       estimated_value: '',
       mensaje: '',
     })
@@ -180,7 +177,6 @@ export default function NuevoLeadModal() {
 
   return (
     <>
-      {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
         style={{
@@ -213,7 +209,6 @@ export default function NuevoLeadModal() {
         <span style={{ fontSize: 16 }}>+</span> Registrar Cliente Nuevo
       </button>
 
-      {/* Modal Overlay */}
       {open && (
         <div
           onClick={(e) => {
@@ -310,7 +305,6 @@ export default function NuevoLeadModal() {
 
             {/* Content */}
             <div style={{ padding: '24px 28px 28px', flex: 1 }}>
-              {/* Success State */}
               {folio ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
                   <p style={{ fontSize: 40, margin: '0 0 12px' }}>✅</p>
@@ -421,7 +415,7 @@ export default function NuevoLeadModal() {
                           servicio: '',
                           categoria: 'marketing',
                           estado: 'nuevo',
-                          payment_status: 'sin_contrato',
+                          payment_status: 'pendiente',
                           estimated_value: '',
                           mensaje: '',
                         })
@@ -471,7 +465,6 @@ export default function NuevoLeadModal() {
                   </div>
                 </div>
               ) : (
-                /* Form */
                 <form
                   onSubmit={handleSubmit}
                   style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
@@ -503,7 +496,9 @@ export default function NuevoLeadModal() {
                     }}
                   >
                     <div>
-                      <label style={sLabel}>Email</label>
+                      <label style={sLabel}>
+                        Email <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
                       <input
                         name="email"
                         type="email"
@@ -512,6 +507,7 @@ export default function NuevoLeadModal() {
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="cliente@ejemplo.com"
+                        required
                         style={getFieldStyle('email')}
                       />
                     </div>

@@ -8,10 +8,11 @@ import { createClient } from '@/lib/supabase/server'
  * Called by Vista360Client and FinanzasClient after every contract/installment change
  * to keep the leads.payment_status column in sync with computed financial logic.
  *
- * Accepted values: 'pagado' | 'parcial' | 'pendiente' | 'vencido' | 'sin_contrato'
+ * Accepted values per DB constraint:
+ * (payment_status = ANY (ARRAY['pendiente'::text, 'parcial'::text, 'pagado'::text]))
  */
 
-const VALID_STATUSES = new Set(['pagado', 'parcial', 'pendiente', 'vencido', 'sin_contrato'])
+const VALID_STATUSES = new Set(['pendiente', 'parcial', 'pagado'])
 
 export async function PATCH(req: Request) {
   try {

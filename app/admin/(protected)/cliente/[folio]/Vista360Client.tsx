@@ -458,31 +458,36 @@ export default function Vista360Client({
   }
 
   async function saveMensaje() {
-    setSavingMensaje(true)
-    try {
-      const res = await fetch('/api/admin/lead-notes', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId: lead.id, mensaje: mensajeText }),
-      })
-      if (res.ok) {
-        setLead(l => ({ ...l, mensaje: mensajeText }))
-        setEditMensaje(false)
-        showMsg('Mensaje del cliente actualizado ✓')
-        router.refresh()
-      } else {
-        showMsg('Error al guardar el mensaje', false)
-      }
-    } catch {
-      showMsg('Error de conexión', false)
-    } finally {
-      setSavingMensaje(false)
+  setSavingMensaje(true)
+  try {
+    const res = await fetch('/api/admin/lead-mensaje', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: lead.id,
+        mensaje: mensajeText,
+        previous_mensaje: lead.mensaje,
+      }),
+    })
+    if (res.ok) {
+      setLead(l => ({ ...l, mensaje: mensajeText }))
+      setEditMensaje(false)
+      showMsg('Mensaje del cliente actualizado ✓')
+      router.refresh()
+    } else {
+      showMsg('Error al guardar el mensaje', false)
     }
+  } catch {
+    showMsg('Error de conexión', false)
+  } finally {
+    setSavingMensaje(false)
   }
+}
 
-  function cancelMensaje() {
-    setMensajeText(lead.mensaje ?? '')
-    setEditMensaje(false)
-  }
+function cancelMensaje() {
+  setMensajeText(lead.mensaje ?? '')
+  setEditMensaje(false)
+}
 
   async function createProjectForLead() {
     setCreatingProject(true)
@@ -660,13 +665,157 @@ export default function Vista360Client({
               <div><span style={sLabel}>Valor estimado</span><span style={{ fontSize: 14, fontWeight: 800, color: '#64748b' }}>{fmtMoney(lead.estimated_value)}</span></div>
               <div><span style={sLabel}>Valor final</span><span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{fmtMoney(dashboard.totalContrato || null)}</span></div>
             </div>
-            {lead.mensaje && (
-              <div style={{ marginTop: 12, padding: '11px 13px', background: '#f8fafc', borderRadius: 8, borderLeft: '3px solid #cbd5e1' }}>
-                <span style={sLabel}>Mensaje del cliente</span>
-                <p style={{ fontSize: 13, color: '#475569', margin: 0, lineHeight: 1.6 }}>{lead.mensaje}</p>
-              </div>
-            )}
-          </div>
+            {/* Client Message — Editable */}
+<div style={{ marginTop: 12 }}>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    }}
+  >
+    <span style={sLabel}>Mensaje / Solicitud del cliente</span>
+    {!editMensaje && (
+      <button
+        onClick={() => setEditMensaje(true)}
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          padding: '4px 10px',
+          borderRadius: 6,
+          border: 'none',
+          cursor: 'pointer',
+          background: '#f1f5f9',
+          color: '#475569',
+          transition: 'all 0.15s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#e2e8f0'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = '#f1f5f9'
+        }}
+      >
+        ✏️ Editar
+      </button>
+    )}
+  </div>
+
+  {editMensaje ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <textarea
+        value={mensajeText}
+        onChange={(e) => setMensajeText(e.target.value)}
+        rows={4}
+        style={{
+          ...inp,
+          resize: 'vertical',
+          fontFamily: 'inherit',
+          lineHeight: 1.6,
+          minHeight: 80,
+        }}
+        placeholder="Mensaje original del cliente..."
+        disabled={savingMensaje}
+      />
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <button
+          onClick={cancelMensaje}
+          disabled={savingMensaje}
+          style={{
+            background: '#f8fafc',
+            border: '0.5px solid #e2e8f0',
+            color: '#475569',
+            borderRadius: 6,
+            padding: '6px 14px',
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={saveMensaje}
+          disabled={savingMensaje}
+          style={{
+            background: savingMensaje ? '#93c5fd' : '#0f172a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            padding: '6px 16px',
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: savingMensaje ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          {savingMensaje ? (
+            <>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 12,
+                  height: 12,
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#fff',
+                  borderRadius: '50%',
+                  animation: 'spin 0.6s linear infinite',
+                }}
+              />
+              Guardando…
+            </>
+          ) : (
+            '💾 Guardar cambios'
+          )}
+        </button>
+      </div>
+    </div>
+  ) : lead.mensaje ? (
+    <div
+      style={{
+        padding: '11px 13px',
+        background: '#f8fafc',
+        borderRadius: 8,
+        borderLeft: '3px solid #cbd5e1',
+      }}
+    >
+      <p
+        style={{
+          fontSize: 13,
+          color: '#475569',
+          margin: 0,
+          lineHeight: 1.6,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {lead.mensaje}
+      </p>
+    </div>
+  ) : (
+    <div
+      style={{
+        padding: '11px 13px',
+        background: '#f8fafc',
+        borderRadius: 8,
+        borderLeft: '3px solid #e2e8f0',
+      }}
+    >
+      <p
+        style={{
+          fontSize: 13,
+          color: '#94a3b8',
+          margin: 0,
+          fontStyle: 'italic',
+        }}
+      >
+        Sin mensaje del cliente. Haz clic en Editar para agregar.
+      </p>
+    </div>
+  )}
+</div>
 
           {/* Pipeline state */}
           <div style={card}>

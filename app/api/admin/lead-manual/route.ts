@@ -3,13 +3,17 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const PREFIJOS: Record<string, string> = {
-  marketing: 'ASMKT',
-  impresion: 'ASIMP',
+  marketing:  'ASMKT',
+  impresion:  'ASIMP',
   fotografia: 'ASFOT',
-  branding: 'ASBRD',
-  web: 'ASWEB',
-  otro: 'ASMKT',
+  branding:   'ASBRD',
+  web:        'ASWEB',
+  otro:       'ASMKT',
 }
+
+// FIX: Valores válidos según constraint leads_payment_status_check
+// (payment_status = ANY (ARRAY['pendiente'::text, 'parcial'::text, 'pagado'::text]))
+const VALID_PAYMENT_STATUSES = new Set(['pendiente', 'parcial', 'pagado'])
 
 function getServiceClient() {
   return createServiceClient(
@@ -25,32 +29,32 @@ function sanitize(val: unknown, max = 300): string {
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user)
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json(
-      { error: 'Body JSON inválido' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'Body JSON inválido' }, { status: 400 })
   }
 
-  const nombre = sanitize(body.nombre, 100)
-  const email = sanitize(body.email, 200)
-  const telefono = sanitize(body.telefono, 50)
-  const servicio = sanitize(body.servicio, 150)
-  const mensaje = sanitize(body.mensaje, 800)
-  const categoria = sanitize(body.categoria, 50)
-  const estado = sanitize(body.estado, 50) || 'nuevo'
-  const payment_status = sanitize(body.payment_status, 50) || 'sin_contrato'
+  const nombre    = sanitize(body.nombre,    100)
+  const email     = sanitize(body.email,     200)
+  const telefono  = sanitize(body.telefono,   50)
+  const servicio  = sanitize(body.servicio,  150)
+  const mensaje   = sanitize(body.mensaje,   800)
+  const categoria = sanitize(body.categoria,  50)
+  const estado    = sanitize(body.estado,     50) || 'nuevo'
+  
+  // FIX CRÍTICO: Validar payment_status contra el constraint de PostgreSQL
+  // Solo permite: 'pendiente', 'parcial', 'pagado'
+  const payment_status_raw = sanitize(body.payment_status, 50)
+  const payment_status = VALID_PAYMENT_STATUSES.has(payment_status_raw)
+    ? payment_status_raw
+    : 'pendiente'
 
-  // Validation
+  // FIX CRÍTICO: Email es NOT NULL en la base de datos
   if (!nombre || !servicio) {
     return NextResponse.json(
       { error: 'Nombre y servicio son obligatorios.' },
@@ -58,28 +62,29 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  if (!email) {
+    return NextResponse.json(
+      { error: 'El email es obligatorio.' },
+      { status: 400 }
+    )
+  }
+
   const sc = getServiceClient()
 
-  // Insert lead with all fields
   const { data, error } = await sc
     .from('leads')
-    .insert([
-      {
-        nombre,
-        email: email || null,
-        telefono: telefono || null,
-        servicio,
-        notes: mensaje || null,
-        estado: estado || 'nuevo',
-        payment_status: payment_status || 'sin_contrato',
-        estimated_value:
-          body.estimated_value !== undefined &&
-          body.estimated_value !== '' &&
-          body.estimated_value !== null
-            ? parseFloat(String(body.estimated_value))
-            : null,
-      },
-    ])
+    .insert([{
+      nombre,
+      email:           email,  // NOT NULL — requerido
+      telefono:        telefono || null,
+      servicio,
+      notes:           mensaje || null,
+      estado:          estado || 'nuevo',
+      payment_status:  payment_status,
+      estimated_value: (body.estimated_value !== undefined && body.estimated_value !== '' && body.estimated_value !== null)
+                         ? parseFloat(String(body.estimated_value))
+                         : null,
+    }])
     .select('folio_num')
     .single()
 
@@ -95,12 +100,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Generate folio with offset
   const prefijo = PREFIJOS[categoria] ?? 'ASMKT'
-  const folio =
-    prefijo + '-' + String(361 + (data.folio_num ?? 0)).padStart(4, '0')
+  const folio   = prefijo + '-' + String(361 + (data.folio_num ?? 0)).padStart(4, '0')
 
-  // Update lead with generated folio
   const { error: updateError } = await sc
     .from('leads')
     .update({ folio })
