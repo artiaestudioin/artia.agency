@@ -458,36 +458,36 @@ export default function Vista360Client({
   }
 
   async function saveMensaje() {
-  setSavingMensaje(true)
-  try {
-    const res = await fetch('/api/admin/lead-mensaje', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        leadId: lead.id,
-        mensaje: mensajeText,
-        previous_mensaje: lead.mensaje,
-      }),
-    })
-    if (res.ok) {
-      setLead(l => ({ ...l, mensaje: mensajeText }))
-      setEditMensaje(false)
-      showMsg('Mensaje del cliente actualizado ✓')
-      router.refresh()
-    } else {
-      showMsg('Error al guardar el mensaje', false)
+    setSavingMensaje(true)
+    try {
+      const res = await fetch('/api/admin/lead-mensaje', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadId: lead.id,
+          mensaje: mensajeText,
+          previous_mensaje: lead.mensaje,
+        }),
+      })
+      if (res.ok) {
+        setLead(l => ({ ...l, mensaje: mensajeText }))
+        setEditMensaje(false)
+        showMsg('Mensaje del cliente actualizado ✓')
+        router.refresh()
+      } else {
+        showMsg('Error al guardar el mensaje', false)
+      }
+    } catch {
+      showMsg('Error de conexión', false)
+    } finally {
+      setSavingMensaje(false)
     }
-  } catch {
-    showMsg('Error de conexión', false)
-  } finally {
-    setSavingMensaje(false)
   }
-}
 
-function cancelMensaje() {
-  setMensajeText(lead.mensaje ?? '')
-  setEditMensaje(false)
-}
+  function cancelMensaje() {
+    setMensajeText(lead.mensaje ?? '')
+    setEditMensaje(false)
+  }
 
   async function createProjectForLead() {
     setCreatingProject(true)
@@ -1024,8 +1024,8 @@ function cancelMensaje() {
               </div>
               {showEmailForm ? (
                 <form onSubmit={sendEmail} style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                  <div><label style={sLabel}>Para</label><input value={lead.email} readOnly style={{ ...inp, background: '#f8fafc', color: '#64748b' }} /></div>
-                  <div><label style={sLabel}>Asunto</label><input value={emailForm.asunto} onChange={e => setEmailForm(p => ({ ...p, asunto: e.target.value }))} style={inp} required /></div>
+                  <div><label style={sLabel}>Para</label><input id="email-para" name="email-para" value={lead.email} readOnly style={{ ...inp, background: '#f8fafc', color: '#64748b' }} /></div>
+                  <div><label style={sLabel}>Asunto</label><input id="email-asunto" name="email-asunto" value={emailForm.asunto} onChange={e => setEmailForm(p => ({ ...p, asunto: e.target.value }))} style={inp} required /></div>
                   <div>
                     <label style={sLabel}>Mensaje</label>
                     <textarea value={emailForm.cuerpo} onChange={e => setEmailForm(p => ({ ...p, cuerpo: e.target.value }))} rows={5} style={{ ...inp, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }} required placeholder={`Hola ${lead.nombre},\n\n`} />
