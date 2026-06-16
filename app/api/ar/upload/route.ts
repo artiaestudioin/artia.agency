@@ -45,6 +45,7 @@ const EXT_TO_TYPE: Record<string, string> = {
   aac:  'audio',
   mp4:  'video',
   webm: 'video',
+  mind: 'glb',   // marcador MindAR compilado (.mind) — se almacena tal cual
 }
 
 const MIME_TO_TYPE: Record<string, string> = {

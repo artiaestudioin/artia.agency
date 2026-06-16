@@ -1,129 +1,117 @@
-# WebAR Híbrido · Módulo de regalos AR de Artia
+# WebAR de Artia · Anclaje por marcador (MindAR) + celebración
 
-Corrección del módulo y la nueva interfaz para que la experiencia tenga **control total**
-(cámara dentro del navegador + confeti + audio + mensaje de voz), sin perder la opción de
-AR nativa sobre una superficie real.
-
----
-
-## 1. El problema que se corrigió
-
-El `model-viewer` anterior, al pulsar el botón, **entregaba la experiencia a la AR del sistema**
-(Scene Viewer en Android / Quick Look en iOS). En ese momento se pierde el control: no se puede
-poner confeti, audio sincronizado ni mensaje de voz encima de la cámara.
-
-La solución es un **motor híbrido**:
-
-- **Inmersiva (en el navegador):** la cámara real se usa como fondo (`getUserMedia`), el modelo
-  3D se renderiza encima con `model-viewer` en modo transparente, y sobre todo eso van el confeti
-  (canvas), la música y la voz. Control total.
-- **Nativa (opcional):** un botón *"Verlo sobre mi mesa"* llama a `activateAR()` para anclar el
-  modelo a una superficie real cuando el usuario lo quiere.
-
-Se preserva `model-viewer` (requisito del proyecto): se usa tanto para el render 3D en la escena
-inmersiva como para la AR nativa.
+Plataforma de regalos en realidad aumentada. El modelo 3D se **ancla a una imagen impresa**
+(marcador) junto al QR, con confeti realista, música y mensaje de voz — todo dentro del
+navegador y con control total. Se conserva un botón opcional de AR nativa para colocarlo sobre
+una superficie real.
 
 ---
 
-## 2. Flujo del cliente (mapeado a tu diagrama)
+## 1. Cómo evolucionó
+
+1. Primero: `model-viewer` entregaba la cámara a la AR del sistema → sin confeti/audio.
+2. Luego: escena inmersiva en el navegador (cámara de fondo + modelo encima) → el modelo
+   **flotaba** siguiendo la cámara, no quedaba fijo.
+3. Ahora: **MindAR (rastreo de imagen)** → el modelo se **ancla sobre la imagen impresa** del
+   regalo y se queda en su sitio; si apartas la cámara, desaparece. Con control total para confeti,
+   audio y voz.
+
+---
+
+## 2. Flujo del cliente
 
 ```
-Escanear QR
-  ↓
-Abrir landing web                 → app/ar/[id]/page.tsx (lee la experiencia activa)
-  ↓
-Mostrar mensaje personalizado     → Pantalla 1 (hero + mensaje, NO arranca AR)
-  ↓
-Pulsar "Ver mi sorpresa"          → handleLaunch()
-  ↓
-Solicitar permisos de cámara      → getUserMedia({ facingMode: 'environment' })  · SOLO al pulsar
-  ↓
-Abrir cámara dentro del navegador → <video> de fondo (object-fit: cover)
-  ↓
-Mostrar modelo 3D en WebAR        → <model-viewer> transparente encima
-  ↓
-Reproducir audio + voz            → música en loop + mensaje de voz (1 vez), dentro del gesto
-  ↓
-Activar confeti                   → canvas (corazones / clásico / estrellas / pétalos)
-  ↓
-Mantener control total            → chrome propio: cerrar, repetir confeti, "verlo sobre mi mesa"
+Escanear QR  →  landing (mensaje personalizado, NO arranca AR)
+   ↓ pulsa "Ver mi sorpresa"  (audio + voz arrancan con el gesto)
+Cámara (MindAR) busca el marcador  →  hint con la imagen objetivo
+   ↓ targetFound (apunta al marcador del regalo)
+Modelo 3D ANCLADO sobre la imagen  +  entrada con GSAP (pop-in elástico + flotación)
+   +  confeti realista (canvas-confetti)  +  música  +  mensaje de voz
+   ↓ opcional
+"Verlo sobre mi mesa"  →  AR nativa (Scene Viewer / Quick Look) sobre una superficie real
 ```
 
-Si el usuario **niega la cámara**, la escena cae con elegancia a 3D sobre el fondo de marca
-(sigue habiendo modelo + confeti + audio + voz).
+Si la experiencia **no tiene marcador compilado**, cae a un modo 3D sobre fondo de marca
+(con confeti y el botón de AR nativa), para no quedar rota.
 
 ---
 
-## 3. Arquitectura (archivos tocados)
+## 3. Arquitectura (archivos)
 
-| Capa | Archivo | Cambio |
-|------|---------|--------|
-| Tipos | `types/ar.ts` | `ARMode`, `ConfettiStyle` + campos nuevos en `ARExperience`, `UpdateARExperienceInput` y `DEFAULT_AR_EXPERIENCE` |
-| BD | `supabase/ar_migration_002.sql` | Columnas nuevas + constraints |
-| Cliente | `app/ar/[id]/_components/ARCustomerExperience.tsx` | Reescrito: flujo híbrido, cámara, confeti canvas, audio/voz sincronizados, AR nativa opcional |
-| Editor | `app/admin/(protected)/ar/_components/ARExperienceEditor.tsx` | Secciones nuevas **Experiencia** y **Confeti**, **Audio** ampliado (voz + audio al pulsar), preview con chips de configuración |
-| API | `app/api/ar/upload/route.ts` | Soporte de `.m4a` / `.aac` para el mensaje de voz |
+| Capa | Archivo | Rol |
+|------|---------|-----|
+| Tipos | `types/ar.ts` | `ARMode`, `ConfettiStyle` + campos de marcador/confeti/voz/escala |
+| BD | `supabase/ar_migration_002.sql` · `ar_migration_003.sql` | Columnas nuevas |
+| Celebración | `app/ar/[id]/_components/celebration.ts` | Carga por CDN de GSAP + canvas-confetti + A-Frame/MindAR; confeti tipo fuegos artificiales; entrada del modelo con GSAP |
+| Cliente | `app/ar/[id]/_components/ARCustomerExperience.tsx` | Escena MindAR anclada + fallback 3D + AR nativa opcional |
+| Editor | `app/admin/(protected)/ar/_components/ARExperienceEditor.tsx` | Secciones Marcador, Experiencia, Confeti, Audio (voz) + compilación `.mind` en navegador |
+| API | `app/api/ar/upload/route.ts` | Soporte de audio `.m4a/.aac` y del archivo `.mind` |
 
-La API de experiencias (`POST` / `PATCH`) ya propaga cualquier campo nuevo, así que no requirió
-cambios de lógica más allá de los tipos.
+Librerías cargadas **por CDN en runtime** (sin tocar `package.json`): GSAP 3.12, canvas-confetti 1.9,
+A-Frame 1.5, aframe-extras 7.5, MindAR 1.2.
 
 ---
 
 ## 4. Modelo de datos · columnas nuevas (`ar_experiences`)
 
-| Columna | Tipo | Default | Uso |
-|---------|------|---------|-----|
-| `ar_mode` | text | `hybrid` | `immersive` · `native` · `hybrid` |
-| `model_scale` | numeric | `1.0` | Escala del modelo en la escena inmersiva |
-| `confetti_enabled` | boolean | `true` | Activa/desactiva el confeti |
-| `confetti_style` | text | `hearts` | `classic` · `hearts` · `stars` · `petals` |
-| `confetti_colors` | text | `''` | Lista hex separada por comas; vacío = primario/secundario |
-| `voice_message_url` | text | `null` | Mensaje de voz (1 reproducción al abrir) |
-| `audio_start_on_launch` | boolean | `true` | Inicia la música con el gesto del usuario (evita bloqueo móvil) |
+Migración **002**: `ar_mode`, `model_scale`, `confetti_enabled`, `confetti_style`,
+`confetti_colors`, `voice_message_url`, `audio_start_on_launch`.
 
-Las filas existentes adoptan los defaults automáticamente: pasan a **híbrida con confeti** sin
-romper nada.
+Migración **003**:
+
+| Columna | Tipo | Uso |
+|---------|------|-----|
+| `target_image_url` | text | Imagen objetivo (se imprime junto al QR) |
+| `target_mind_url` | text | Archivo `.mind` compilado para el rastreo |
+
+Las filas existentes adoptan los defaults (modo `hybrid`, confeti `hearts`).
 
 ---
 
 ## 5. Despliegue — orden importante
 
-1. **Ejecuta primero la migración** en Supabase → SQL Editor:
-   `supabase/ar_migration_002.sql`
-   > Debe correr **antes** de desplegar el código. La creación/guardado de experiencias inserta
-   > los campos nuevos; sin las columnas, esos `INSERT`/`UPDATE` fallarían.
-2. Despliega el código (Next.js).
-3. Verifica en tu entorno:
+1. Ejecuta en Supabase → SQL Editor, en orden:
+   `supabase/ar_migration_002.sql`  y luego  `supabase/ar_migration_003.sql`.
+   > Deben correr **antes** de desplegar el código.
+2. Asegura el bucket `ar-assets` público (ya lo usa el upload).
+3. Despliega (Next.js) y verifica en tu entorno:
    ```bash
-   npx tsc --noEmit        # chequeo de tipos
-   npm run build           # build de producción
+   npx tsc --noEmit
+   npm run build
    ```
-   (En este entorno no pude correr el compilador de forma fiable por un desfase de la copia en
-   el sandbox; los archivos reales quedaron revisados y balanceados.)
 
 ---
 
-## 6. Editor — qué cambió para el administrador
+## 6. Editor — crear una experiencia anclada
 
-- **Experiencia** (✦): elige el motor AR (Híbrida / Inmersiva / Nativa) y la escala del modelo.
-- **Confeti** (🎉): activar, estilo y colores.
-- **Audio** (🎵): música de fondo + **"iniciar al pulsar el botón"** + **mensaje de voz** (subida
-  de archivo o URL).
-- **Preview** en vivo: muestra chips con la configuración elegida (modo, confeti, voz, música) y
-  un guiño del estilo de confeti.
+1. **Contenido / Fondo / Card**: textos y branding.
+2. **Modelo 3D**: sube el `.glb` (y `.usdz` para la AR nativa en iOS).
+3. **Marcador**:
+   - Sube la **imagen objetivo** (foto/ilustración con detalle y contraste; el QR solo no sirve).
+   - Pulsa **"Compilar marcador"** → genera el `.mind` en tu navegador y lo guarda.
+4. **Experiencia**: motor `hybrid` (recomendado) y **escala del modelo** (con MindAR suele bajarse a
+   ~0.2–0.5; el plano del marcador mide 1 unidad).
+5. **Confeti**: estilo (corazones/clásico/estrellas/pétalos) y colores.
+6. **Audio**: música de fondo + **mensaje de voz** + "iniciar al pulsar".
+7. **Publicar**: genera URL pública y QR.
 
-Cada experiencia mantiene su propia configuración y su QR ligado a un único `slug` público
-(`/ar/[slug]`), como ya hacía el dashboard.
+> En el regalo se imprimen **dos** cosas: el **QR** (abre la landing) y la **imagen objetivo**
+> (sobre la que aparece el modelo). Pueden ir juntas en la misma tarjeta.
 
 ---
 
 ## 7. Notas técnicas y límites
 
-- **iOS Safari:** la escena inmersiva (cámara + modelo + confeti + voz) funciona sobre HTTPS. Para
-  anclar a una superficie real, iOS usa **Quick Look**, que exige el `.usdz` (campo `model_ios_url`).
-- **Confeti:** implementado en canvas, sin dependencias, respeta `prefers-reduced-motion`.
-- **Audio/voz:** se disparan dentro del gesto de "Ver mi sorpresa" para sortear el bloqueo de
-  autoplay de los navegadores móviles.
-- **`model-viewer`:** se conserva como render 3D (fondo transparente sobre la cámara) y como vía a
-  la AR nativa. El botón nativo solo aparece si el dispositivo soporta AR (`canActivateAR`).
-- **HTTPS obligatorio** para cámara y AR.
+- **MindAR** rastrea imágenes; funciona en Android e iOS (Safari) sobre **HTTPS** con permiso de
+  cámara. MindAR gestiona la cámara (no abrimos `getUserMedia` aparte → sin conflictos).
+- **Compilación `.mind` en navegador**: la imagen objetivo debe ser legible por CORS (las URLs
+  públicas de Supabase lo permiten). Si falla, el editor muestra el error.
+- **Escala del modelo**: un `.glb` grande puede verse enorme sobre el marcador; ajústalo en
+  *Experiencia → escala* (rango 0.1–3×).
+- **Confeti + GSAP**: el confeti usa canvas-confetti (físicas reales, formas por emoji) y GSAP
+  orquesta la secuencia y la entrada del modelo (`back.out`, flotación en loop). Respeta
+  `prefers-reduced-motion`.
+- **AR nativa** (botón "Verlo sobre mi mesa"): usa `scene-viewer` (Android) / `quick-look` (iOS),
+  requiere `.usdz` en iPhone. El botón por defecto de model-viewer está oculto.
+- **Calidad del marcador**: imágenes con muchos detalles y bordes rastrean mejor que logos planos o
+  zonas de color liso.

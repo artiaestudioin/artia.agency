@@ -6,7 +6,7 @@ import {
   Save, Eye, ArrowLeft, Upload, Palette, Type, Camera,
   Music, Layout, Globe, CheckCircle, AlertCircle, Loader2,
   Smartphone, Monitor, Image as ImageIcon, Zap, Sliders,
-  Wand2, PartyPopper, Mic,
+  Wand2, PartyPopper, Mic, Crosshair,
 } from 'lucide-react'
 import type { ARExperience, OccasionType, UpdateARExperienceInput, ARMode, ConfettiStyle } from '@/types/ar'
 import { DEFAULT_AR_EXPERIENCE, OCCASION_LABELS, OCCASION_EMOJIS } from '@/types/ar'
@@ -16,13 +16,14 @@ interface Props {
   experienceId?: string
 }
 
-type Section = 'content' | 'design' | 'card' | 'model' | 'experience' | 'animation' | 'cta' | 'confetti' | 'audio' | 'publish'
+type Section = 'content' | 'design' | 'card' | 'model' | 'marker' | 'experience' | 'animation' | 'cta' | 'confetti' | 'audio' | 'publish'
 
 const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'content',    label: 'Contenido',  icon: <Type size={13} /> },
   { id: 'design',     label: 'Fondo',      icon: <ImageIcon size={13} /> },
   { id: 'card',       label: 'Card',       icon: <Layout size={13} /> },
   { id: 'model',      label: 'Modelo 3D',  icon: <Camera size={13} /> },
+  { id: 'marker',     label: 'Marcador',   icon: <Crosshair size={13} /> },
   { id: 'experience', label: 'Experiencia',icon: <Wand2 size={13} /> },
   { id: 'animation',  label: 'Animación',  icon: <Zap size={13} /> },
   { id: 'cta',        label: 'Botón',      icon: <Sliders size={13} /> },
@@ -30,6 +31,32 @@ const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'audio',      label: 'Audio',      icon: <Music size={13} /> },
   { id: 'publish',    label: 'Publicar',   icon: <Globe size={13} /> },
 ]
+
+// MindAR: compilador del marcador (.mind) en el navegador
+const MINDAR_COMPILER_CDN = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js'
+
+function loadScriptOnce(src: string, ready: () => boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (ready()) return resolve()
+    const ex = document.querySelector(`script[data-src="${src}"]`)
+    if (ex) { ex.addEventListener('load', () => resolve()); return }
+    const s = document.createElement('script')
+    s.src = src; s.async = true; s.setAttribute('data-src', src)
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('No se pudo cargar el compilador MindAR'))
+    document.head.appendChild(s)
+  })
+}
+
+function loadImageEl(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('No se pudo leer la imagen objetivo (revisa CORS / la URL)'))
+    img.src = url
+  })
+}
 
 const AR_MODES: { value: ARMode; label: string; desc: string; icon: string }[] = [
   { value: 'hybrid',    label: 'Híbrida',    icon: '✨', desc: 'Cámara en el navegador con confeti, audio y voz + botón opcional para verlo sobre una superficie real (AR nativa). Recomendada.' },
@@ -145,6 +172,8 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
   const fileVoiceRef = useRef<HTMLInputElement>(null)
   const fileBgRef    = useRef<HTMLInputElement>(null)
   const fileLogoRef  = useRef<HTMLInputElement>(null)
+  const fileTargetRef = useRef<HTMLInputElement>(null)
+  const [compiling, setCompiling] = useState(false)
 
   useEffect(() => {
     if (mode === 'edit' && experienceId) {
@@ -188,6 +217,8 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
         cta_text_color: form.cta_text_color, cta_border_radius: form.cta_border_radius,
         cta_icon: form.cta_icon, cta_animation: form.cta_animation,
         ar_mode: form.ar_mode, model_scale: form.model_scale,
+        target_image_url: form.target_image_url ?? null,
+        target_mind_url: form.target_mind_url ?? null,
         confetti_enabled: form.confetti_enabled, confetti_style: form.confetti_style,
         confetti_colors: form.confetti_colors,
         audio_url: form.audio_url ?? null, audio_autoplay: form.audio_autoplay,
@@ -253,6 +284,33 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
     else showToast(json.error, 'err')
   }
 
+  // Compila la imagen objetivo a .mind (MindAR) en el navegador y la sube
+  async function compileTarget() {
+    if (!experienceId)           { showToast('Guarda primero la experiencia', 'err'); return }
+    if (!form.target_image_url)  { showToast('Sube una imagen objetivo primero', 'err'); return }
+    setCompiling(true)
+    try {
+      await loadScriptOnce(MINDAR_COMPILER_CDN, () => !!(window as any).MINDAR?.IMAGE?.Compiler)
+      const img = await loadImageEl(form.target_image_url)
+      const compiler = new (window as any).MINDAR.IMAGE.Compiler()
+      await compiler.compileImageTargets([img], () => {})
+      const buffer: ArrayBuffer = await compiler.exportData()
+      const file = new File([buffer], 'targets.mind', { type: 'application/octet-stream' })
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('experience_id', experienceId)
+      const res  = await fetch('/api/ar/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? json.hint ?? 'Error al subir el marcador')
+      set('target_mind_url', json.url)
+      showToast('Marcador compilado y listo ✓', 'ok')
+    } catch (e: any) {
+      showToast(e.message ?? 'Error al compilar el marcador', 'err')
+    } finally {
+      setCompiling(false)
+    }
+  }
+
   const previewUrl = form.public_url
 
   return (
@@ -310,6 +368,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
           {section === 'design'     && <SectionDesign     form={form} set={set} fileRef={fileBgRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
           {section === 'card'       && <SectionCard       form={form} set={set} fileRef={fileLogoRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
           {section === 'model'      && <SectionModel      form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'marker'     && <SectionMarker     form={form} set={set} fileRef={fileTargetRef} uploading={uploading} experienceId={experienceId} onCompile={compileTarget} compiling={compiling} />}
           {section === 'experience' && <SectionExperience form={form} set={set} />}
           {section === 'animation'  && <SectionAnimation  form={form} set={set} />}
           {section === 'cta'        && <SectionCTA        form={form} set={set} />}
@@ -386,6 +445,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
       <input ref={fileUsdzRef}  type="file" accept=".usdz"      style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'usdz', 'model_ios_url')} />
       <input ref={fileAudioRef} type="file" accept=".mp3,.ogg,.wav" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'audio', 'audio_url')} />
       <input ref={fileVoiceRef} type="file" accept=".mp3,.ogg,.wav,.m4a" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'voice', 'voice_message_url')} />
+      <input ref={fileTargetRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'targetimg', 'target_image_url')} />
       <input ref={fileBgRef}    type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'bg_image')} />
       <input ref={fileLogoRef}  type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'logo_url')} />
     </div>
@@ -660,6 +720,53 @@ function SectionCTA({ form, set }: any) {
   )
 }
 
+function SectionMarker({ form, set, fileRef, uploading, experienceId, onCompile, compiling }: any) {
+  return (
+    <>
+      <div style={{ padding: 11, background: '#1e1b2e33', border: '1px solid #2a2642', borderRadius: 9, fontSize: 12, color: '#9ca3af', marginBottom: 14, lineHeight: 1.5 }}>
+        El modelo 3D se ancla sobre una <b style={{ color: '#c084fc' }}>imagen impresa</b> (el marcador), que se imprime junto al QR del regalo. Usa una imagen con buen detalle y contraste (una foto o ilustración, <b>no</b> el QR solo).
+      </div>
+
+      {/* 1 · Imagen objetivo */}
+      <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14, marginBottom: 14 }}>
+        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>1 · Imagen objetivo (se imprime)</p>
+        <button onClick={() => fileRef.current?.click()} disabled={uploading === 'targetimg'}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#c084fc22', border: '1px dashed #c084fc', color: '#c084fc', fontWeight: 600, fontSize: 12, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+          {uploading === 'targetimg' ? <Loader2 size={12} /> : <Upload size={12} />}
+          {uploading === 'targetimg' ? 'Subiendo…' : 'Subir imagen (.jpg, .png)'}
+        </button>
+        {form.target_image_url && (
+          <div style={{ marginTop: 8, position: 'relative', width: 'fit-content' }}>
+            <img src={form.target_image_url} alt="marcador" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #2a2642' }} />
+            <button onClick={() => { set('target_image_url', null); set('target_mind_url', null) }}
+              style={{ position: 'absolute', top: 4, right: 4, background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
+        <input style={{ ...inputStyle, marginTop: 8 }} value={form.target_image_url ?? ''} onChange={e => set('target_image_url', e.target.value || null)} placeholder="https://…/marcador.jpg" />
+      </div>
+
+      {/* 2 · Compilar .mind */}
+      <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14 }}>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>2 · Compilar marcador (.mind)</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#6b6894' }}>Genera el archivo de rastreo en tu navegador a partir de la imagen.</p>
+        <button onClick={onCompile} disabled={compiling || !form.target_image_url || !experienceId}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 9, background: (compiling || !form.target_image_url) ? '#2a2642' : 'linear-gradient(135deg,#c084fc,#818cf8)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: compiling ? 'wait' : 'pointer', width: '100%', justifyContent: 'center', opacity: (!form.target_image_url || !experienceId) ? 0.5 : 1 }}>
+          {compiling ? <Loader2 size={14} /> : <Crosshair size={14} />}
+          {compiling ? 'Compilando marcador…' : 'Compilar marcador'}
+        </button>
+        {form.target_mind_url
+          ? <p style={{ margin: '8px 0 0', fontSize: 12, color: '#22c55e', fontWeight: 600 }}>✓ Marcador listo — la AR se anclará a esta imagen</p>
+          : <p style={{ margin: '8px 0 0', fontSize: 11, color: '#f59e0b' }}>Aún sin compilar — el modelo no estará anclado</p>}
+        <input style={{ ...inputStyle, marginTop: 8 }} value={form.target_mind_url ?? ''} onChange={e => set('target_mind_url', e.target.value || null)} placeholder="https://…/targets.mind" />
+      </div>
+
+      {!experienceId && (
+        <p style={{ margin: '12px 0 0', fontSize: 11, color: '#f59e0b' }}>💡 Guarda primero para subir y compilar.</p>
+      )}
+    </>
+  )
+}
+
 function SectionExperience({ form, set }: any) {
   const mode = (form.ar_mode ?? 'hybrid') as ARMode
   const active = AR_MODES.find(m => m.value === mode) ?? AR_MODES[0]
@@ -684,7 +791,7 @@ function SectionExperience({ form, set }: any) {
       </div>
 
       {active.value !== 'native' && (
-        <RangeRow label="Escala del modelo en la escena" value={form.model_scale ?? 1} min={0.5} max={2} step={0.1} unit="×"
+        <RangeRow label="Escala del modelo en la escena" value={form.model_scale ?? 1} min={0.1} max={3} step={0.1} unit="×"
           onChange={v => set('model_scale', v)} />
       )}
 

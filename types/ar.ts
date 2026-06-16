@@ -76,6 +76,10 @@ export interface ARExperience {
   ar_mode: ARMode
   model_scale: number                // escala del modelo en la escena inmersiva
 
+  // Marcador de imagen (MindAR) — el modelo se ancla sobre esta imagen impresa
+  target_image_url: string | null    // imagen objetivo (se imprime con el QR)
+  target_mind_url: string | null     // .mind compilado para el rastreo
+
   // Confeti (overlay con control total — solo immersive/hybrid)
   confetti_enabled: boolean
   confetti_style: ConfettiStyle
@@ -190,6 +194,8 @@ export interface UpdateARExperienceInput {
 
   ar_mode?: ARMode
   model_scale?: number
+  target_image_url?: string | null
+  target_mind_url?: string | null
   confetti_enabled?: boolean
   confetti_style?: ConfettiStyle
   confetti_colors?: string
@@ -266,6 +272,9 @@ export const DEFAULT_AR_EXPERIENCE: Omit<ARExperience,
 
   ar_mode:            'hybrid',
   model_scale:        1,
+
+  target_image_url:   null,
+  target_mind_url:    null,
 
   confetti_enabled:   true,
   confetti_style:     'hearts',
