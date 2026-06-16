@@ -3,10 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ARExperience } from '@/types/ar'
 import { OCCASION_EMOJIS } from '@/types/ar'
-import {
-  loadScript, CDN, ensureGsap, startCelebration, animateModelEntrance, popIn,
-  type ConfettiStyle,
-} from './celebration'
+import { ensureGsap, startCelebration, popIn, type ConfettiStyle } from './celebration'
 
 declare global {
   namespace JSX {
@@ -15,6 +12,7 @@ declare global {
         src?: string; 'ios-src'?: string; alt?: string
         ar?: boolean | ''; 'ar-modes'?: string; 'ar-scale'?: string
         'camera-controls'?: boolean | ''; 'auto-rotate'?: boolean | ''
+        'auto-rotate-delay'?: string; 'rotation-per-second'?: string
         'interaction-prompt'?: string
         'shadow-intensity'?: string; exposure?: string
         'environment-image'?: string; loading?: string
@@ -51,19 +49,14 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
   const [started,     setStarted]     = useState(false)
   const [btnPressed,  setBtnPressed]  = useState(false)
   const [arAvailable, setArAvailable] = useState(false)
-  const [mindStarted, setMindStarted] = useState(false)
-  const [targetFound, setTargetFound] = useState(false)
-  const [mindError,   setMindError]   = useState(false)
 
-  const viewerRef   = useRef<HTMLElement>(null)
-  const arContainer = useRef<HTMLDivElement>(null)
-  const canvasRef   = useRef<HTMLCanvasElement>(null)
-  const audioRef    = useRef<HTMLAudioElement>(null)
-  const voiceRef    = useRef<HTMLAudioElement>(null)
-  const sceneElRef  = useRef<any>(null)
+  const viewerRef = useRef<HTMLElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const audioRef  = useRef<HTMLAudioElement>(null)
+  const voiceRef  = useRef<HTMLAudioElement>(null)
   const stopCelebrateRef = useRef<() => void>(() => {})
 
-  // ── Config derivada ──
+  // ── Config ──
   const primary   = experience.primary_color   ?? '#ff6b35'
   const secondary = experience.secondary_color ?? '#ff8c5a'
   const bg        = experience.bg_color        ?? '#1a0a00'
@@ -75,13 +68,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
   const ctaAnim   = experience.cta_animation   ?? 'pulse'
   const emoji     = OCCASION_EMOJIS[experience.occasion ?? 'birthday']
 
-  const arMode    = experience.ar_mode ?? 'hybrid'
-  const modelScale = experience.model_scale ?? 1
-  const hasModel   = !!experience.model_url
-  const useMindAR  = !!experience.target_mind_url && arMode !== 'native'
-  const needViewer = hasModel && (!useMindAR || arMode !== 'immersive')
-  const showNativeBtn = arMode !== 'immersive' && arAvailable
-
+  const hasModel = !!experience.model_url
   const confettiOn    = experience.confetti_enabled ?? true
   const confettiStyle = (experience.confetti_style ?? 'hearts') as ConfettiStyle
   const palette = (experience.confetti_colors ?? '').split(',').map(c => c.trim()).filter(Boolean)
@@ -101,8 +88,8 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
   useEffect(() => { trackEvent(experience.id, 'page_view') }, [experience.id])
 
   useEffect(() => {
-    if (needViewer) loadModelViewerScript(() => setScriptReady(true))
-  }, [needViewer])
+    if (hasModel) loadModelViewerScript(() => setScriptReady(true))
+  }, [hasModel])
 
   useEffect(() => {
     if (experience.audio_url && experience.audio_autoplay && !audioOnLaunch && audioRef.current) {
@@ -110,99 +97,20 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
     }
   }, [experience.audio_url, experience.audio_autoplay, audioOnLaunch])
 
-  // Disponibilidad de AR nativa
+  // ¿AR disponible en este dispositivo? (WebXR / Scene Viewer / Quick Look)
   useEffect(() => {
-    if (!started || !scriptReady || arMode === 'immersive') return
+    if (!started || !scriptReady) return
     const v = viewerRef.current as any
     if (!v) return
     const check = () => setArAvailable(!!v.canActivateAR)
     v.addEventListener?.('load', check)
     const t = setTimeout(check, 800)
     return () => { v.removeEventListener?.('load', check); clearTimeout(t) }
-  }, [started, scriptReady, arMode])
+  }, [started, scriptReady])
 
-  function playMedia() {
-    if (experience.audio_url && audioRef.current) audioRef.current.play().catch(() => {})
-    if (experience.voice_message_url && voiceRef.current) voiceRef.current.play().catch(() => {})
-  }
-
-  // ── Escena MindAR (anclaje a marcador) ──
+  // Celebración al abrir (confeti + entrada del modelo)
   useEffect(() => {
-    if (!started || !useMindAR) return
-    const container = arContainer.current
-    if (!container) return
-    let cancelled = false
-
-    ;(async () => {
-      try {
-        await loadScript(CDN.aframe, () => !!(window as any).AFRAME)
-        await loadScript(CDN.aframeExtras, () => !!(window as any).AFRAME?.components['animation-mixer'])
-        await loadScript(CDN.mindarAframe, () => !!(window as any).AFRAME?.components['mindar-image'])
-        if (cancelled) return
-        const gsap = await ensureGsap()
-
-        const mixerAttr = experience.animation_name
-          ? `animation-mixer="clip: ${experience.animation_name}"`
-          : 'animation-mixer'
-
-        container.innerHTML = `
-          <a-scene
-            mindar-image="imageTargetSrc: ${experience.target_mind_url}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0005; filterBeta: 0.01"
-            embedded color-space="sRGB"
-            renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true"
-            vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-            <a-assets><a-asset-item id="celModel" src="${experience.model_url}"></a-asset-item></a-assets>
-            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-            <a-entity id="celTarget" mindar-image-target="targetIndex: 0">
-              <a-gltf-model id="celGltf" src="#celModel" position="0 0 0" rotation="0 0 0" scale="0.001 0.001 0.001" ${mixerAttr}></a-gltf-model>
-            </a-entity>
-          </a-scene>`
-
-        const sceneEl: any = container.querySelector('a-scene')
-        sceneElRef.current = sceneEl
-        const targetEl: any = container.querySelector('#celTarget')
-        const gltfEl: any   = container.querySelector('#celGltf')
-
-        const startMind = () => {
-          try { sceneEl.systems['mindar-image-system'].start(); setMindStarted(true) }
-          catch { setMindError(true) }
-        }
-        if (sceneEl.hasLoaded) startMind()
-        else sceneEl.addEventListener('loaded', startMind, { once: true })
-
-        let first = true
-        targetEl.addEventListener('targetFound', () => {
-          setTargetFound(true)
-          if (first) {
-            first = false
-            animateModelEntrance(gsap, gltfEl.object3D, modelScale)
-            if (confettiOn && canvasRef.current) {
-              stopCelebrateRef.current?.()
-              startCelebration(canvasRef.current, { colors, style: confettiStyle })
-                .then(stop => { stopCelebrateRef.current = stop })
-            }
-          }
-        })
-        targetEl.addEventListener('targetLost', () => setTargetFound(false))
-      } catch {
-        if (!cancelled) setMindError(true)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-      try { sceneElRef.current?.systems?.['mindar-image-system']?.stop() } catch {}
-      stopCelebrateRef.current?.()
-      if (arContainer.current) arContainer.current.innerHTML = ''
-      sceneElRef.current = null
-      setMindStarted(false); setTargetFound(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, useMindAR])
-
-  // ── Celebración del fallback 3D (sin marcador) ──
-  useEffect(() => {
-    if (!started || useMindAR) return
+    if (!started) return
     let stop = () => {}
     ;(async () => {
       const gsap = await ensureGsap().catch(() => null)
@@ -215,35 +123,32 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
     })()
     return () => { stop() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, useMindAR])
+  }, [started])
 
   useEffect(() => () => stopCelebrateRef.current?.(), [])
 
-  // ── Acciones ──
+  function playMedia() {
+    if (experience.audio_url && audioRef.current) audioRef.current.play().catch(() => {})
+    if (experience.voice_message_url && voiceRef.current) voiceRef.current.play().catch(() => {})
+  }
+
   function handleLaunch() {
     setBtnPressed(true)
     trackEvent(experience.id, 'ar_launch')
-    playMedia()
+    playMedia()             // dentro del gesto -> el móvil permite el audio
     setStarted(true)
-    if (arMode === 'native') {
-      setTimeout(() => { (viewerRef.current as any)?.activateAR?.() }, 350)
-    }
+  }
+
+  function handleEnterAR() {
+    const v = viewerRef.current as any
+    if (v?.activateAR) { try { v.activateAR() } catch { /* noop */ } }
   }
 
   function handleClose() {
-    try { sceneElRef.current?.systems?.['mindar-image-system']?.stop() } catch {}
     stopCelebrateRef.current?.()
     audioRef.current?.pause()
     voiceRef.current?.pause()
     setStarted(false); setBtnPressed(false)
-    setTargetFound(false); setMindStarted(false); setMindError(false)
-  }
-
-  function handleNativeAR() {
-    const v = viewerRef.current as any
-    if (!v?.activateAR) return
-    try { sceneElRef.current?.systems?.['mindar-image-system']?.pause?.() } catch {}
-    try { v.activateAR() } catch { /* noop */ }
   }
 
   function replayConfetti() {
@@ -262,12 +167,8 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
         rel="stylesheet"
       />
 
-      {experience.audio_url && (
-        <audio ref={audioRef} src={experience.audio_url} loop preload="auto" style={{ display: 'none' }} />
-      )}
-      {experience.voice_message_url && (
-        <audio ref={voiceRef} src={experience.voice_message_url} preload="auto" style={{ display: 'none' }} />
-      )}
+      {experience.audio_url && <audio ref={audioRef} src={experience.audio_url} loop preload="auto" style={{ display: 'none' }} />}
+      {experience.voice_message_url && <audio ref={voiceRef} src={experience.voice_message_url} preload="auto" style={{ display: 'none' }} />}
 
       {/* ─────────── PANTALLA 1 · MENSAJE ─────────── */}
       <div style={{ minHeight: '100dvh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -323,15 +224,9 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
               transition: 'transform 0.15s ease',
               animation: !btnPressed && ctaAnim !== 'none' ? `cta-${ctaAnim} 2s ease-in-out infinite` : undefined,
             }}>
-              <span style={{ fontSize: 22 }}>{ctaIcons[experience.cta_icon ?? 'camera'] ?? '📷'}</span>
+              <span style={{ fontSize: 22 }}>{ctaIcons[experience.cta_icon ?? 'gift'] ?? '🎁'}</span>
               {ctaText}
             </button>
-
-            <p style={{ margin: '14px 0 0', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: hasBgImage ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.3)' }}>
-              {useMindAR
-                ? 'Apunta la cámara al marcador del regalo'
-                : arMode === 'native' ? 'Se abrirá la cámara para colocar tu regalo' : 'Toca para descubrir tu regalo'}
-            </p>
           </div>
 
           <p style={{ marginTop: 28, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>
@@ -340,45 +235,23 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
         </div>
       </div>
 
-      {/* ─────────── PANTALLA 2 · ESCENA AR ─────────── */}
+      {/* ─────────── PANTALLA 2 · CELEBRACIÓN + AR ─────────── */}
       {started && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: bg, overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'hidden', background: heroBg ?? bg }}>
 
-          {/* MindAR (anclado al marcador) */}
-          {useMindAR && <div ref={arContainer} style={{ position: 'absolute', inset: 0, zIndex: 0 }} />}
-
-          {/* Fallback 3D sobre fondo de marca / modo nativo */}
-          {!useMindAR && (
-            <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: heroBg ?? bg }}>
-              {hasModel && scriptReady && (
-                <model-viewer
-                  ref={viewerRef as any}
-                  src={experience.model_url!}
-                  ios-src={experience.model_ios_url ?? undefined}
-                  alt={experience.model_alt ?? 'Modelo AR'}
-                  ar ar-modes="scene-viewer quick-look" ar-scale="auto"
-                  camera-controls autoplay
-                  animation-name={experience.animation_name ?? undefined}
-                  interaction-prompt="none" shadow-intensity="1" exposure="1.1"
-                  environment-image="neutral" loading="eager"
-                  style={{ width: '100%', height: '100%', background: 'transparent', '--poster-color': 'transparent' } as React.CSSProperties}
-                >
-                  <div slot="ar-button" style={{ display: 'none' }} />
-                </model-viewer>
-              )}
-            </div>
-          )}
-
-          {/* model-viewer oculto para la AR nativa cuando se usa MindAR */}
-          {useMindAR && hasModel && arMode === 'hybrid' && scriptReady && (
+          {/* Modelo 3D */}
+          {hasModel && scriptReady && (
             <model-viewer
               ref={viewerRef as any}
               src={experience.model_url!}
               ios-src={experience.model_ios_url ?? undefined}
-              alt={experience.model_alt ?? 'Modelo AR'}
-              ar ar-modes="scene-viewer quick-look" ar-scale="auto"
+              alt={experience.model_alt ?? 'Modelo 3D'}
+              ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto"
+              camera-controls auto-rotate auto-rotate-delay="0" rotation-per-second="18deg"
+              autoplay animation-name={experience.animation_name ?? undefined}
+              interaction-prompt="none" shadow-intensity="1" exposure="1.15" environment-image="neutral"
               loading="eager"
-              style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', zIndex: -1 } as React.CSSProperties}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', background: 'transparent', '--poster-color': 'transparent' } as React.CSSProperties}
             >
               <div slot="ar-button" style={{ display: 'none' }} />
             </model-viewer>
@@ -388,38 +261,13 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
           {confettiOn && <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 3, pointerEvents: 'none' }} />}
 
           {/* Chrome */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 4, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 4, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 100%)' }}>
             <button onClick={handleClose} aria-label="Cerrar" style={iconBtn}>✕</button>
             <div style={{ fontFamily: `"${font}", serif`, fontSize: 15, fontWeight: 600, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{experience.title}</div>
             {confettiOn ? <button onClick={replayConfetti} aria-label="Repetir confeti" style={iconBtn}>🎉</button> : <div style={{ width: 40 }} />}
           </div>
 
-          {/* Hint de escaneo (MindAR buscando marcador) */}
-          {useMindAR && !targetFound && !mindError && (
-            <div style={{ position: 'absolute', inset: 0, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, pointerEvents: 'none', padding: 24, textAlign: 'center' }}>
-              {experience.target_image_url && (
-                <div style={{ position: 'relative', width: 150, height: 150, borderRadius: 16, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.6)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
-                  <img src={experience.target_image_url} alt="marcador" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, animation: 'scanline 2s ease-in-out infinite', background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)' }} />
-                </div>
-              )}
-              <p style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 14, fontWeight: 600, color: '#fff', background: 'rgba(0,0,0,0.4)', padding: '10px 18px', borderRadius: 999, backdropFilter: 'blur(8px)', margin: 0 }}>
-                {mindStarted ? 'Apunta la cámara a la imagen del regalo' : 'Iniciando cámara…'}
-              </p>
-            </div>
-          )}
-
-          {/* Error MindAR */}
-          {mindError && (
-            <div style={{ position: 'absolute', inset: 0, zIndex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28, textAlign: 'center' }}>
-              <p style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 14, color: '#fff', background: 'rgba(0,0,0,0.5)', padding: '14px 18px', borderRadius: 14, maxWidth: 320 }}>
-                No se pudo iniciar la cámara AR. Revisa los permisos e inténtalo de nuevo{showNativeBtn ? ', o usa “Verlo sobre mi mesa”.' : '.'}
-              </p>
-            </div>
-          )}
-
-          {/* Nombre del destinatario */}
-          {experience.recipient_name && (targetFound || !useMindAR) && (
+          {experience.recipient_name && (
             <div style={{ position: 'absolute', top: 70, left: 0, right: 0, zIndex: 3, textAlign: 'center', pointerEvents: 'none' }}>
               <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 999, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff' }}>
                 Para {experience.recipient_name} {emoji}
@@ -427,22 +275,20 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
             </div>
           )}
 
-          {/* Pie */}
+          {/* Pie: botón AR */}
           <div style={{ position: 'absolute', bottom: 34, left: 0, right: 0, zIndex: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '0 20px' }}>
-            {showNativeBtn && (
-              <button onClick={handleNativeAR} style={{
-                padding: '15px 30px', fontSize: 15, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif',
+            {arAvailable && (
+              <button onClick={handleEnterAR} style={{
+                padding: '16px 34px', fontSize: 16, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif',
                 background: ctaColor, color: ctaTxtClr, border: 'none', borderRadius: ctaRadius, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 10, boxShadow: `0 10px 35px ${ctaColor}66`,
               }}>
-                <span style={{ fontSize: 18 }}>🪄</span> Verlo sobre mi mesa
+                <span style={{ fontSize: 20 }}>🪄</span> Ver en mi espacio
               </button>
             )}
-            {!useMindAR && (
-              <p style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: 0, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
-                Arrastra para girar · pellizca para acercar
-              </p>
-            )}
+            <p style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}>
+              {arAvailable ? 'Apunta a una superficie y coloca tu regalo · arrastra para girar' : 'Arrastra para girar · pellizca para acercar'}
+            </p>
           </div>
         </div>
       )}
@@ -455,10 +301,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
         @keyframes cta-pulse  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
         @keyframes cta-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes cta-glow   { 0%,100% { box-shadow: 0 10px 35px ${ctaColor}55; } 50% { box-shadow: 0 12px 50px ${ctaColor}aa; } }
-        @keyframes scanline   { 0%,100% { transform: translateY(-100%); } 50% { transform: translateY(100%); } }
         button:focus-visible { outline: 2px solid rgba(255,255,255,0.7); outline-offset: 3px; }
-        /* MindAR usa video de fondo; lo dejamos cubrir su contenedor */
-        .mindar-ui-overlay { z-index: 1 !important; }
       `}</style>
     </div>
   )

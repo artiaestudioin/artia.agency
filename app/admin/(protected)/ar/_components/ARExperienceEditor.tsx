@@ -754,10 +754,9 @@ function SectionCTA({ form, set }: any) {
 function SectionMarker({ form, set, fileRef, fileMindRef, uploading, experienceId, onCompile, compiling }: any) {
   return (
     <>
-      <div style={{ padding: 11, background: '#1e1b2e33', border: '1px solid #2a2642', borderRadius: 9, fontSize: 12, color: '#9ca3af', marginBottom: 14, lineHeight: 1.55 }}>
-        <b style={{ color: '#c084fc' }}>¿Qué es el marcador?</b> Es la <b>imagen impresa</b> sobre la que aparece el modelo 3D. El cliente apunta la cámara a esa imagen y el regalo se ancla encima.
-        <br /><b>Importante:</b> la cámara AR solo se abre cuando hay un marcador compilado. Sin él, el regalo se ve en 3D pero sin cámara.
-        <br />Usa una imagen con detalle y contraste (una foto/ilustración, <b>no</b> el QR solo).
+      <div style={{ padding: 11, background: '#45221422', border: '1px solid #f59e0b55', borderRadius: 9, fontSize: 12, color: '#9ca3af', marginBottom: 14, lineHeight: 1.55 }}>
+        <b style={{ color: '#fbbf24' }}>Opcional · avanzado.</b> El AR normal funciona <b>sin marcador</b>: el cliente toca <i>“Ver en mi espacio”</i> y coloca el regalo sobre una superficie real (WebXR en Android · Quick Look en iPhone). <b>No necesitas nada de esto.</b>
+        <br />Esta sección es solo para el modo <b>imagen impresa</b> (MindAR), donde el modelo aparece sobre una foto impresa.
       </div>
 
       {/* 1 · Imagen objetivo */}

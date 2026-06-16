@@ -1,38 +1,39 @@
-# WebAR de Artia · Anclaje por marcador (MindAR) + celebración
+# WebAR de Artia · regalo en realidad aumentada
 
-Plataforma de regalos en realidad aumentada. El modelo 3D se **ancla a una imagen impresa**
-(marcador) junto al QR, con confeti realista, música y mensaje de voz — todo dentro del
-navegador y con control total. Se conserva un botón opcional de AR nativa para colocarlo sobre
-una superficie real.
+Plataforma de regalos AR. El cliente escanea un QR, lee un mensaje personalizado con confeti,
+música y voz, y coloca el modelo 3D **anclado sobre una superficie real** con la AR del navegador
+(WebXR) o del sistema (Scene Viewer / Quick Look). **Sin marcador ni imagen impresa.**
 
 ---
 
-## 1. Cómo evolucionó
+## 1. Enfoque actual (WebXR markerless)
 
-1. Primero: `model-viewer` entregaba la cámara a la AR del sistema → sin confeti/audio.
-2. Luego: escena inmersiva en el navegador (cámara de fondo + modelo encima) → el modelo
-   **flotaba** siguiendo la cámara, no quedaba fijo.
-3. Ahora: **MindAR (rastreo de imagen)** → el modelo se **ancla sobre la imagen impresa** del
-   regalo y se queda en su sitio; si apartas la cámara, desaparece. Con control total para confeti,
-   audio y voz.
+El AR lo maneja **`model-viewer`** con `ar-modes="webxr scene-viewer quick-look"`:
+
+- **Android moderno** → **WebXR** dentro del navegador: detecta una superficie con un retículo,
+  ancla el regalo ahí y el cliente se mueve a su alrededor (se queda fijo).
+- **iPhone** → **Quick Look** (AR nativa). Requiere el `.usdz`.
+- **Sin AR** (escritorio) → el modelo se ve y gira en 3D.
+
+La cámara la gestiona el sistema/WebXR, así que **no hay permisos web frágiles ni `getUserMedia`
+propio**. El confeti, la música y el mensaje de voz van en la **pantalla de celebración** (no
+encima de la cámara, porque la sesión AR es del sistema).
+
+> Por qué no MindAR / cámara propia: la cámara dentro del navegador con `getUserMedia` daba
+> problemas de permisos y pantallas negras, y el marcador impreso añadía fricción. WebXR + nativo
+> es lo robusto y multiplataforma.
 
 ---
 
 ## 2. Flujo del cliente
 
 ```
-Escanear QR  →  landing (mensaje personalizado, NO arranca AR)
-   ↓ pulsa "Ver mi sorpresa"  (audio + voz arrancan con el gesto)
-Cámara (MindAR) busca el marcador  →  hint con la imagen objetivo
-   ↓ targetFound (apunta al marcador del regalo)
-Modelo 3D ANCLADO sobre la imagen  +  entrada con GSAP (pop-in elástico + flotación)
-   +  confeti realista (canvas-confetti)  +  música  +  mensaje de voz
-   ↓ opcional
-"Verlo sobre mi mesa"  →  AR nativa (Scene Viewer / Quick Look) sobre una superficie real
+Escanear QR  →  landing (mensaje personalizado, NO arranca nada)
+   ↓ pulsa "Ver mi sorpresa"   (confeti + música + voz, con el gesto del usuario)
+Pantalla de celebración: modelo 3D + confeti realista (GSAP / canvas-confetti)
+   ↓ pulsa "Ver en mi espacio"
+AR: WebXR (Android, en el navegador) · Quick Look (iPhone) → coloca el regalo en una superficie
 ```
-
-Si la experiencia **no tiene marcador compilado**, cae a un modo 3D sobre fondo de marca
-(con confeti y el botón de AR nativa), para no quedar rota.
 
 ---
 
@@ -40,86 +41,48 @@ Si la experiencia **no tiene marcador compilado**, cae a un modo 3D sobre fondo 
 
 | Capa | Archivo | Rol |
 |------|---------|-----|
-| Tipos | `types/ar.ts` | `ARMode`, `ConfettiStyle` + campos de marcador/confeti/voz/escala |
-| BD | `supabase/ar_migration_002.sql` · `ar_migration_003.sql` | Columnas nuevas |
-| Celebración | `app/ar/[id]/_components/celebration.ts` | Carga por CDN de GSAP + canvas-confetti + A-Frame/MindAR; confeti tipo fuegos artificiales; entrada del modelo con GSAP |
-| Cliente | `app/ar/[id]/_components/ARCustomerExperience.tsx` | Escena MindAR anclada + fallback 3D + AR nativa opcional |
-| Editor | `app/admin/(protected)/ar/_components/ARExperienceEditor.tsx` | Secciones Marcador, Experiencia, Confeti, Audio (voz) + compilación `.mind` en navegador |
-| API | `app/api/ar/upload/route.ts` | Soporte de audio `.m4a/.aac` y del archivo `.mind` |
-
-Librerías cargadas **por CDN en runtime** (sin tocar `package.json`): GSAP 3.12, canvas-confetti 1.9,
-A-Frame 1.5, aframe-extras 7.5, MindAR 1.2.
+| Tipos | `types/ar.ts` | Campos de branding, confeti, audio/voz, modelo |
+| BD | `supabase/ar_migration_00{1,2,3}.sql` | Columnas de las experiencias |
+| Celebración | `app/ar/[id]/_components/celebration.ts` | GSAP + canvas-confetti (por CDN); confeti tipo fuegos artificiales |
+| Cliente | `app/ar/[id]/_components/ARCustomerExperience.tsx` | Mensaje → celebración → AR (model-viewer WebXR / nativo) |
+| Editor | `app/admin/(protected)/ar/_components/ARExperienceEditor.tsx` | Crea/edita experiencias, QR, confeti, audio/voz, modelo 3D |
+| Conversión 3D | `app/admin/(protected)/ar/_components/model-convert.ts` | `.fbx/.obj/.stl` → `.glb` en el navegador (three.js) |
 
 ---
 
-## 4. Modelo de datos · columnas nuevas (`ar_experiences`)
-
-Migración **002**: `ar_mode`, `model_scale`, `confetti_enabled`, `confetti_style`,
-`confetti_colors`, `voice_message_url`, `audio_start_on_launch`.
-
-Migración **003**:
-
-| Columna | Tipo | Uso |
-|---------|------|-----|
-| `target_image_url` | text | Imagen objetivo (se imprime junto al QR) |
-| `target_mind_url` | text | Archivo `.mind` compilado para el rastreo |
-
-Las filas existentes adoptan los defaults (modo `hybrid`, confeti `hearts`).
-
----
-
-## 5. Despliegue — orden importante
-
-1. Ejecuta en Supabase → SQL Editor, en orden:
-   `supabase/ar_migration_002.sql`  y luego  `supabase/ar_migration_003.sql`.
-   > Deben correr **antes** de desplegar el código.
-2. Asegura el bucket `ar-assets` público (ya lo usa el upload).
-3. Despliega (Next.js) y verifica en tu entorno:
-   ```bash
-   npx tsc --noEmit
-   npm run build
-   ```
-
----
-
-## 6. Editor — crear una experiencia anclada
+## 4. Editor — crear una experiencia
 
 1. **Contenido / Fondo / Card**: textos y branding.
-2. **Modelo 3D**: sube `.glb`, `.gltf`, `.fbx`, `.obj` o `.stl` — los que no son glb se
-   convierten a `.glb` automáticamente en el navegador. Sube también `.usdz` para la AR nativa en iOS.
-3. **Marcador** (imprescindible para que se abra la cámara AR):
-   - Sube la **imagen objetivo** (foto/ilustración con detalle y contraste; el QR solo no sirve).
-   - Pulsa **"Compilar marcador"** → genera el `.mind` en tu navegador y lo guarda.
-   - Si la compilación falla, genera el `.mind` en la [herramienta de MindAR](https://hiukim.github.io/mind-ar-js-doc/tools/compile)
-     y **súbelo** con "Subir archivo .mind". Sin marcador, el regalo se ve en 3D pero la cámara no se abre.
-4. **Experiencia**: motor `hybrid` (recomendado) y **escala del modelo** (con MindAR suele bajarse a
-   ~0.2–0.5; el plano del marcador mide 1 unidad).
-5. **Confeti**: estilo (corazones/clásico/estrellas/pétalos) y colores.
-6. **Audio**: música de fondo + **mensaje de voz** + "iniciar al pulsar".
-7. **Publicar**: genera URL pública y QR.
+2. **Modelo 3D**: sube `.glb`, `.gltf`, `.fbx`, `.obj` o `.stl` (los no-glb se convierten solos).
+   Sube también `.usdz` para la AR de iPhone.
+3. **Confeti**: estilo (corazones/clásico/estrellas/pétalos) y colores.
+4. **Audio**: música de fondo + mensaje de voz + "iniciar al pulsar".
+5. **Botón**: texto, color, ícono, animación.
+6. **Publicar**: genera URL pública y QR. En el regalo se imprime **solo el QR**.
 
-> En el regalo se imprimen **dos** cosas: el **QR** (abre la landing) y la **imagen objetivo**
-> (sobre la que aparece el modelo). Pueden ir juntas en la misma tarjeta.
+> La pestaña **Marcador** es **opcional** (modo avanzado con imagen impresa / MindAR). El AR normal
+> no la necesita.
 
 ---
 
-## 7. Notas técnicas y límites
+## 5. Despliegue
 
-- **MindAR** rastrea imágenes; funciona en Android e iOS (Safari) sobre **HTTPS** con permiso de
-  cámara. MindAR gestiona la cámara (no abrimos `getUserMedia` aparte → sin conflictos).
-- **Compilación `.mind` en navegador**: la imagen objetivo debe ser legible por CORS (las URLs
-  públicas de Supabase lo permiten). Si falla, el editor muestra el error.
-- **Escala del modelo**: un `.glb` grande puede verse enorme sobre el marcador; ajústalo en
-  *Experiencia → escala* (rango 0.1–3×).
-- **Confeti + GSAP**: el confeti usa canvas-confetti (físicas reales, formas por emoji) y GSAP
-  orquesta la secuencia y la entrada del modelo (`back.out`, flotación en loop). Respeta
-  `prefers-reduced-motion`.
-- **AR nativa** (botón "Verlo sobre mi mesa"): usa `scene-viewer` (Android) / `quick-look` (iOS),
-  requiere `.usdz` en iPhone. El botón por defecto de model-viewer está oculto.
-- **Calidad del marcador**: imágenes con muchos detalles y bordes rastrean mejor que logos planos o
-  zonas de color liso.
-- **Formatos 3D**: el AR web solo renderiza glTF/glb, así que `.fbx/.obj/.stl` se convierten a `.glb`
-  en el navegador con three.js (`model-convert.ts`) al subirlos. Caveats: el `.fbx` conserva
-  geometría y animaciones embebidas (no efectos propietarios); el `.obj` solo trae geometría —
-  sus texturas (`.mtl` + imágenes) no viajan en un único archivo, así que para texturas exporta a
-  `.glb` desde tu herramienta 3D. Modelos muy pesados pueden tardar en convertir en móviles.
+1. Migraciones en Supabase → SQL Editor: `ar_migration_001/002/003.sql`.
+2. Bucket `ar-assets` público.
+3. **iPhone**: para la AR nativa, cada modelo necesita su `.usdz` además del `.glb`.
+4. Verifica en tu entorno: `npx tsc --noEmit` y `npm run build`.
+
+---
+
+## 6. Notas y límites
+
+- **Probar en teléfono real.** El AR (WebXR / Quick Look) no funciona en el modo responsive de
+  escritorio; ahí solo verás el 3D.
+- **HTTPS obligatorio** para AR.
+- **WebXR** requiere Android con ARCore (Chrome). Sin él, `model-viewer` cae a Scene Viewer o, si
+  tampoco, muestra el 3D.
+- **Confeti/audio/voz** se disparan con el gesto de "Ver mi sorpresa" (evita el bloqueo de autoplay
+  móvil) y viven en la pantalla de celebración.
+- **Formatos 3D**: el AR web solo renderiza glTF/glb; `.fbx/.obj/.stl` se convierten a `.glb` con
+  three.js. El `.obj` no trae sus texturas (van en archivos aparte) — para texturas, exporta a `.glb`.
+- **Marcador (MindAR)**: queda disponible como modo avanzado, pero no se usa en el flujo normal.
