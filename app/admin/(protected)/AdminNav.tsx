@@ -27,7 +27,7 @@ import {
   UserCircle,
   Sun,
   Moon,
-   Brain, Package, Box, Layers,Archive,
+   Brain, Package, Box, Layers, Archive, Scan,
 } from 'lucide-react'
 
 // ─── NAV STRUCTURE ───────────────────────────────────────────────
@@ -99,6 +99,13 @@ const NAV_ITEMS: NavGroup[] = [
     children: [
       { href: '/admin/reportes',    label: 'Vista General',        icon: <BarChart3 size={15} /> },
       { href: '/admin/reportes/bi', label: 'Business Intelligence', icon: <Brain size={15} /> },
+    ],
+  },
+  {
+    label: 'WebAR',
+    icon: <Scan size={18} />,
+    children: [
+      { href: '/admin/ar', label: 'Experiencias AR', icon: <Scan size={15} /> },
     ],
   },
   {
@@ -235,6 +242,7 @@ export default function AdminNav({ email }: { email: string }) {
   // ↓ Reportes abre si estamos en cualquier sub-ruta
   const [reportesOpen,  setReportesOpen]  = useState(() => pathname.startsWith('/admin/reportes'))
   const [catalogoOpen, setCatalogoOpen] = useState(() => pathname.startsWith('/admin/catalogo'))
+  const [arOpen, setArOpen] = useState(() => pathname.startsWith('/admin/ar'))
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dark, setDark] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -318,9 +326,10 @@ export default function AdminNav({ email }: { email: string }) {
       const isClientes = item.label === 'Clientes'
     const isReportes = item.label === 'Reportes'
     const isCatalogo = item.label === 'Catálogo'
+    const isAR = item.label === 'WebAR'
 
-    const open = isVentas? salesOpen : isClientes ? clientesOpen : isReportes ? reportesOpen: isCatalogo? catalogoOpen : false
-    const setOpen = isVentas ? setSalesOpen : isClientes ? setClientesOpen : isReportes ? setReportesOpen : isCatalogo? setCatalogoOpen: () => {}
+    const open = isVentas ? salesOpen : isClientes ? clientesOpen : isReportes ? reportesOpen : isCatalogo ? catalogoOpen : isAR ? arOpen : false
+    const setOpen = isVentas ? setSalesOpen : isClientes ? setClientesOpen : isReportes ? setReportesOpen : isCatalogo ? setCatalogoOpen : isAR ? setArOpen : () => {}
       const groupActive = item.children.some(c => isActive(c.href))
 
       return (
