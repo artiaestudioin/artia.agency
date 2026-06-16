@@ -20,6 +20,7 @@ export interface ARExperience {
   id: string
   slug: string                       // ID único para URL pública y QR
   title: string
+  subtitle: string                   // Subtítulo opcional
   message: string                    // Mensaje personalizado al destinatario
   recipient_name: string
   occasion: OccasionType
@@ -28,9 +29,20 @@ export interface ARExperience {
   // Branding visual
   bg_image: string | null
   bg_color: string
+  bg_overlay_opacity: number         // 0-1, opacidad del overlay sobre bg_image
   primary_color: string
   secondary_color: string
   font_family: string
+  font_size_title: number            // px
+  text_color: string                 // color del texto principal
+
+  // Card de mensaje
+  card_bg_color: string              // color de fondo de la card
+  card_opacity: number               // 0-1
+  card_border_radius: number
+
+  // Logo
+  logo_url: string | null
 
   // Contenido 3D / 2D
   model_url: string | null           // .glb
@@ -38,12 +50,19 @@ export interface ARExperience {
   model_type: ARModelType
   model_alt: string
 
+  // Animación
+  animation_name: string | null      // nombre de la animación activa en el GLB
+  animation_autoplay: boolean
+  animation_loop: boolean
+  animation_speed: number            // 1 = normal
+
   // Botón AR
   cta_text: string
   cta_color: string
   cta_text_color: string
   cta_border_radius: number
   cta_icon: string
+  cta_animation: 'none' | 'pulse' | 'bounce' | 'glow'
 
   // Audio
   audio_url: string | null
@@ -107,26 +126,47 @@ export interface CreateARExperienceInput {
 
 export interface UpdateARExperienceInput {
   title?: string
+  subtitle?: string
   message?: string
   recipient_name?: string
   occasion?: OccasionType
   status?: ARExperienceStatus
+
   bg_image?: string | null
   bg_color?: string
+  bg_overlay_opacity?: number
   primary_color?: string
   secondary_color?: string
   font_family?: string
+  font_size_title?: number
+  text_color?: string
+
+  card_bg_color?: string
+  card_opacity?: number
+  card_border_radius?: number
+
+  logo_url?: string | null
+
   model_url?: string | null
   model_ios_url?: string | null
   model_type?: ARModelType
   model_alt?: string
+
+  animation_name?: string | null
+  animation_autoplay?: boolean
+  animation_loop?: boolean
+  animation_speed?: number
+
   cta_text?: string
   cta_color?: string
   cta_text_color?: string
   cta_border_radius?: number
   cta_icon?: string
+  cta_animation?: ARExperience['cta_animation']
+
   audio_url?: string | null
   audio_autoplay?: boolean
+
   frame_style?: ARExperience['frame_style']
   campaign_id?: string | null
 }
@@ -158,27 +198,48 @@ export const OCCASION_EMOJIS: Record<OccasionType, string> = {
 export const DEFAULT_AR_EXPERIENCE: Omit<ARExperience,
   'id' | 'slug' | 'qr_code_url' | 'public_url' | 'scan_count' | 'ar_launch_count' | 'created_at' | 'updated_at' | 'created_by'
 > = {
-  title:             'Mi Regalo Especial',
-  message:           'Tienes un regalo esperándote. Toca el botón para descubrirlo.',
-  recipient_name:    '',
-  occasion:          'birthday',
-  status:            'draft',
-  bg_image:          null,
-  bg_color:          '#0a0a0f',
-  primary_color:     '#c084fc',
-  secondary_color:   '#818cf8',
-  font_family:       'Playfair Display',
-  model_url:         'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-  model_ios_url:     'https://modelviewer.dev/shared-assets/models/Astronaut.usdz',
-  model_type:        '3d_glb',
-  model_alt:         'Tu regalo en realidad aumentada',
-  cta_text:          'Abrir Cámara',
-  cta_color:         '#c084fc',
-  cta_text_color:    '#ffffff',
-  cta_border_radius: 999,
-  cta_icon:          'camera',
-  audio_url:         null,
-  audio_autoplay:    false,
-  frame_style:       'elegant',
-  campaign_id:       null,
+  title:              'Mi Regalo Especial',
+  subtitle:           '',
+  message:            'Tienes un regalo esperándote. Toca el botón para descubrirlo.',
+  recipient_name:     '',
+  occasion:           'birthday',
+  status:             'draft',
+
+  bg_image:           null,
+  bg_color:           '#0f0a1a',
+  bg_overlay_opacity: 0.55,
+  primary_color:      '#ff6b35',
+  secondary_color:    '#ff8c5a',
+  font_family:        'Playfair Display',
+  font_size_title:    34,
+  text_color:         '#ffffff',
+
+  card_bg_color:      '#ffffff',
+  card_opacity:       0.12,
+  card_border_radius: 28,
+
+  logo_url:           null,
+
+  model_url:          'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+  model_ios_url:      'https://modelviewer.dev/shared-assets/models/Astronaut.usdz',
+  model_type:         '3d_glb',
+  model_alt:          'Tu regalo en realidad aumentada',
+
+  animation_name:     null,
+  animation_autoplay: true,
+  animation_loop:     true,
+  animation_speed:    1,
+
+  cta_text:           'Ver mi sorpresa',
+  cta_color:          '#ff6b35',
+  cta_text_color:     '#ffffff',
+  cta_border_radius:  999,
+  cta_icon:           'gift',
+  cta_animation:      'pulse',
+
+  audio_url:          null,
+  audio_autoplay:     false,
+
+  frame_style:        'none',
+  campaign_id:        null,
 }

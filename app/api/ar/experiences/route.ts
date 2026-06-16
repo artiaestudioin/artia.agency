@@ -57,7 +57,10 @@ export async function POST(req: NextRequest) {
   }
 
   const slug = generateSlug()
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://artia.agency'
+  // Usar NEXT_PUBLIC_BASE_URL si está seteado, si no auto-detectar del request
+  const reqUrl  = new URL(req.url)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    ?? `${reqUrl.protocol}//${reqUrl.host}`
   const public_url = `${baseUrl}/ar/${slug}`
 
   const payload = {
