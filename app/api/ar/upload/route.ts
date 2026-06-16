@@ -41,6 +41,8 @@ const EXT_TO_TYPE: Record<string, string> = {
   mp3:  'audio',
   ogg:  'audio',
   wav:  'audio',
+  m4a:  'audio',
+  aac:  'audio',
   mp4:  'video',
   webm: 'video',
 }
@@ -57,6 +59,9 @@ const MIME_TO_TYPE: Record<string, string> = {
   'audio/mpeg':  'audio',
   'audio/ogg':   'audio',
   'audio/wav':   'audio',
+  'audio/mp4':   'audio',
+  'audio/x-m4a': 'audio',
+  'audio/aac':   'audio',
   'video/mp4':   'video',
   'video/webm':  'video',
 }

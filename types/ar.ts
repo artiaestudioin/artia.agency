@@ -16,6 +16,14 @@ export type OccasionType =
 
 export type ARModelType = '3d_glb' | '2d_image' | 'video'
 
+// Motor de la experiencia AR
+//   immersive = cámara dentro del navegador + modelo 3D + confeti/audio/voz (control total)
+//   native    = entrega a la AR del sistema (Scene Viewer / Quick Look)
+//   hybrid    = inmersiva por defecto + botón opcional "verlo sobre mi mesa"
+export type ARMode = 'immersive' | 'native' | 'hybrid'
+
+export type ConfettiStyle = 'classic' | 'hearts' | 'stars' | 'petals'
+
 export interface ARExperience {
   id: string
   slug: string                       // ID único para URL pública y QR
@@ -64,9 +72,20 @@ export interface ARExperience {
   cta_icon: string
   cta_animation: 'none' | 'pulse' | 'bounce' | 'glow'
 
+  // Motor / escena AR
+  ar_mode: ARMode
+  model_scale: number                // escala del modelo en la escena inmersiva
+
+  // Confeti (overlay con control total — solo immersive/hybrid)
+  confetti_enabled: boolean
+  confetti_style: ConfettiStyle
+  confetti_colors: string            // lista de hex separada por comas; vacío = usar primary/secondary
+
   // Audio
-  audio_url: string | null
+  audio_url: string | null           // música de fondo (loop)
   audio_autoplay: boolean
+  audio_start_on_launch: boolean     // arranca la música al pulsar el botón (evita bloqueo móvil)
+  voice_message_url: string | null   // mensaje de voz personalizado (1 reproducción al abrir)
 
   // Frame decorativo
   frame_style: 'none' | 'elegant' | 'floral' | 'minimal' | 'luxury'
@@ -166,6 +185,14 @@ export interface UpdateARExperienceInput {
 
   audio_url?: string | null
   audio_autoplay?: boolean
+  audio_start_on_launch?: boolean
+  voice_message_url?: string | null
+
+  ar_mode?: ARMode
+  model_scale?: number
+  confetti_enabled?: boolean
+  confetti_style?: ConfettiStyle
+  confetti_colors?: string
 
   frame_style?: ARExperience['frame_style']
   campaign_id?: string | null
@@ -237,8 +264,17 @@ export const DEFAULT_AR_EXPERIENCE: Omit<ARExperience,
   cta_icon:           'gift',
   cta_animation:      'pulse',
 
-  audio_url:          null,
-  audio_autoplay:     false,
+  ar_mode:            'hybrid',
+  model_scale:        1,
+
+  confetti_enabled:   true,
+  confetti_style:     'hearts',
+  confetti_colors:    '',
+
+  audio_url:             null,
+  audio_autoplay:        false,
+  audio_start_on_launch: true,
+  voice_message_url:     null,
 
   frame_style:        'none',
   campaign_id:        null,

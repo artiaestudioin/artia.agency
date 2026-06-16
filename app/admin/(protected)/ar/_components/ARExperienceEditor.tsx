@@ -6,8 +6,9 @@ import {
   Save, Eye, ArrowLeft, Upload, Palette, Type, Camera,
   Music, Layout, Globe, CheckCircle, AlertCircle, Loader2,
   Smartphone, Monitor, Image as ImageIcon, Zap, Sliders,
+  Wand2, PartyPopper, Mic,
 } from 'lucide-react'
-import type { ARExperience, OccasionType, UpdateARExperienceInput } from '@/types/ar'
+import type { ARExperience, OccasionType, UpdateARExperienceInput, ARMode, ConfettiStyle } from '@/types/ar'
 import { DEFAULT_AR_EXPERIENCE, OCCASION_LABELS, OCCASION_EMOJIS } from '@/types/ar'
 
 interface Props {
@@ -15,17 +16,32 @@ interface Props {
   experienceId?: string
 }
 
-type Section = 'content' | 'design' | 'card' | 'model' | 'animation' | 'cta' | 'audio' | 'publish'
+type Section = 'content' | 'design' | 'card' | 'model' | 'experience' | 'animation' | 'cta' | 'confetti' | 'audio' | 'publish'
 
 const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
-  { id: 'content',   label: 'Contenido',  icon: <Type size={13} /> },
-  { id: 'design',    label: 'Fondo',      icon: <ImageIcon size={13} /> },
-  { id: 'card',      label: 'Card',       icon: <Layout size={13} /> },
-  { id: 'model',     label: 'Modelo 3D',  icon: <Camera size={13} /> },
-  { id: 'animation', label: 'Animación',  icon: <Zap size={13} /> },
-  { id: 'cta',       label: 'Botón',      icon: <Sliders size={13} /> },
-  { id: 'audio',     label: 'Audio',      icon: <Music size={13} /> },
-  { id: 'publish',   label: 'Publicar',   icon: <Globe size={13} /> },
+  { id: 'content',    label: 'Contenido',  icon: <Type size={13} /> },
+  { id: 'design',     label: 'Fondo',      icon: <ImageIcon size={13} /> },
+  { id: 'card',       label: 'Card',       icon: <Layout size={13} /> },
+  { id: 'model',      label: 'Modelo 3D',  icon: <Camera size={13} /> },
+  { id: 'experience', label: 'Experiencia',icon: <Wand2 size={13} /> },
+  { id: 'animation',  label: 'Animación',  icon: <Zap size={13} /> },
+  { id: 'cta',        label: 'Botón',      icon: <Sliders size={13} /> },
+  { id: 'confetti',   label: 'Confeti',    icon: <PartyPopper size={13} /> },
+  { id: 'audio',      label: 'Audio',      icon: <Music size={13} /> },
+  { id: 'publish',    label: 'Publicar',   icon: <Globe size={13} /> },
+]
+
+const AR_MODES: { value: ARMode; label: string; desc: string; icon: string }[] = [
+  { value: 'hybrid',    label: 'Híbrida',    icon: '✨', desc: 'Cámara en el navegador con confeti, audio y voz + botón opcional para verlo sobre una superficie real (AR nativa). Recomendada.' },
+  { value: 'immersive', label: 'Inmersiva',  icon: '🪄', desc: 'Cámara dentro del navegador con control total (confeti/audio/voz). Sin entrega a la AR del sistema.' },
+  { value: 'native',    label: 'AR nativa',  icon: '📱', desc: 'Entrega directa a Scene Viewer / Quick Look para anclar a una superficie. No muestra confeti encima.' },
+]
+
+const CONFETTI_STYLES: { value: ConfettiStyle; label: string }[] = [
+  { value: 'hearts',  label: '❤️ Corazones' },
+  { value: 'classic', label: '🎊 Clásico' },
+  { value: 'stars',   label: '⭐ Estrellas' },
+  { value: 'petals',  label: '🌸 Pétalos' },
 ]
 
 const FONTS = [
@@ -126,6 +142,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
   const fileGlbRef   = useRef<HTMLInputElement>(null)
   const fileUsdzRef  = useRef<HTMLInputElement>(null)
   const fileAudioRef = useRef<HTMLInputElement>(null)
+  const fileVoiceRef = useRef<HTMLInputElement>(null)
   const fileBgRef    = useRef<HTMLInputElement>(null)
   const fileLogoRef  = useRef<HTMLInputElement>(null)
 
@@ -170,7 +187,12 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
         cta_text: form.cta_text, cta_color: form.cta_color,
         cta_text_color: form.cta_text_color, cta_border_radius: form.cta_border_radius,
         cta_icon: form.cta_icon, cta_animation: form.cta_animation,
+        ar_mode: form.ar_mode, model_scale: form.model_scale,
+        confetti_enabled: form.confetti_enabled, confetti_style: form.confetti_style,
+        confetti_colors: form.confetti_colors,
         audio_url: form.audio_url ?? null, audio_autoplay: form.audio_autoplay,
+        audio_start_on_launch: form.audio_start_on_launch,
+        voice_message_url: form.voice_message_url ?? null,
         frame_style: form.frame_style, campaign_id: form.campaign_id ?? null,
         ...(andPublish ? { status: 'active' as const } : {}),
       }
@@ -284,14 +306,16 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
 
         {/* Campos */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-          {section === 'content'   && <SectionContent   form={form} set={set} />}
-          {section === 'design'    && <SectionDesign    form={form} set={set} fileRef={fileBgRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
-          {section === 'card'      && <SectionCard      form={form} set={set} fileRef={fileLogoRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
-          {section === 'model'     && <SectionModel     form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
-          {section === 'animation' && <SectionAnimation form={form} set={set} />}
-          {section === 'cta'       && <SectionCTA       form={form} set={set} />}
-          {section === 'audio'     && <SectionAudio     form={form} set={set} fileRef={fileAudioRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
-          {section === 'publish'   && <SectionPublish   form={form} onPublish={() => handleSave(true)} publishing={publishing} onRegenerateUrl={handleRegenerateUrl} />}
+          {section === 'content'    && <SectionContent    form={form} set={set} />}
+          {section === 'design'     && <SectionDesign     form={form} set={set} fileRef={fileBgRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'card'       && <SectionCard       form={form} set={set} fileRef={fileLogoRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'model'      && <SectionModel      form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'experience' && <SectionExperience form={form} set={set} />}
+          {section === 'animation'  && <SectionAnimation  form={form} set={set} />}
+          {section === 'cta'        && <SectionCTA        form={form} set={set} />}
+          {section === 'confetti'   && <SectionConfetti   form={form} set={set} />}
+          {section === 'audio'      && <SectionAudio      form={form} set={set} fileRef={fileAudioRef} fileVoiceRef={fileVoiceRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'publish'    && <SectionPublish    form={form} onPublish={() => handleSave(true)} publishing={publishing} onRegenerateUrl={handleRegenerateUrl} />}
         </div>
       </div>
 
@@ -361,6 +385,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
       <input ref={fileGlbRef}   type="file" accept=".glb,.gltf" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'glb', 'model_url')} />
       <input ref={fileUsdzRef}  type="file" accept=".usdz"      style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'usdz', 'model_ios_url')} />
       <input ref={fileAudioRef} type="file" accept=".mp3,.ogg,.wav" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'audio', 'audio_url')} />
+      <input ref={fileVoiceRef} type="file" accept=".mp3,.ogg,.wav,.m4a" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'voice', 'voice_message_url')} />
       <input ref={fileBgRef}    type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'bg_image')} />
       <input ref={fileLogoRef}  type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'logo_url')} />
     </div>
@@ -635,15 +660,92 @@ function SectionCTA({ form, set }: any) {
   )
 }
 
-function SectionAudio({ form, set, fileRef, uploading, onUpload, experienceId }: any) {
+function SectionExperience({ form, set }: any) {
+  const mode = (form.ar_mode ?? 'hybrid') as ARMode
+  const active = AR_MODES.find(m => m.value === mode) ?? AR_MODES[0]
   return (
     <>
+      <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>Motor de la experiencia AR</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        {AR_MODES.map(m => (
+          <button key={m.value} onClick={() => set('ar_mode', m.value)} style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left',
+            padding: '11px 12px', borderRadius: 11, cursor: 'pointer',
+            background: mode === m.value ? '#c084fc22' : '#1e1b2e',
+            border: `1px solid ${mode === m.value ? '#c084fc' : '#2a2642'}`,
+          }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>{m.icon}</span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: mode === m.value ? '#c084fc' : '#f1f0f9' }}>{m.label}</span>
+              <span style={{ display: 'block', fontSize: 11, color: '#9ca3af', marginTop: 2, lineHeight: 1.45 }}>{m.desc}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {active.value !== 'native' && (
+        <RangeRow label="Escala del modelo en la escena" value={form.model_scale ?? 1} min={0.5} max={2} step={0.1} unit="×"
+          onChange={v => set('model_scale', v)} />
+      )}
+
+      <div style={{ padding: 10, background: '#1e1b2e33', border: '1px solid #2a2642', borderRadius: 9, fontSize: 12, color: '#6b6894' }}>
+        💡 La <b style={{ color: '#c084fc' }}>híbrida</b> es la mejor para un regalo: abre la cámara dentro del navegador con confeti, audio y voz, y deja un botón para anclarlo a una superficie real con la AR del teléfono.
+      </div>
+    </>
+  )
+}
+
+function SectionConfetti({ form, set }: any) {
+  const enabled = form.confetti_enabled ?? true
+  return (
+    <>
+      <Field mb={14}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          <input type="checkbox" checked={enabled} onChange={e => set('confetti_enabled', e.target.checked)}
+            style={{ width: 16, height: 16, accentColor: '#c084fc', cursor: 'pointer' }} />
+          <span style={{ fontSize: 13, color: '#f1f0f9', fontWeight: 600 }}>Activar confeti al abrir la sorpresa</span>
+        </label>
+        <p style={{ margin: '4px 0 0 24px', fontSize: 11, color: '#6b6894' }}>Se muestra encima de la cámara en los modos Híbrida e Inmersiva.</p>
+      </Field>
+
+      {enabled && (
+        <>
+          <Field>
+            <Label>Estilo</Label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 6 }}>
+              {CONFETTI_STYLES.map(s => (
+                <button key={s.value} onClick={() => set('confetti_style', s.value)} style={{
+                  padding: '9px 6px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  background: (form.confetti_style ?? 'hearts') === s.value ? '#c084fc22' : '#1e1b2e',
+                  border: `1px solid ${(form.confetti_style ?? 'hearts') === s.value ? '#c084fc' : '#2a2642'}`,
+                  color: (form.confetti_style ?? 'hearts') === s.value ? '#c084fc' : '#9ca3af',
+                }}>{s.label}</button>
+              ))}
+            </div>
+          </Field>
+
+          <Field>
+            <Label>Colores (opcional)</Label>
+            <input style={inputStyle} value={form.confetti_colors ?? ''} onChange={e => set('confetti_colors', e.target.value)}
+              placeholder="#ff6b35, #ffd166, #ffffff" />
+            <p style={{ margin: '5px 0 0', fontSize: 11, color: '#6b6894' }}>Lista separada por comas. Vacío = usa los colores primario y secundario.</p>
+          </Field>
+        </>
+      )}
+    </>
+  )
+}
+
+function SectionAudio({ form, set, fileRef, fileVoiceRef, uploading, onUpload, experienceId }: any) {
+  return (
+    <>
+      {/* Música de fondo */}
       <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>Música de fondo (opcional)</p>
+        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>🎵 Música de fondo (loop, opcional)</p>
         <button onClick={() => fileRef.current?.click()} disabled={uploading === 'audio'}
           style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#22c55e22', border: '1px dashed #22c55e', color: '#22c55e', fontWeight: 600, fontSize: 12, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
           {uploading === 'audio' ? <Loader2 size={12} /> : <Upload size={12} />}
-          Subir audio (.mp3, .ogg, .wav)
+          Subir música (.mp3, .ogg, .wav)
         </button>
         {form.audio_url && (
           <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -652,16 +754,40 @@ function SectionAudio({ form, set, fileRef, uploading, onUpload, experienceId }:
               style={{ background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer' }}>✕</button>
           </div>
         )}
-        <input style={{ ...inputStyle, marginTop: 8 }} value={form.audio_url ?? ''} onChange={e => set('audio_url', e.target.value || null)} placeholder="https://…/audio.mp3" />
+        <input style={{ ...inputStyle, marginTop: 8 }} value={form.audio_url ?? ''} onChange={e => set('audio_url', e.target.value || null)} placeholder="https://…/musica.mp3" />
       </div>
-      <Field mb={8}>
+
+      <Field mb={16}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <input type="checkbox" checked={form.audio_autoplay ?? false} onChange={e => set('audio_autoplay', e.target.checked)}
+          <input type="checkbox" checked={form.audio_start_on_launch ?? true} onChange={e => set('audio_start_on_launch', e.target.checked)}
             style={{ width: 16, height: 16, accentColor: '#c084fc', cursor: 'pointer' }} />
-          <span style={{ fontSize: 13, color: '#f1f0f9' }}>Reproducir automáticamente al abrir</span>
+          <span style={{ fontSize: 13, color: '#f1f0f9' }}>Iniciar música al pulsar el botón</span>
         </label>
-        <p style={{ margin: '4px 0 0 24px', fontSize: 11, color: '#6b6894' }}>Los navegadores móviles pueden bloquear el autoplay sin interacción del usuario.</p>
+        <p style={{ margin: '4px 0 0 24px', fontSize: 11, color: '#6b6894' }}>Recomendado: el móvil permite el audio porque hay interacción del usuario.</p>
       </Field>
+
+      {/* Mensaje de voz */}
+      <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14 }}>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}><Mic size={12} style={{ verticalAlign: -1 }} /> Mensaje de voz personalizado</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#6b6894' }}>Se reproduce una vez al abrir la sorpresa (sobre la música).</p>
+        <button onClick={() => fileVoiceRef?.current?.click()} disabled={uploading === 'voice'}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#f472b622', border: '1px dashed #f472b6', color: '#f472b6', fontWeight: 600, fontSize: 12, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+          {uploading === 'voice' ? <Loader2 size={12} /> : <Upload size={12} />}
+          Subir voz (.mp3, .m4a, .wav)
+        </button>
+        {form.voice_message_url && (
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <audio src={form.voice_message_url} controls style={{ width: '100%', height: 32 }} />
+            <button onClick={() => set('voice_message_url', null)}
+              style={{ background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer' }}>✕</button>
+          </div>
+        )}
+        <input style={{ ...inputStyle, marginTop: 8 }} value={form.voice_message_url ?? ''} onChange={e => set('voice_message_url', e.target.value || null)} placeholder="https://…/voz.mp3" />
+      </div>
+
+      {!experienceId && (
+        <p style={{ margin: '12px 0 0', fontSize: 11, color: '#f59e0b' }}>💡 Guarda primero para subir archivos</p>
+      )}
     </>
   )
 }
@@ -764,6 +890,13 @@ function MobilePreview({ form, desktop }: { form: Partial<ARExperience>; desktop
   }
   const emoji = OCCASION_EMOJIS[occasion]
 
+  const modeMeta: Record<string, { icon: string; label: string }> = {
+    hybrid: { icon: '✨', label: 'Híbrida' }, immersive: { icon: '🪄', label: 'Inmersiva' }, native: { icon: '📱', label: 'AR nativa' },
+  }
+  const confEmoji: Record<string, string> = { hearts: '❤️', classic: '🎊', stars: '⭐', petals: '🌸' }
+  const mode = modeMeta[form.ar_mode ?? 'hybrid'] ?? modeMeta.hybrid
+  const showConfetti = (form.confetti_enabled ?? true) && (form.ar_mode ?? 'hybrid') !== 'native'
+
   // parse color hex to rgba for card
   function hexToRgba(hex: string, alpha: number) {
     const r = parseInt(hex.slice(1, 3), 16)
@@ -856,6 +989,39 @@ function MobilePreview({ form, desktop }: { form: Partial<ARExperience>; desktop
         </div>
       </div>
 
+      {/* Confeti decorativo (hint del estilo configurado) */}
+      {showConfetti && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          {[12, 30, 52, 70, 86].map((left, i) => (
+            <span key={i} style={{
+              position: 'absolute', left: `${left}%`, top: `${[8, 18, 6, 22, 12][i]}%`,
+              fontSize: [14, 11, 16, 12, 13][i], opacity: 0.5,
+              animation: `prevFall ${3 + i * 0.4}s ease-in ${i * 0.3}s infinite`,
+            }}>{confEmoji[form.confetti_style ?? 'hearts']}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Chips de configuración (no forman parte de la UI del cliente) */}
+      <div style={{
+        position: 'absolute', bottom: 26, left: 0, right: 0, zIndex: 2,
+        display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center', padding: '0 10px',
+      }}>
+        {[
+          `${mode.icon} ${mode.label}`,
+          ...(showConfetti ? [`${confEmoji[form.confetti_style ?? 'hearts']} Confeti`] : []),
+          ...(form.voice_message_url ? ['🎤 Voz'] : []),
+          ...(form.audio_url ? ['🎵 Música'] : []),
+        ].map((chip, i) => (
+          <span key={i} style={{
+            fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
+            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)',
+            padding: '3px 8px', borderRadius: 999, fontFamily: 'Inter, system-ui',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}>{chip}</span>
+        ))}
+      </div>
+
       {/* Watermark */}
       <div style={{
         position: 'absolute', bottom: 8, left: 0, right: 0,
@@ -864,6 +1030,8 @@ function MobilePreview({ form, desktop }: { form: Partial<ARExperience>; desktop
       }}>
         ARTIA WebAR
       </div>
+
+      <style>{`@keyframes prevFall { 0% { transform: translateY(-6px) rotate(0deg); } 100% { transform: translateY(18px) rotate(40deg); } }`}</style>
     </div>
   )
 }
