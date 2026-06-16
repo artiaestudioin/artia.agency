@@ -325,6 +325,33 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
     voiceRef.current?.pause()
   }
 
+  // AR nativa (Scene Viewer / Quick Look): libera la cámara del navegador antes de entregar
+  function handleNativeAR() {
+    const v = viewerRef.current as any
+    if (!v?.activateAR) return
+    stopStream()
+    setCameraOn(false)
+    try { v.activateAR() } catch { /* noop */ }
+  }
+
+  // Al volver de la AR nativa, reactivar la cámara del navegador
+  useEffect(() => {
+    if (!started || !wantsCamera) return
+    const resume = () => {
+      if (document.visibilityState === 'visible' && !streamRef.current) startCamera()
+    }
+    document.addEventListener('visibilitychange', resume)
+    const v = viewerRef.current as any
+    const onStatus = (e: any) => {
+      if (e?.detail?.status === 'not-presenting' && !streamRef.current) startCamera()
+    }
+    v?.addEventListener?.('ar-status', onStatus)
+    return () => {
+      document.removeEventListener('visibilitychange', resume)
+      v?.removeEventListener?.('ar-status', onStatus)
+    }
+  }, [started, wantsCamera, startCamera])
+
   function replayConfetti() {
     if (!confettiOn || !canvasRef.current) return
     stopConfettiRef.current?.()
@@ -514,7 +541,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
                 ios-src={experience.model_ios_url ?? undefined}
                 alt={experience.model_alt ?? 'Modelo AR'}
                 ar
-                ar-modes="webxr scene-viewer quick-look"
+                ar-modes="scene-viewer quick-look"
                 ar-scale="auto"
                 camera-controls
                 autoplay
@@ -525,7 +552,10 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
                 environment-image="neutral"
                 loading="eager"
                 style={{ width: '100%', height: '100%', background: 'transparent', '--poster-color': 'transparent' } as React.CSSProperties}
-              />
+              >
+                {/* Reemplaza/oculta el botón AR por defecto: usamos el nuestro */}
+                <div slot="ar-button" style={{ display: 'none' }} />
+              </model-viewer>
             </div>
           )}
 
@@ -577,7 +607,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
           }}>
             {showNativeBtn && (
               <button
-                onClick={() => { const v = viewerRef.current as any; v?.activateAR?.() }}
+                onClick={handleNativeAR}
                 style={{
                   padding: '15px 30px', fontSize: 15, fontWeight: 700,
                   fontFamily: 'Inter, system-ui, sans-serif',
@@ -612,6 +642,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { margin: 0; padding: 0; background: ${bg}; }
+        model-viewer::part(default-ar-button) { display: none !important; }
         @keyframes heartbeat {
           0%, 100% { transform: scale(1); }
           14%       { transform: scale(1.15); }
