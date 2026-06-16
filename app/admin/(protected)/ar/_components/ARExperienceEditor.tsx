@@ -33,20 +33,27 @@ const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'publish',    label: 'Publicar',   icon: <Globe size={13} /> },
 ]
 
-// MindAR: compilador del marcador (.mind) en el navegador
-const MINDAR_COMPILER_CDN = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js'
+// MindAR: cargar el compilador de marcadores (.mind) en el navegador.
+// El build prod es un módulo ESM (no un script global), por eso se importa
+// dinámicamente; esm.sh resuelve la dependencia 'three'. new Function evita
+// que el bundler intente empaquetar el import en build time.
+const MINDAR_COMPILER_URLS = [
+  'https://esm.sh/mind-ar@1.2.5/dist/mindar-image.prod.js',
+  'https://esm.sh/mind-ar@1.2.5',
+]
 
-function loadScriptOnce(src: string, ready: () => boolean): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (ready()) return resolve()
-    const ex = document.querySelector(`script[data-src="${src}"]`)
-    if (ex) { ex.addEventListener('load', () => resolve()); return }
-    const s = document.createElement('script')
-    s.src = src; s.async = true; s.setAttribute('data-src', src)
-    s.onload = () => resolve()
-    s.onerror = () => reject(new Error('No se pudo cargar el compilador MindAR'))
-    document.head.appendChild(s)
-  })
+async function loadMindCompiler(): Promise<any> {
+  const existing = (window as any).MINDAR?.IMAGE?.Compiler
+  if (existing) return existing
+  const dynImport = new Function('u', 'return import(u)') as (u: string) => Promise<any>
+  for (const u of MINDAR_COMPILER_URLS) {
+    try {
+      const m: any = await dynImport(u)
+      const C = m?.Compiler ?? m?.default?.Compiler ?? m?.IMAGE?.Compiler ?? m?.default?.IMAGE?.Compiler
+      if (C) return C
+    } catch { /* probar siguiente fuente */ }
+  }
+  throw new Error('No se pudo cargar el compilador de marcadores')
 }
 
 function loadImageEl(url: string): Promise<HTMLImageElement> {
@@ -174,6 +181,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
   const fileBgRef    = useRef<HTMLInputElement>(null)
   const fileLogoRef  = useRef<HTMLInputElement>(null)
   const fileTargetRef = useRef<HTMLInputElement>(null)
+  const fileMindRef   = useRef<HTMLInputElement>(null)
   const [compiling, setCompiling] = useState(false)
   const [convertStage, setConvertStage] = useState<string | null>(null)
 
@@ -308,9 +316,9 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
     if (!form.target_image_url)  { showToast('Sube una imagen objetivo primero', 'err'); return }
     setCompiling(true)
     try {
-      await loadScriptOnce(MINDAR_COMPILER_CDN, () => !!(window as any).MINDAR?.IMAGE?.Compiler)
+      const Compiler = await loadMindCompiler()
       const img = await loadImageEl(form.target_image_url)
-      const compiler = new (window as any).MINDAR.IMAGE.Compiler()
+      const compiler = new Compiler()
       await compiler.compileImageTargets([img], () => {})
       const buffer: ArrayBuffer = await compiler.exportData()
       const file = new File([buffer], 'targets.mind', { type: 'application/octet-stream' })
@@ -323,7 +331,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
       set('target_mind_url', json.url)
       showToast('Marcador compilado y listo ✓', 'ok')
     } catch (e: any) {
-      showToast(e.message ?? 'Error al compilar el marcador', 'err')
+      showToast(`${e?.message ?? 'Error al compilar'} · alternativa: compílalo en la herramienta de MindAR y sube el .mind`, 'err')
     } finally {
       setCompiling(false)
     }
@@ -386,7 +394,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
           {section === 'design'     && <SectionDesign     form={form} set={set} fileRef={fileBgRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
           {section === 'card'       && <SectionCard       form={form} set={set} fileRef={fileLogoRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
           {section === 'model'      && <SectionModel      form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} convertStage={convertStage} />}
-          {section === 'marker'     && <SectionMarker     form={form} set={set} fileRef={fileTargetRef} uploading={uploading} experienceId={experienceId} onCompile={compileTarget} compiling={compiling} />}
+          {section === 'marker'     && <SectionMarker     form={form} set={set} fileRef={fileTargetRef} fileMindRef={fileMindRef} uploading={uploading} experienceId={experienceId} onCompile={compileTarget} compiling={compiling} />}
           {section === 'experience' && <SectionExperience form={form} set={set} />}
           {section === 'animation'  && <SectionAnimation  form={form} set={set} />}
           {section === 'cta'        && <SectionCTA        form={form} set={set} />}
@@ -464,6 +472,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
       <input ref={fileAudioRef} type="file" accept=".mp3,.ogg,.wav" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'audio', 'audio_url')} />
       <input ref={fileVoiceRef} type="file" accept=".mp3,.ogg,.wav,.m4a" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'voice', 'voice_message_url')} />
       <input ref={fileTargetRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'targetimg', 'target_image_url')} />
+      <input ref={fileMindRef} type="file" accept=".mind" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'mind', 'target_mind_url')} />
       <input ref={fileBgRef}    type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'bg_image')} />
       <input ref={fileLogoRef}  type="file" accept="image/*"    style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'image', 'logo_url')} />
     </div>
@@ -742,11 +751,13 @@ function SectionCTA({ form, set }: any) {
   )
 }
 
-function SectionMarker({ form, set, fileRef, uploading, experienceId, onCompile, compiling }: any) {
+function SectionMarker({ form, set, fileRef, fileMindRef, uploading, experienceId, onCompile, compiling }: any) {
   return (
     <>
-      <div style={{ padding: 11, background: '#1e1b2e33', border: '1px solid #2a2642', borderRadius: 9, fontSize: 12, color: '#9ca3af', marginBottom: 14, lineHeight: 1.5 }}>
-        El modelo 3D se ancla sobre una <b style={{ color: '#c084fc' }}>imagen impresa</b> (el marcador), que se imprime junto al QR del regalo. Usa una imagen con buen detalle y contraste (una foto o ilustración, <b>no</b> el QR solo).
+      <div style={{ padding: 11, background: '#1e1b2e33', border: '1px solid #2a2642', borderRadius: 9, fontSize: 12, color: '#9ca3af', marginBottom: 14, lineHeight: 1.55 }}>
+        <b style={{ color: '#c084fc' }}>¿Qué es el marcador?</b> Es la <b>imagen impresa</b> sobre la que aparece el modelo 3D. El cliente apunta la cámara a esa imagen y el regalo se ancla encima.
+        <br /><b>Importante:</b> la cámara AR solo se abre cuando hay un marcador compilado. Sin él, el regalo se ve en 3D pero sin cámara.
+        <br />Usa una imagen con detalle y contraste (una foto/ilustración, <b>no</b> el QR solo).
       </div>
 
       {/* 1 · Imagen objetivo */}
@@ -767,18 +778,35 @@ function SectionMarker({ form, set, fileRef, uploading, experienceId, onCompile,
         <input style={{ ...inputStyle, marginTop: 8 }} value={form.target_image_url ?? ''} onChange={e => set('target_image_url', e.target.value || null)} placeholder="https://…/marcador.jpg" />
       </div>
 
-      {/* 2 · Compilar .mind */}
+      {/* 2 · Marcador .mind */}
       <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14 }}>
-        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>2 · Compilar marcador (.mind)</p>
-        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#6b6894' }}>Genera el archivo de rastreo en tu navegador a partir de la imagen.</p>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>2 · Marcador de rastreo (.mind)</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#6b6894' }}>Genéralo desde tu imagen, aquí mismo:</p>
         <button onClick={onCompile} disabled={compiling || !form.target_image_url || !experienceId}
           style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', borderRadius: 9, background: (compiling || !form.target_image_url) ? '#2a2642' : 'linear-gradient(135deg,#c084fc,#818cf8)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: compiling ? 'wait' : 'pointer', width: '100%', justifyContent: 'center', opacity: (!form.target_image_url || !experienceId) ? 0.5 : 1 }}>
           {compiling ? <Loader2 size={14} /> : <Crosshair size={14} />}
-          {compiling ? 'Compilando marcador…' : 'Compilar marcador'}
+          {compiling ? 'Compilando… (puede tardar)' : 'Compilar marcador'}
         </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0' }}>
+          <div style={{ flex: 1, height: 1, background: '#2a2642' }} />
+          <span style={{ fontSize: 10, color: '#6b6894' }}>O SUBE UN .mind</span>
+          <div style={{ flex: 1, height: 1, background: '#2a2642' }} />
+        </div>
+
+        <button onClick={() => fileMindRef?.current?.click()} disabled={uploading === 'mind' || !experienceId}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#818cf822', border: '1px dashed #818cf8', color: '#818cf8', fontWeight: 600, fontSize: 12, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+          {uploading === 'mind' ? <Loader2 size={12} /> : <Upload size={12} />}
+          Subir archivo .mind
+        </button>
+        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#6b6894' }}>
+          ¿La compilación falla? Genera el .mind en la{' '}
+          <a href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank" rel="noopener noreferrer" style={{ color: '#c084fc' }}>herramienta de MindAR</a>{' '}y súbelo aquí.
+        </p>
+
         {form.target_mind_url
-          ? <p style={{ margin: '8px 0 0', fontSize: 12, color: '#22c55e', fontWeight: 600 }}>✓ Marcador listo — la AR se anclará a esta imagen</p>
-          : <p style={{ margin: '8px 0 0', fontSize: 11, color: '#f59e0b' }}>Aún sin compilar — el modelo no estará anclado</p>}
+          ? <p style={{ margin: '10px 0 0', fontSize: 12, color: '#22c55e', fontWeight: 600 }}>✓ Marcador listo — la AR se anclará a esta imagen</p>
+          : <p style={{ margin: '10px 0 0', fontSize: 11, color: '#f59e0b' }}>Aún sin marcador — el modelo no estará anclado y la cámara no se abrirá</p>}
         <input style={{ ...inputStyle, marginTop: 8 }} value={form.target_mind_url ?? ''} onChange={e => set('target_mind_url', e.target.value || null)} placeholder="https://…/targets.mind" />
       </div>
 

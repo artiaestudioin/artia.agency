@@ -87,9 +87,11 @@ Las filas existentes adoptan los defaults (modo `hybrid`, confeti `hearts`).
 1. **Contenido / Fondo / Card**: textos y branding.
 2. **Modelo 3D**: sube `.glb`, `.gltf`, `.fbx`, `.obj` o `.stl` — los que no son glb se
    convierten a `.glb` automáticamente en el navegador. Sube también `.usdz` para la AR nativa en iOS.
-3. **Marcador**:
+3. **Marcador** (imprescindible para que se abra la cámara AR):
    - Sube la **imagen objetivo** (foto/ilustración con detalle y contraste; el QR solo no sirve).
    - Pulsa **"Compilar marcador"** → genera el `.mind` en tu navegador y lo guarda.
+   - Si la compilación falla, genera el `.mind` en la [herramienta de MindAR](https://hiukim.github.io/mind-ar-js-doc/tools/compile)
+     y **súbelo** con "Subir archivo .mind". Sin marcador, el regalo se ve en 3D pero la cámara no se abre.
 4. **Experiencia**: motor `hybrid` (recomendado) y **escala del modelo** (con MindAR suele bajarse a
    ~0.2–0.5; el plano del marcador mide 1 unidad).
 5. **Confeti**: estilo (corazones/clásico/estrellas/pétalos) y colores.
