@@ -30,12 +30,19 @@ declare global {
   }
 }
 
-function loadModelViewerScript() {
-  if (document.querySelector('script[data-mv]')) return
+function loadModelViewerScript(onReady?: () => void) {
+  const existing = document.querySelector('script[data-mv]')
+  if (existing) {
+    // Script ya inyectado — esperar a que el custom element esté definido
+    customElements.whenDefined('model-viewer').then(() => onReady?.())
+    return
+  }
   const s = document.createElement('script')
   s.type  = 'module'
   s.src   = 'https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js'
   s.setAttribute('data-mv', '1')
+  s.onload = () => customElements.whenDefined('model-viewer').then(() => onReady?.())
+  s.onerror = () => onReady?.() // continuar aunque falle
   document.head.appendChild(s)
 }
 
@@ -66,11 +73,13 @@ function CTAIcon({ icon }: { icon: string }) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function ARCustomerExperience({ experience }: { experience: ARExperience }) {
-  const [arActive,    setArActive]    = useState(false)
-  const [arReady,     setArReady]     = useState(false)
-  const [btnPressed,  setBtnPressed]  = useState(false)
-  const viewerRef = useRef<HTMLElement>(null)
-  const audioRef  = useRef<HTMLAudioElement>(null)
+  const [arActive,      setArActive]      = useState(false)
+  const [arReady,       setArReady]       = useState(false)
+  const [scriptReady,   setScriptReady]   = useState(false)
+  const [btnPressed,    setBtnPressed]    = useState(false)
+  const viewerRef  = useRef<HTMLElement>(null)
+  const audioRef   = useRef<HTMLAudioElement>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const primary   = experience.primary_color   ?? '#ff6b35'
   const secondary = experience.secondary_color ?? '#ff8c5a'
@@ -98,9 +107,33 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
     setTimeout(() => {
       setArActive(true)
       trackEvent(experience.id, 'ar_launch')
-      loadModelViewerScript()
+      // Cargar script y esperar a que esté listo
+      loadModelViewerScript(() => setScriptReady(true))
     }, 260)
   }
+
+  // Escuchar eventos de model-viewer con addEventListener (React onLoad no funciona en web components)
+  useEffect(() => {
+    if (!arActive || !scriptReady) return
+    const attach = () => {
+      const viewer = viewerRef.current
+      if (!viewer) return
+      const onLoad = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        setTimeout(() => setArReady(true), 300)
+      }
+      viewer.addEventListener('load', onLoad)
+      // Fallback: si en 12s no carga, mostrar igual
+      timeoutRef.current = setTimeout(() => setArReady(true), 12000)
+      return () => {
+        viewer.removeEventListener('load', onLoad)
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      }
+    }
+    // Dar tiempo a que model-viewer actualice el elemento en el DOM
+    const t = setTimeout(attach, 200)
+    return () => clearTimeout(t)
+  }, [arActive, scriptReady])
 
   function triggerNativeAR() {
     const v = viewerRef.current as any
@@ -389,8 +422,8 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
               </div>
             )}
 
-            {/* Model Viewer */}
-            {experience.model_url && (
+            {/* Model Viewer — solo se renderiza cuando el script está listo */}
+            {experience.model_url && scriptReady && (
               <model-viewer
                 ref={viewerRef as any}
                 src={experience.model_url}
@@ -416,7 +449,6 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
                   opacity: arReady ? 1 : 0,
                   transition: 'opacity 0.5s ease',
                 } as React.CSSProperties}
-                onLoad={() => setTimeout(() => setArReady(true), 400)}
               />
             )}
 
