@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import type { ARExperience, OccasionType, UpdateARExperienceInput, ARMode, ConfettiStyle } from '@/types/ar'
 import { DEFAULT_AR_EXPERIENCE, OCCASION_LABELS, OCCASION_EMOJIS } from '@/types/ar'
+import { convertToGlb, extOf } from './model-convert'
 
 interface Props {
   mode: 'create' | 'edit'
@@ -174,6 +175,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
   const fileLogoRef  = useRef<HTMLInputElement>(null)
   const fileTargetRef = useRef<HTMLInputElement>(null)
   const [compiling, setCompiling] = useState(false)
+  const [convertStage, setConvertStage] = useState<string | null>(null)
 
   useEffect(() => {
     if (mode === 'edit' && experienceId) {
@@ -275,6 +277,22 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
     }
   }
 
+  // Modelo 3D: glb/gltf se suben directo; fbx/obj/stl se convierten a glb antes
+  async function handleModelFile(file: File) {
+    const ext = extOf(file.name)
+    if (ext === 'glb' || ext === 'gltf') { handleUpload(file, 'glb', 'model_url'); return }
+    if (!experienceId) { showToast('Guarda primero para subir archivos', 'err'); return }
+    try {
+      setConvertStage(`Convirtiendo ${ext.toUpperCase()} → GLB…`)
+      const glb = await convertToGlb(file, s => setConvertStage(s))
+      setConvertStage(null)
+      await handleUpload(glb, 'glb', 'model_url')
+    } catch (e: any) {
+      setConvertStage(null)
+      showToast(e.message ?? 'No se pudo convertir el modelo', 'err')
+    }
+  }
+
   // Regenerar URL con host correcto
   async function handleRegenerateUrl() {
     if (!experienceId) return
@@ -367,7 +385,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
           {section === 'content'    && <SectionContent    form={form} set={set} />}
           {section === 'design'     && <SectionDesign     form={form} set={set} fileRef={fileBgRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
           {section === 'card'       && <SectionCard       form={form} set={set} fileRef={fileLogoRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
-          {section === 'model'      && <SectionModel      form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} />}
+          {section === 'model'      && <SectionModel      form={form} set={set} fileGlbRef={fileGlbRef} fileUsdzRef={fileUsdzRef} uploading={uploading} onUpload={handleUpload} experienceId={experienceId} convertStage={convertStage} />}
           {section === 'marker'     && <SectionMarker     form={form} set={set} fileRef={fileTargetRef} uploading={uploading} experienceId={experienceId} onCompile={compileTarget} compiling={compiling} />}
           {section === 'experience' && <SectionExperience form={form} set={set} />}
           {section === 'animation'  && <SectionAnimation  form={form} set={set} />}
@@ -441,7 +459,7 @@ export default function ARExperienceEditor({ mode, experienceId }: Props) {
       )}
 
       {/* Hidden file inputs */}
-      <input ref={fileGlbRef}   type="file" accept=".glb,.gltf" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'glb', 'model_url')} />
+      <input ref={fileGlbRef}   type="file" accept=".glb,.gltf,.fbx,.obj,.stl" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleModelFile(e.target.files[0])} />
       <input ref={fileUsdzRef}  type="file" accept=".usdz"      style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'usdz', 'model_ios_url')} />
       <input ref={fileAudioRef} type="file" accept=".mp3,.ogg,.wav" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'audio', 'audio_url')} />
       <input ref={fileVoiceRef} type="file" accept=".mp3,.ogg,.wav,.m4a" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'voice', 'voice_message_url')} />
@@ -581,18 +599,22 @@ function SectionCard({ form, set, fileRef, uploading, onUpload, experienceId }: 
   )
 }
 
-function SectionModel({ form, set, fileGlbRef, fileUsdzRef, uploading, onUpload, experienceId }: any) {
+function SectionModel({ form, set, fileGlbRef, fileUsdzRef, uploading, onUpload, experienceId, convertStage }: any) {
+  const busy = uploading === 'glb' || !!convertStage
   return (
     <>
       <div style={{ background: '#1e1b2e', border: '1px solid #2a2642', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>Modelo .glb (Android / WebXR)</p>
-        <button onClick={() => fileGlbRef.current?.click()} disabled={uploading === 'glb'}
-          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#c084fc22', border: '1px dashed #c084fc', color: '#c084fc', fontWeight: 600, fontSize: 12, cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
-          {uploading === 'glb' ? <Loader2 size={12} /> : <Upload size={12} />}
-          {uploading === 'glb' ? 'Subiendo…' : 'Subir .glb'}
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#f1f0f9' }}>Modelo 3D</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#6b6894' }}>
+          Acepta <b style={{ color: '#c084fc' }}>.glb · .gltf · .fbx · .obj · .stl</b>. Los que no son glb se convierten automáticamente.
+        </p>
+        <button onClick={() => fileGlbRef.current?.click()} disabled={busy}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 9, background: '#c084fc22', border: '1px dashed #c084fc', color: '#c084fc', fontWeight: 600, fontSize: 12, cursor: busy ? 'wait' : 'pointer', width: '100%', justifyContent: 'center', textAlign: 'center' }}>
+          {busy ? <Loader2 size={12} /> : <Upload size={12} />}
+          {convertStage ? convertStage : uploading === 'glb' ? 'Subiendo…' : 'Subir modelo 3D'}
         </button>
         {form.model_url && <p style={{ margin: '6px 0 0', fontSize: 11, color: '#22c55e', wordBreak: 'break-all' }}>✓ {form.model_url}</p>}
-        <p style={{ margin: '8px 0 4px', fontSize: 11, color: '#6b6894' }}>O pega URL:</p>
+        <p style={{ margin: '8px 0 4px', fontSize: 11, color: '#6b6894' }}>O pega URL (.glb):</p>
         <input style={inputStyle} value={form.model_url ?? ''} onChange={e => set('model_url', e.target.value)} placeholder="https://…/modelo.glb" />
       </div>
 

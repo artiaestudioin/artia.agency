@@ -79,7 +79,7 @@ export default function ARCustomerExperience({ experience }: { experience: ARExp
   const modelScale = experience.model_scale ?? 1
   const hasModel   = !!experience.model_url
   const useMindAR  = !!experience.target_mind_url && arMode !== 'native'
-  const needViewer = hasModel && (!useMindAR || arMode === 'hybrid' || arMode === 'native')
+  const needViewer = hasModel && (!useMindAR || arMode !== 'immersive')
   const showNativeBtn = arMode !== 'immersive' && arAvailable
 
   const confettiOn    = experience.confetti_enabled ?? true

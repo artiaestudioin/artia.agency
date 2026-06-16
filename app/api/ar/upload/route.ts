@@ -33,6 +33,9 @@ function createUploadClient() {
 const EXT_TO_TYPE: Record<string, string> = {
   glb:  'glb',
   gltf: 'glb',
+  fbx:  'glb',   // se convierte a glb en el editor; se acepta por robustez
+  obj:  'glb',
+  stl:  'glb',
   usdz: 'usdz',
   jpg:  'image',
   jpeg: 'image',

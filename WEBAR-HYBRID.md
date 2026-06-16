@@ -85,7 +85,8 @@ Las filas existentes adoptan los defaults (modo `hybrid`, confeti `hearts`).
 ## 6. Editor — crear una experiencia anclada
 
 1. **Contenido / Fondo / Card**: textos y branding.
-2. **Modelo 3D**: sube el `.glb` (y `.usdz` para la AR nativa en iOS).
+2. **Modelo 3D**: sube `.glb`, `.gltf`, `.fbx`, `.obj` o `.stl` — los que no son glb se
+   convierten a `.glb` automáticamente en el navegador. Sube también `.usdz` para la AR nativa en iOS.
 3. **Marcador**:
    - Sube la **imagen objetivo** (foto/ilustración con detalle y contraste; el QR solo no sirve).
    - Pulsa **"Compilar marcador"** → genera el `.mind` en tu navegador y lo guarda.
@@ -115,3 +116,8 @@ Las filas existentes adoptan los defaults (modo `hybrid`, confeti `hearts`).
   requiere `.usdz` en iPhone. El botón por defecto de model-viewer está oculto.
 - **Calidad del marcador**: imágenes con muchos detalles y bordes rastrean mejor que logos planos o
   zonas de color liso.
+- **Formatos 3D**: el AR web solo renderiza glTF/glb, así que `.fbx/.obj/.stl` se convierten a `.glb`
+  en el navegador con three.js (`model-convert.ts`) al subirlos. Caveats: el `.fbx` conserva
+  geometría y animaciones embebidas (no efectos propietarios); el `.obj` solo trae geometría —
+  sus texturas (`.mtl` + imágenes) no viajan en un único archivo, así que para texturas exporta a
+  `.glb` desde tu herramienta 3D. Modelos muy pesados pueden tardar en convertir en móviles.
